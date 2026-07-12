@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../home/home_provider.dart';
 import '../stats/stats_provider.dart';
 import 'history_provider.dart';
 import 'session_detail_screen.dart';
 
-const _kAccent = Color(0xFF16A34A);
-const _kTextPrimary = Color(0xFF111111);
-const _kTextSec = Color(0xFF444444);
-const _kTextMuted = Color(0xFF888888);
+const _kAccent = Color(0xFFC6FF3D);
+const _kTextPrimary = Color(0xFFF2F5EF);
+const _kTextSec = Color(0xFFB8C2B4);
+const _kTextMuted = Color(0xFF7C8A7C);
 
 class HistoryScreen extends ConsumerWidget {
   const HistoryScreen({super.key});
@@ -110,8 +111,8 @@ class HistoryScreen extends ConsumerWidget {
               onConfirm();
             },
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.red[900],
-              foregroundColor: const Color(0xFFE2F0E2),
+              backgroundColor: const Color(0xFF1A0800),
+              foregroundColor: const Color(0xFFFF5A3C),
             ),
             child: const Text('ลบ'),
           ),
@@ -149,9 +150,9 @@ class _SessionTile extends StatelessWidget {
                 children: [
                   Text(
                     day,
-                    style: const TextStyle(
+                    style: GoogleFonts.spaceGrotesk(
                       fontSize: 22,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                       height: 1,
                       letterSpacing: -0.5,
                       color: _kTextPrimary,
@@ -193,11 +194,11 @@ class _SessionTile extends StatelessWidget {
                 margin: const EdgeInsets.only(right: 8),
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFF3E0),
+                  color: const Color(0xFFFF9F1C).withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: const Text('กำลังเล่น',
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.orange)),
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFFFF9F1C))),
               )
             else
               Container(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/providers/unit_provider.dart';
 import 'active_workout_provider.dart';
 import 'add_exercise_dialog.dart';
@@ -7,11 +8,11 @@ import 'add_set_form.dart';
 import 'rest_timer_provider.dart';
 import 'rest_timer_widget.dart';
 
-const _kAccent = Color(0xFF16A34A);
-const _kTextPrimary = Color(0xFF111111);
-const _kTextSec = Color(0xFF444444);
-const _kTextMuted = Color(0xFF888888);
-const _kBorder = Color(0xFFBFDFBF);
+const _kAccent = Color(0xFFC6FF3D);
+const _kTextPrimary = Color(0xFFF2F5EF);
+const _kTextSec = Color(0xFFB8C2B4);
+const _kTextMuted = Color(0xFF7C8A7C);
+const _kBorder = Color(0xFF262A24);
 
 class ActiveWorkoutScreen extends ConsumerWidget {
   final bool readOnly;
@@ -246,7 +247,7 @@ class _ExerciseCard extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     ex.name,
-                    style: const TextStyle(
+                    style: GoogleFonts.spaceGrotesk(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       letterSpacing: -0.2,
@@ -288,8 +289,8 @@ class _ExerciseCard extends ConsumerWidget {
                               onDeleteExercise();
                             },
                             style: FilledButton.styleFrom(
-                              backgroundColor: Colors.red[900],
-                              foregroundColor: const Color(0xFFE2F0E2),
+                              backgroundColor: const Color(0xFF1A0800),
+                              foregroundColor: const Color(0xFFFF5A3C),
                             ),
                             child: const Text('ลบ'),
                           ),
@@ -357,12 +358,12 @@ class _ExerciseCard extends ConsumerWidget {
                               ? Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: Colors.orange.withValues(alpha: 0.18),
+                                    color: const Color(0xFFFF9F1C).withValues(alpha: 0.18),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: const Text('W',
                                       style: TextStyle(
-                                          fontSize: 11, color: Colors.orange, fontWeight: FontWeight.w700)),
+                                          fontSize: 11, color: Color(0xFFFF9F1C), fontWeight: FontWeight.w700)),
                                 )
                               : Text('${s.setNumber}',
                                   style: const TextStyle(fontSize: 13, color: _kTextSec)),
@@ -373,7 +374,7 @@ class _ExerciseCard extends ConsumerWidget {
                             children: [
                               Text(
                                 s.weightKg.display(isLbs),
-                                style: TextStyle(
+                                style: GoogleFonts.jetBrainsMono(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                     color: s.isWarmup ? _kTextSec : _kTextPrimary),
@@ -383,14 +384,14 @@ class _ExerciseCard extends ConsumerWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                                   decoration: BoxDecoration(
-                                    color: _kAccent.withValues(alpha: 0.15),
+                                    color: const Color(0xFFFF5A3C),
                                     borderRadius: BorderRadius.circular(3),
                                   ),
                                   child: const Text('PR',
                                       style: TextStyle(
                                           fontSize: 9,
                                           fontWeight: FontWeight.w800,
-                                          color: _kAccent)),
+                                          color: Color(0xFF1A0800))),
                                 ),
                               ],
                             ],
@@ -400,7 +401,7 @@ class _ExerciseCard extends ConsumerWidget {
                           child: Text(
                             '${s.reps}',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: GoogleFonts.jetBrainsMono(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
                                 color: s.isWarmup ? _kTextSec : _kTextPrimary),
@@ -412,7 +413,7 @@ class _ExerciseCard extends ConsumerWidget {
                               : Text(
                                   fmtNum(calc1RM(s.weightKg, s.reps) * (isLbs ? kgToLbs : 1)),
                                   textAlign: TextAlign.center,
-                                  style: const TextStyle(fontSize: 12, color: _kTextMuted),
+                                  style: GoogleFonts.jetBrainsMono(fontSize: 12, color: _kTextMuted),
                                 ),
                         ),
                         SizedBox(

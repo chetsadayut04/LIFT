@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../core/database/exercise_dao.dart';
 
-const _kAccent = Color(0xFF16A34A);
-const _kTextPrimary = Color(0xFF111111);
-const _kTextMuted = Color(0xFF888888);
+const _kAccent = Color(0xFFC6FF3D);
+const _kTextPrimary = Color(0xFFF2F5EF);
+const _kTextMuted = Color(0xFF7C8A7C);
 
 Future<String?> showAddExerciseSheet(BuildContext context) {
   return showModalBottomSheet<String>(
@@ -65,8 +65,8 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.red[900],
-              foregroundColor: Colors.white,
+              backgroundColor: const Color(0xFF1A0800),
+              foregroundColor: const Color(0xFFFF5A3C),
             ),
             child: const Text('ลบ'),
           ),
@@ -101,7 +101,7 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
 
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: Color(0xFF1B1F1B),
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       padding: EdgeInsets.only(bottom: bottom),
@@ -114,7 +114,7 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: const Color(0xFFDDDDDD),
+              color: const Color(0xFF262A24),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -141,7 +141,7 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
                       )
                     : null,
                 filled: true,
-                fillColor: const Color(0xFFF5F5F5),
+                fillColor: const Color(0xFF0A0C0A),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -183,7 +183,7 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
                     padding: EdgeInsets.symmetric(vertical: 24),
                     child: Column(
                       children: [
-                        Icon(Icons.fitness_center, size: 32, color: Color(0xFFBFDFBF)),
+                        Icon(Icons.fitness_center, size: 32, color: Color(0xFF262A24)),
                         SizedBox(height: 10),
                         Text('ยังไม่มีท่าในระบบ',
                             style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _kTextMuted)),
@@ -265,7 +265,7 @@ class _ExerciseItem extends StatelessWidget {
     required this.onTap,
     this.onLongPress,
     this.icon = Icons.fitness_center,
-    this.iconColor = const Color(0xFFBFDFBF),
+    this.iconColor = const Color(0xFF7C8A7C),
     this.nameColor = _kTextPrimary,
   });
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'rest_timer_provider.dart';
 
 class RestTimerBottomSheet extends ConsumerWidget {
@@ -26,7 +27,7 @@ class RestTimerBottomSheet extends ConsumerWidget {
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: const Color(0xFF2A2835),
+              color: const Color(0xFF262A24),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -37,7 +38,7 @@ class RestTimerBottomSheet extends ConsumerWidget {
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 1,
-              color: Color(0xFF5A5565),
+              color: Color(0xFF7C8A7C),
             ),
           ),
           const SizedBox(height: 28),
@@ -52,25 +53,33 @@ class RestTimerBottomSheet extends ConsumerWidget {
                   child: CircularProgressIndicator(
                     value: isReady ? 1.0 : timer.progress,
                     strokeWidth: 6,
-                    backgroundColor: const Color(0xFF2A2835),
+                    backgroundColor: const Color(0xFF262A24),
                     color: isDone
-                        ? const Color(0xFFC9A96E)
+                        ? const Color(0xFFC6FF3D)
                         : isReady
-                            ? const Color(0xFF2A2835)
-                            : const Color(0xFFC9A96E),
+                            ? const Color(0xFF262A24)
+                            : const Color(0xFFC6FF3D),
                   ),
                 ),
                 Text(
                   isDone ? 'GO!' : timeStr,
-                  style: TextStyle(
+                  style: GoogleFonts.jetBrainsMono(
                     fontSize: 36,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w700,
                     letterSpacing: -1.5,
                     color: isDone
-                        ? const Color(0xFFC9A96E)
+                        ? const Color(0xFFC6FF3D)
                         : isReady
-                            ? const Color(0xFF5A5565)
-                            : const Color(0xFFE5E1DD),
+                            ? const Color(0xFF7C8A7C)
+                            : const Color(0xFFF2F5EF),
+                    shadows: !isReady
+                        ? [
+                            Shadow(
+                              color: const Color(0xFFC6FF3D).withValues(alpha: 0.4),
+                              blurRadius: 14,
+                            ),
+                          ]
+                        : null,
                   ),
                 ),
               ],

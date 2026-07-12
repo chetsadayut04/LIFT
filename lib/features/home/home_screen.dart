@@ -1,17 +1,19 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/database/exercise_dao.dart';
 import '../../core/database/session_dao.dart';
 import '../../core/providers/unit_provider.dart';
+import '../../core/widgets/plate_stack.dart';
 import '../workout/active_workout_provider.dart';
 import '../workout/active_workout_screen.dart';
 import 'home_provider.dart';
 
-const _kAccent = Color(0xFF16A34A);
-const _kTextPrimary = Color(0xFF111111);
-const _kTextMuted = Color(0xFF888888);
-const _kDivider = Color(0xFFBFDFBF);
+const _kAccent = Color(0xFFC6FF3D);
+const _kTextPrimary = Color(0xFFF2F5EF);
+const _kTextMuted = Color(0xFF7C8A7C);
+const _kDivider = Color(0xFF262A24);
 
 const _thaiDays = [
   'จันทร์',
@@ -136,9 +138,9 @@ class _HomeBody extends ConsumerWidget {
                 (state.todayVolume > 0
                     ? _fmtVol(state.todayVolume, isLbs)
                     : 'พร้อมแล้ว?'),
-            style: const TextStyle(
-              fontSize: 36,
-              fontWeight: FontWeight.w800,
+            style: GoogleFonts.spaceGrotesk(
+              fontSize: 38,
+              fontWeight: FontWeight.w700,
               letterSpacing: -1.5,
               height: 1,
               color: _kTextPrimary,
@@ -240,8 +242,8 @@ class _HomeBody extends ConsumerWidget {
             child: OutlinedButton(
               onPressed: () => _finish(context, ref),
               style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFFE07070),
-                side: const BorderSide(color: Color(0xFF6B3030)),
+                foregroundColor: const Color(0xFFFF5A3C),
+                side: const BorderSide(color: Color(0xFFFF5A3C)),
                 padding: const EdgeInsets.symmetric(horizontal: 20),
               ),
               child: const Row(
@@ -338,8 +340,8 @@ class _HomeBody extends ConsumerWidget {
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF6B3030),
-              foregroundColor: const Color(0xFFE07070),
+              backgroundColor: const Color(0xFF1A0800),
+              foregroundColor: const Color(0xFFFF5A3C),
             ),
             child: const Text('เสร็จสิ้น'),
           ),
@@ -366,11 +368,11 @@ class _HomeBody extends ConsumerWidget {
                 ),
               ],
             ),
-            backgroundColor: Colors.white,
+            backgroundColor: const Color(0xFF1B1F1B),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
-              side: const BorderSide(color: Color(0xFFBFDFBF)),
+              side: const BorderSide(color: Color(0xFF262A24)),
             ),
             duration: const Duration(seconds: 2),
           ),
@@ -465,11 +467,14 @@ class _TimerRowState extends ConsumerState<_TimerRow> {
         const SizedBox(width: 10),
         Text(
           timerStr,
-          style: TextStyle(
+          style: GoogleFonts.jetBrainsMono(
             fontSize: 22,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.5,
             color: isActive ? _kAccent : _kTextMuted,
+            shadows: isActive
+                ? [Shadow(color: _kAccent.withValues(alpha: 0.4), blurRadius: 14)]
+                : null,
           ),
         ),
       ],
@@ -493,8 +498,8 @@ class _WorkoutNameDialogState extends State<_WorkoutNameDialog> {
   List<_Template> _templates = [];
   String? _selectedName;
 
-  static const _kBorder = Color(0xFFBFDFBF);
-  static const _kSurface = Color(0xFFEAF5EA);
+  static const _kBorder = Color(0xFF262A24);
+  static const _kSurface = Color(0xFF15181A);
 
   @override
   void initState() {
@@ -627,7 +632,7 @@ class _VolumeSummaryRow extends StatelessWidget {
       final pct = (state.todayVolume - last) / last * 100;
       final sign = pct >= 0 ? '+' : '';
       changeStr = '$sign${pct.toStringAsFixed(1)}%';
-      changeColor = pct >= 0 ? _kAccent : const Color(0xFFE07070);
+      changeColor = pct >= 0 ? _kAccent : const Color(0xFFFF5A3C);
     }
 
     return Column(
@@ -693,6 +698,8 @@ class _ExerciseList extends StatelessWidget {
       );
     }
 
+    final maxVolume = exercises.fold(0.0, (m, e) => e.totalVolume > m ? e.totalVolume : m);
+
     return ListView.separated(
       padding: EdgeInsets.zero,
       itemCount: exercises.length,
@@ -702,6 +709,7 @@ class _ExerciseList extends StatelessWidget {
         final w = isLbs ? ex.avgWeight * kgToLbs : ex.avgWeight;
         final vol = isLbs ? ex.totalVolume * kgToLbs : ex.totalVolume;
         final unit = isLbs ? 'lbs' : 'kg';
+        final ratio = maxVolume > 0 ? ex.totalVolume / maxVolume : 0.0;
 
         return Row(
           children: [
@@ -727,7 +735,7 @@ class _ExerciseList extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFF3CD),
+                            color: const Color(0xFFFF5A3C),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const Text(
@@ -735,7 +743,7 @@ class _ExerciseList extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF856404),
+                              color: Color(0xFF1A0800),
                             ),
                           ),
                         ),
@@ -753,6 +761,8 @@ class _ExerciseList extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
+                PlateStack(ratio: ratio),
+                const SizedBox(height: 4),
                 Text(
                   '${fmtNum(vol)} $unit',
                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _kTextMuted),

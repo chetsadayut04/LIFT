@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>LIFT — Overload · ทุกหน้าจอ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:#1c1e1c;font-family:'Inter','Noto Sans Thai',sans-serif;}
+  .page-head{padding:44px 40px 8px;}
+  .page-head h1{font-family:'Space Grotesk','Noto Sans Thai',sans-serif;font-size:28px;font-weight:700;margin:0 0 8px;letter-spacing:-0.5px;color:#eee;}
+  .page-head p{margin:0;color:#9aa39a;font-size:14px;max-width:760px;line-height:1.7;}
+  .board{display:flex;flex-wrap:wrap;gap:26px;padding:28px 40px 60px;align-items:flex-start;}
+  .frame-label{font-size:10.5px;font-weight:700;letter-spacing:1px;color:#9aa39a;margin-bottom:10px;text-transform:uppercase;}
+  .phone{width:300px;height:640px;border-radius:32px;border:8px solid #000;overflow:hidden;position:relative;box-shadow:0 20px 44px rgba(0,0,0,0.45);}
+  .screen{position:absolute;inset:0;display:flex;flex-direction:column;}
+
+  .ov{
+    --bg:#0A0C0A; --surface:#15181580; --surface2:#1B1F1B; --accent:#C6FF3D; --accent2:#FF5A3C;
+    --text:#F2F5EF; --muted:#7C8A7C; --line:#262A24; --warm:#FF9F1C;
+    background:var(--bg); color:var(--text);
+  }
+  .ov .disp{font-family:'Space Grotesk','Noto Sans Thai',sans-serif;}
+  .ov .mono{font-family:'JetBrains Mono','Noto Sans Thai',monospace;}
+  .ov .statusbar{height:22px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:10px;font-weight:600;color:var(--text);}
+  .ov .appbar{height:48px;flex-shrink:0;display:flex;align-items:center;padding:0 16px;font-size:16px;font-weight:700;font-family:'Space Grotesk',sans-serif;letter-spacing:-0.2px;gap:8px;}
+  .ov .appbar .ic{margin-left:auto;color:var(--muted);font-size:15px;}
+  .ov .navbar{height:58px;flex-shrink:0;display:flex;align-items:center;justify-content:space-around;border-top:1px solid var(--line);}
+  .ov .navbar div{font-size:16px;color:var(--muted);}
+  .ov .navbar div.on{color:var(--accent);}
+
+  /* ---- Home ---- */
+  .ov .pad{padding:22px 20px 10px;flex:1;display:flex;flex-direction:column;overflow:hidden;}
+  .ov .eyebrow{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);display:flex;align-items:center;}
+  .ov .eyebrow .r{margin-left:auto;font-family:'JetBrains Mono',monospace;color:var(--muted);font-size:10px;}
+  .ov .hero{margin:18px 0 2px;}
+  .ov .hero .cap{font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px;}
+  .ov .hero .num{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:38px;letter-spacing:-1.5px;line-height:0.95;}
+  .ov .timer-line{display:flex;align-items:center;gap:8px;margin-top:14px;}
+  .ov .timer-line .d{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
+  .ov .timer-line .t{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--accent);text-shadow:0 0 14px rgba(198,255,61,0.4);}
+  .ov .delta{font-size:11px;color:var(--muted);margin-top:8px;font-family:'JetBrains Mono',monospace;}
+  .ov .delta b{color:var(--accent);}
+  .ov hr{border:none;border-top:1px solid var(--line);margin:16px 0 12px;}
+  .ov .today-lab{font-size:9.5px;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:12px;}
+  .ov .excard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:11px 12px;margin-bottom:10px;}
+  .ov .excard .top{display:flex;align-items:center;font-size:13px;font-weight:600;gap:6px;}
+  .ov .excard .pr{background:var(--accent2);color:#1a0800;font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;}
+  .ov .excard .sub{font-size:10.5px;color:var(--muted);margin-top:2px;font-family:'JetBrains Mono',monospace;}
+  .ov .plates{display:flex;gap:2px;align-items:flex-end;margin-top:8px;height:16px;}
+  .ov .plates div{width:5px;background:var(--accent);border-radius:1px;}
+  .ov .plates div.off{background:var(--muted);}
+  .ov .actions{display:flex;gap:8px;margin-top:auto;}
+  .ov .btn{flex:1;height:46px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;border-radius:8px;letter-spacing:0.3px;font-family:'Space Grotesk',sans-serif;}
+  .ov .btn-fill{background:var(--accent);color:#0A0C0A;}
+  .ov .btn-line{border:1px solid var(--accent2);color:var(--accent2);flex:0 0 auto;padding:0 16px;}
+  .ov .btn-line.neutral{border:1px solid var(--line);color:var(--text);}
+
+  /* ---- exercise list (home) ---- */
+  .ov .ex-list{flex:1;overflow:hidden;display:flex;flex-direction:column;gap:10px;}
+
+  /* ---- Active workout ---- */
+  .ov .aw-body{padding:14px;overflow-y:auto;flex:1;}
+  .ov .ex-card2{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px;position:relative;overflow:hidden;}
+  .ov .ex-card2::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);}
+  .ov .ex-card2 .hdr{display:flex;align-items:center;font-size:13px;font-weight:700;font-family:'Space Grotesk',sans-serif;gap:6px;margin-left:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ov .ex-card2 .hdr .spacer{flex:1;}
+  .ov .ex-card2 .hdr .icon{color:var(--muted);font-size:13px;}
+  .ov .set-hdr{display:flex;font-size:10px;font-weight:700;color:var(--muted);border-top:1px solid var(--line);margin:10px 0 6px 6px;padding-top:8px;letter-spacing:0.5px;}
+  .ov .set-hdr div{flex:1;text-align:center;}
+  .ov .set-hdr div:first-child{flex:0 0 30px;text-align:left;}
+  .ov .set-hdr div:last-child{flex:0 0 22px;}
+  .ov .set-row2{display:flex;align-items:center;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;padding:5px 0;margin-left:6px;}
+  .ov .set-row2 div{flex:1;text-align:center;}
+  .ov .set-row2 div:first-child{flex:0 0 30px;text-align:left;color:var(--muted);font-weight:400;}
+  .ov .set-row2 div:last-child{flex:0 0 22px;color:var(--muted);}
+  .ov .set-row2 .pr-mini{background:var(--accent2);color:#1a0800;font-size:7.5px;font-weight:700;padding:1px 4px;border-radius:3px;margin-left:4px;font-family:'Inter',sans-serif;}
+  .ov .prog-hint{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--accent);font-weight:700;margin:8px 0 8px 6px;font-family:'JetBrains Mono',monospace;}
+  .ov .warmup-chip{display:inline-block;background:rgba(255,159,28,0.15);border:1px solid var(--warm);font-size:10.5px;font-weight:700;color:var(--warm);padding:4px 10px;border-radius:6px;margin:2px 0 8px 6px;}
+  .ov .input-row2{display:flex;align-items:center;gap:5px;margin:8px 0 0 6px;}
+  .ov .stepper2{width:26px;height:34px;border:1px solid var(--line);background:var(--surface);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:14px;flex-shrink:0;font-weight:700;}
+  .ov .input-box2{flex:1;height:34px;border:1px solid var(--line);background:var(--surface);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;position:relative;color:var(--text);}
+  .ov .input-box2 .lab{position:absolute;top:-7px;left:6px;font-size:8px;background:var(--bg);padding:0 3px;color:var(--muted);}
+  .ov .input-box2.reps{flex:0 0 44px;}
+  .ov .add-set-btn2{background:var(--accent);color:#0A0C0A;font-size:12.5px;font-weight:700;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;margin:8px 0 0 6px;}
+  .ov .fab{position:absolute;bottom:20px;right:16px;background:var(--accent);color:#0A0C0A;border-radius:16px;height:44px;padding:0 18px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;box-shadow:0 6px 18px rgba(198,255,61,0.3);font-family:'Space Grotesk',sans-serif;}
+
+  /* ---- Rest timer sheet ---- */
+  .ov .sheet-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:flex-end;}
+  .ov .rest-sheet{width:100%;background:var(--surface2);border-top:1px solid var(--line);border-radius:20px 20px 0 0;padding:20px 24px 28px;display:flex;flex-direction:column;align-items:center;}
+  .ov .rest-handle{width:36px;height:4px;background:var(--line);border-radius:2px;margin-bottom:20px;}
+  .ov .rest-label{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:18px;}
+  .ov .rest-ring{width:130px;height:130px;border-radius:50%;border:6px solid var(--line);display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:20px;}
+  .ov .rest-ring::before{content:'';position:absolute;inset:-6px;border-radius:50%;background:conic-gradient(var(--accent) 0% 62%, transparent 62% 100%);
+    -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 6px),#000 calc(100% - 6px));
+            mask:radial-gradient(farthest-side,transparent calc(100% - 6px),#000 calc(100% - 6px));}
+  .ov .rest-time{font-family:'JetBrains Mono',monospace;font-size:30px;font-weight:700;color:var(--accent);letter-spacing:-1px;z-index:1;text-shadow:0 0 16px rgba(198,255,61,0.4);}
+  .ov .rest-adjust{display:flex;gap:6px;margin-bottom:14px;}
+  .ov .rest-adjust div{border:1px solid var(--line);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:8px 10px;border-radius:8px;}
+  .ov .rest-skip{width:100%;border:1px solid var(--accent2);color:var(--accent2);text-align:center;padding:12px 0;border-radius:10px;font-size:14px;font-weight:700;font-family:'Space Grotesk',sans-serif;}
+
+  /* ---- Add exercise sheet ---- */
+  .ov .aes-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:flex-end;}
+  .ov .aes-sheet{width:100%;background:var(--surface2);border-top:1px solid var(--line);border-radius:20px 20px 0 0;padding:14px 16px 20px;max-height:75%;}
+  .ov .aes-handle{width:36px;height:4px;background:var(--line);border-radius:2px;margin:0 auto 14px;}
+  .ov .aes-search{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 14px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+  .ov .aes-sec{font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--muted);margin:10px 0 6px;}
+  .ov .aes-item{display:flex;align-items:center;gap:12px;padding:9px 4px;font-size:13.5px;font-weight:500;color:var(--text);}
+  .ov .aes-item .ic{color:var(--accent);font-size:15px;}
+
+  /* ---- History ---- */
+  .ov .month-hdr{padding:16px 20px 6px;font-size:10.5px;font-weight:700;letter-spacing:1.5px;color:var(--muted);}
+  .ov .list{overflow-y:auto;flex:1;}
+  .ov .session-tile{display:flex;align-items:center;padding:13px 20px;border-bottom:1px solid var(--line);gap:14px;}
+  .ov .date-block{width:38px;flex-shrink:0;}
+  .ov .date-day{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;line-height:1;letter-spacing:-0.5px;color:var(--text);}
+  .ov .date-month{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+  .ov .tile-content{flex:1;min-width:0;}
+  .ov .tile-title{font-size:13.5px;font-weight:600;color:var(--text);}
+  .ov .tile-sub{font-size:11.5px;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+  .ov .tag-live{background:rgba(255,159,28,0.15);color:var(--warm);font-size:8.5px;font-weight:700;padding:2px 6px;border-radius:6px;margin-right:6px;}
+  .ov .chev{color:var(--muted);font-size:16px;}
+  .ov .trash{color:var(--muted);font-size:14px;margin-right:6px;}
+  .ov .dot-fin{width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:12px;box-shadow:0 0 6px rgba(198,255,61,0.5);}
+
+  /* ---- Session Detail ---- */
+  .ov .detail-body{padding:14px;overflow-y:auto;flex:1;}
+  .ov .dcard{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px;}
+  .ov .dcard-title{font-size:14px;font-weight:700;font-family:'Space Grotesk',sans-serif;display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .ov .dcard-title .handle{color:var(--muted);font-size:13px;}
+  .ov .dtable-hdr{display:flex;font-size:10px;font-weight:700;color:var(--muted);border-top:1px solid var(--line);padding-top:8px;letter-spacing:0.5px;}
+  .ov .dtable-hdr div,.ov .dset-row div{flex:1;text-align:center;}
+  .ov .dtable-hdr div:first-child,.ov .dset-row div:first-child{flex:0 0 30px;text-align:left;}
+  .ov .dset-row{display:flex;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;padding:5px 0;align-items:center;color:var(--text);}
+  .ov .prev-block{border-top:1px solid var(--line);margin-top:8px;padding-top:6px;}
+  .ov .prev-label{font-size:9px;font-weight:700;color:var(--muted);letter-spacing:1px;margin-bottom:4px;}
+  .ov .prev-tags{font-size:10.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:10px;font-family:'JetBrains Mono',monospace;}
+
+  /* ---- Stats ---- */
+  .ov .stats-pad{padding:20px;flex:1;overflow:hidden;}
+  .ov .card{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:15px;margin-bottom:12px;}
+  .ov .card .cap{font-size:9.5px;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:10px;}
+  .ov .weekwrap{display:flex;align-items:center;}
+  .ov .weeknum{font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:700;color:var(--accent);line-height:1;}
+  .ov .weeklab{font-size:10px;color:var(--muted);margin-top:2px;}
+  .ov .weekdiv{width:1px;height:38px;background:var(--line);margin:0 20px;}
+  .ov .cal-hd{display:flex;align-items:center;margin-bottom:10px;font-size:11px;color:var(--text);}
+  .ov .cal-hd .t{margin:0 auto;font-weight:700;font-family:'Space Grotesk',sans-serif;}
+  .ov .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;row-gap:6px;}
+  .ov .cal-dow{font-size:9px;color:var(--muted);font-weight:700;}
+  .ov .cal-day{font-size:10.5px;color:var(--muted);width:22px;height:22px;line-height:22px;margin:0 auto;border-radius:5px;font-family:'JetBrains Mono',monospace;}
+  .ov .cal-day.on{background:var(--accent);color:#0A0C0A;font-weight:700;box-shadow:0 0 8px rgba(198,255,61,0.35);}
+  .ov .cal-day.today{border:1px solid var(--accent2);color:var(--accent2);}
+  .ov .prrow{padding:10px 0;border-top:1px solid var(--line);}
+  .ov .prrow .top2{display:flex;align-items:baseline;margin-bottom:6px;}
+  .ov .prrow .n{flex:1;font-size:12.5px;font-weight:600;}
+  .ov .prrow .e{font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:700;color:var(--accent);}
+
+  .callout{max-width:1200px;margin:0 40px 60px;padding:20px 24px;background:#111411;border:1px solid #262a24;border-radius:12px;font-size:13px;line-height:1.8;color:#c4cbc4;}
+  .callout b{display:block;font-size:14px;margin-bottom:6px;color:#eee;}
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1>LIFT · OVERLOAD — ทุกหน้าจอ</h1>
+  <p>ขยายทิศทาง "Overload" ให้ครบทุกหน้าจอตามฟังก์ชันเดิมของแอพ — พื้นดำสนิท เขียวมะนาวเรืองแสงเป็น accent หลัก, Space Grotesk สำหรับหัวข้อ, JetBrains Mono สำหรับตัวเลข/ข้อมูล และแถบ "plate stack" เป็นลายเซ็นแทน progress bar ทั่วไป</p>
+</div>
+
+<div class="board">
+
+  <!-- 1. Home -->
+  <div>
+    <div class="frame-label">1. หน้าหลัก</div>
+    <div class="phone ov">
+      <div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="mono">◼◼◼ 100%</span></div>
+        <div class="pad">
+          <div class="eyebrow disp">OVERLOAD <span class="r">THU 11.07</span></div>
+          <div class="hero">
+            <div class="cap">PUSH DAY</div>
+            <div class="num">4,212<span style="font-size:16px;color:var(--muted);margin-left:6px;">KG</span></div>
+          </div>
+          <div class="timer-line"><span class="d"></span><span class="t">42:18</span></div>
+          <div class="delta">+8.4% <b>vs last time</b></div>
+          <hr>
+          <div class="today-lab">TODAY</div>
+          <div class="ex-list">
+            <div class="excard">
+              <div class="top">Bench Press <span class="pr">PR</span></div>
+              <div class="sub">4 SETS · 82.5 KG AVG · 1,320 KG VOL</div>
+              <div class="plates"><div style="height:16px;"></div><div style="height:14px;"></div><div style="height:16px;"></div><div style="height:12px;"></div><div style="height:16px;"></div><div style="height:8px;"></div></div>
+            </div>
+            <div class="excard">
+              <div class="top">Incline DB Press</div>
+              <div class="sub">3 SETS · 32 KG AVG · 576 KG VOL</div>
+              <div class="plates"><div style="height:11px;"></div><div style="height:9px;"></div><div style="height:11px;"></div><div class="off" style="height:6px;"></div><div class="off" style="height:6px;"></div><div class="off" style="height:6px;"></div></div>
+            </div>
+            <div class="excard">
+              <div class="top">Cable Fly</div>
+              <div class="sub">3 SETS · 18 KG AVG · 324 KG VOL</div>
+              <div class="plates"><div style="height:8px;"></div><div style="height:7px;"></div><div style="height:8px;"></div><div class="off" style="height:5px;"></div><div class="off" style="height:5px;"></div><div class="off" style="height:5px;"></div></div>
+            </div>
+          </div>
+          <div class="actions">
+            <div class="btn btn-fill">CONTINUE →</div>
+            <div class="btn btn-line">DONE</div>
+          </div>
+        </div>
+        <div class="navbar"><div class="on">⬤</div><div>▥</div><div>▲</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Active workout -->
+  <div>
+    <div class="frame-label">2. บันทึกเซ็ต</div>
+    <div class="phone ov">
+      <div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="mono">◼◼◼ 100%</span></div>
+        <div class="appbar">PUSH DAY <span class="ic">⏱</span></div>
+        <div class="aw-body">
+          <div class="ex-card2">
+            <div class="hdr">⋮⋮ BENCH PRESS <span class="spacer"></span><span class="icon">⚙</span><span class="icon">✎</span><span class="icon">🗑</span></div>
+            <div class="set-hdr"><div>SET</div><div>KG</div><div>REPS</div><div>E1RM</div><div></div></div>
+            <div class="set-row2"><div>1</div><div>80</div><div>8</div><div>101</div><div>✕</div></div>
+            <div class="set-row2"><div>2</div><div>82.5<span class="pr-mini">PR</span></div><div>6</div><div>99</div><div>✕</div></div>
+            <div class="set-row2"><div>3</div><div>80</div><div>7</div><div>99</div><div>✕</div></div>
+            <div class="prog-hint">↗ +REPS: 80 KG × 8</div>
+            <div class="warmup-chip">WARM-UP</div>
+            <div class="input-row2">
+              <div class="stepper2">−</div>
+              <div class="input-box2"><span class="lab">KG</span>80</div>
+              <div class="stepper2">+</div>
+              <div class="stepper2">−</div>
+              <div class="input-box2 reps"><span class="lab">REPS</span>8</div>
+              <div class="stepper2">+</div>
+            </div>
+            <div class="add-set-btn2">+ ADD SET</div>
+          </div>
+          <div class="ex-card2">
+            <div class="hdr">⋮⋮ INCLINE DB PRESS <span class="spacer"></span><span class="icon">⚙</span><span class="icon">✎</span><span class="icon">🗑</span></div>
+            <div class="set-hdr"><div>SET</div><div>KG</div><div>REPS</div><div>E1RM</div><div></div></div>
+            <div class="set-row2"><div>1</div><div>32</div><div>10</div><div>43</div><div>✕</div></div>
+            <div class="input-row2">
+              <div class="stepper2">−</div>
+              <div class="input-box2"><span class="lab">KG</span>32</div>
+              <div class="stepper2">+</div>
+              <div class="stepper2">−</div>
+              <div class="input-box2 reps"><span class="lab">REPS</span>10</div>
+              <div class="stepper2">+</div>
+            </div>
+            <div class="add-set-btn2">+ ADD SET</div>
+          </div>
+        </div>
+        <div class="fab">+ ADD EXERCISE</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Rest timer -->
+  <div>
+    <div class="frame-label">3. ตัวจับเวลาพัก</div>
+    <div class="phone ov">
+      <div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="mono">◼◼◼ 100%</span></div>
+        <div class="appbar" style="opacity:0.15;">PUSH DAY</div>
+        <div class="aw-body" style="opacity:0.15;">
+          <div class="ex-card2"><div class="hdr">BENCH PRESS</div></div>
+        </div>
+        <div class="sheet-overlay">
+          <div class="rest-sheet">
+            <div class="rest-handle"></div>
+            <div class="rest-label">REST</div>
+            <div class="rest-ring"><div class="rest-time">00:56</div></div>
+            <div class="rest-adjust"><div>−30s</div><div>−15s</div><div>+15s</div><div>+30s</div></div>
+            <div class="rest-skip">SKIP</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Add exercise sheet -->
+  <div>
+    <div class="frame-label">4. เพิ่มท่าออกกำลังกาย</div>
+    <div class="phone ov">
+      <div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="mono">◼◼◼ 100%</span></div>
+        <div class="appbar" style="opacity:0.15;">PUSH DAY</div>
+        <div class="aw-body" style="opacity:0.15;">
+          <div class="ex-card2"><div class="hdr">BENCH PRESS</div></div>
+        </div>
+        <div class="aes-overlay">
+          <div class="aes-sheet">
+            <div class="aes-handle"></div>
+            <div class="aes-search">🔍 SEARCH EXERCISE...</div>
+            <div class="aes-sec">RECENT</div>
+            <div class="aes-item"><span class="ic">▲</span> Bench Press</div>
+            <div class="aes-item"><span class="ic">▲</span> Squat</div>
+            <div class="aes-item"><span class="ic">▲</span> Deadlift</div>
+            <div class="aes-sec">ALL</div>
+            <div class="aes-item"><span class="ic">▲</span> Cable Fly</div>
+            <div class="aes-item"><span class="ic">▲</span> Incline DB Press</div>
+            <div class="aes-item"><span class="ic">▲</span> Overhead Press</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. History -->
+  <div>
+    <div class="frame-label">5. ประวัติ</div>
+    <div class="phone ov">
+      <div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="mono">◼◼◼ 100%</span></div>
+        <div class="appbar">HISTORY</div>
+        <div class="list">
+          <div class="month-hdr">JUL 2026</div>
+          <div class="session-tile">
+            <div class="date-block"><div class="date-day">11</div><div class="date-month">JUL</div></div>
+            <div class="tile-content"><div class="tile-title">Push Day</div><div class="tile-sub">3 EX · 10 SETS</div></div>
+            <span class="tag-live">LIVE</span><span class="trash">🗑</span><span class="chev">›</span>
+          </div>
+          <div class="session-tile">
+            <div class="date-block"><div class="date-day">09</div><div class="date-month">JUL</div></div>
+            <div class="tile-content"><div class="tile-title">Leg Day</div><div class="tile-sub">5 EX · 16 SETS</div></div>
+            <div class="dot-fin"></div><span class="trash">🗑</span><span class="chev">›</span>
+          </div>
+          <div class="session-tile">
+            <div class="date-block"><div class="date-day">07</div><div class="date-month">JUL</div></div>
+            <div class="tile-content"><div class="tile-title">Pull Day</div><div class="tile-sub">4 EX · 14 SETS</div></div>
+            <div class="dot-fin"></div><span class="trash">🗑</span><span class="chev">›</span>
+          </div>
+          <div class="month-hdr">JUN 2026</div>
+          <div class="session-tile">
+            <div class="date-block"><div class="date-day">28</div><div class="date-month">JUN</div></div>
+            <div class="tile-content"><div class="tile-title">Push Day</div><div class="tile-sub">3 EX · 11 SETS</div></div>
+            <div class="dot-fin"></div><span class="trash">🗑</span><span class="chev">›</span>
+          </div>
+        </div>
+        <div class="navbar"><div>⬤</div><div class="on">▥</div><div>▲</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Session Detail -->
+  <div>
+    <div class="frame-label">6. รายละเอียด Session</div>
+    <div class="phone ov">
+      <div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="mono">◼◼◼ 100%</span></div>
+        <div class="appbar" style="display:block;line-height:1.2;padding-top:6px;">PUSH DAY<div style="font-size:10.5px;font-weight:400;color:var(--muted);font-family:'JetBrains Mono',monospace;">11.07.2026</div></div>
+        <div class="detail-body">
+          <div class="dcard">
+            <div class="dcard-title"><span class="handle">⋮⋮</span> BENCH PRESS</div>
+            <div class="dtable-hdr"><div>SET</div><div>KG</div><div>REPS</div></div>
+            <div class="dset-row"><div>1</div><div>80</div><div>8</div></div>
+            <div class="dset-row"><div>2</div><div>82.5</div><div>6</div></div>
+            <div class="dset-row"><div>3</div><div>80</div><div>7</div></div>
+            <div class="prev-block">
+              <div class="prev-label">LAST TIME</div>
+              <div class="prev-tags"><span>1: 77.5×8</span><span>2: 80×6</span><span>3: 77.5×7</span></div>
+            </div>
+          </div>
+          <div class="dcard">
+            <div class="dcard-title"><span class="handle">⋮⋮</span> INCLINE DB PRESS</div>
+            <div class="dtable-hdr"><div>SET</div><div>KG</div><div>REPS</div></div>
+            <div class="dset-row"><div>1</div><div>32</div><div>10</div></div>
+            <div class="dset-row"><div>2</div><div>32</div><div>9</div></div>
+            <div class="dset-row"><div>3</div><div>30</div><div>10</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Stats -->
+  <div>
+    <div class="frame-label">7. สถิติ</div>
+    <div class="phone ov">
+      <div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="mono">◼◼◼ 100%</span></div>
+        <div class="appbar">STATS <span class="ic">↻</span></div>
+        <div class="stats-pad">
+          <div class="card">
+            <div class="cap">THIS WEEK</div>
+            <div class="weekwrap">
+              <div><div class="weeknum">4</div><div class="weeklab">SESSIONS</div></div>
+              <div class="weekdiv"></div>
+              <div><div class="weeknum">42</div><div class="weeklab">SETS</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="cal-hd"><span>‹</span><span class="t">JUL 2026</span><span>›</span></div>
+            <div class="cal-grid">
+              <div class="cal-dow">M</div><div class="cal-dow">T</div><div class="cal-dow">W</div><div class="cal-dow">T</div><div class="cal-dow">F</div><div class="cal-dow">S</div><div class="cal-dow">S</div>
+              <div></div><div></div><div class="cal-day on">1</div><div class="cal-day">2</div><div class="cal-day on">3</div><div class="cal-day">4</div><div class="cal-day">5</div>
+              <div class="cal-day">6</div><div class="cal-day on">7</div><div class="cal-day">8</div><div class="cal-day on">9</div><div class="cal-day">10</div><div class="cal-day today">11</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="cap">MAX LIFTS</div>
+            <div class="prrow"><div class="top2"><span class="n">Bench Press</span><span class="e">101 KG</span></div>
+              <div class="plates"><div style="height:14px;"></div><div style="height:14px;"></div><div style="height:14px;"></div><div style="height:14px;"></div><div style="height:14px;"></div><div style="height:14px;"></div><div style="height:14px;"></div><div style="height:14px;"></div></div>
+            </div>
+            <div class="prrow"><div class="top2"><span class="n">Squat</span><span class="e">132 KG</span></div>
+              <div class="plates"><div style="height:14px;"></div><div style="height:14px;"></div><div style="height:14px;"></div><div style="height:14px;"></div><div style="height:14px;"></div><div class="off" style="height:9px;"></div></div>
+            </div>
+            <div class="prrow"><div class="top2"><span class="n">Deadlift</span><span class="e">158 KG</span></div>
+              <div class="plates"><div style="height:14px;"></div><div style="height:14px;"></div><div style="height:14px;"></div><div style="height:14px;"></div><div style="height:14px;"></div><div style="height:14px;"></div><div class="off" style="height:10px;"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="navbar"><div>⬤</div><div>▥</div><div class="on">▲</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="callout">
+  <b>Design tokens — Overload</b>
+  BG <code>#0A0C0A</code> · Surface <code>#15181580 / #1B1F1B</code> · Accent (lime) <code>#C6FF3D</code> · Accent2 (PR/warning) <code>#FF5A3C</code> · Warmup <code>#FF9F1C</code> · Text <code>#F2F5EF</code> · Muted <code>#7C8A7C</code> · Line <code>#262A24</code><br>
+  Display: Space Grotesk (700) · Data/numbers: JetBrains Mono · Body: Inter — signature: "plate stack" bar แทน progress bar ทุกจุดที่ต้องแสดงสัดส่วน (volume, e1RM เทียบท่าอื่น)
+</div>
+
+</body>
+</html>

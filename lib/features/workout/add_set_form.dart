@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers/unit_provider.dart';
 
-const _kAccent = Color(0xFF16A34A);
-const _kTextSec = Color(0xFF444444);
-const _kTextMuted = Color(0xFF888888);
-const _kBorder = Color(0xFFBFDFBF);
-const _kSurfaceHi = Color(0xFFEAF5EA);
+const _kAccent = Color(0xFFC6FF3D);
+const _kTextSec = Color(0xFFB8C2B4);
+const _kTextMuted = Color(0xFF7C8A7C);
+const _kBorder = Color(0xFF262A24);
+const _kSurfaceHi = Color(0xFF15181A);
 
 class AddSetForm extends ConsumerStatefulWidget {
   final void Function(double weight, int reps, bool isWarmup) onAdd;
@@ -182,10 +182,10 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
                 duration: const Duration(milliseconds: 150),
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: _isWarmup ? Colors.orange.withValues(alpha: 0.18) : _kSurfaceHi,
+                  color: _isWarmup ? const Color(0xFFFF9F1C).withValues(alpha: 0.18) : _kSurfaceHi,
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: _isWarmup ? Colors.orange : _kBorder,
+                    color: _isWarmup ? const Color(0xFFFF9F1C) : _kBorder,
                     width: 1,
                   ),
                 ),
@@ -194,7 +194,7 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: _isWarmup ? Colors.orange : _kTextSec,
+                    color: _isWarmup ? const Color(0xFFFF9F1C) : _kTextSec,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -250,7 +250,7 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
               onPressed: () => _submit(isLbs),
               style: _isWarmup
                   ? FilledButton.styleFrom(
-                      backgroundColor: Colors.orange.withValues(alpha: 0.7),
+                      backgroundColor: const Color(0xFFFF9F1C).withValues(alpha: 0.7),
                       foregroundColor: Colors.white,
                     )
                   : null,

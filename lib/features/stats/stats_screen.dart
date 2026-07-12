@@ -1,10 +1,12 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
 import '../../core/database/session_dao.dart';
 import '../../core/database/set_dao.dart';
 import '../../core/providers/unit_provider.dart';
+import '../../core/widgets/plate_stack.dart';
 import 'stats_provider.dart';
 
 class StatsScreen extends ConsumerStatefulWidget {
@@ -101,7 +103,7 @@ class _CalendarCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const accent = Color(0xFF16A34A);
+    const accent = Color(0xFFC6FF3D);
     final today = DateTime.now();
     final todayStr = _fmt(today);
 
@@ -149,7 +151,7 @@ class _CalendarCard extends StatelessWidget {
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 1,
-                    color: Color(0xFF888888),
+                    color: Color(0xFF7C8A7C),
                   ),
                 ),
                 const Spacer(),
@@ -167,17 +169,17 @@ class _CalendarCard extends StatelessWidget {
                     children: [
                       Text(
                         monthLabel,
-                        style: const TextStyle(
+                        style: GoogleFonts.spaceGrotesk(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF111111),
+                          color: const Color(0xFFF2F5EF),
                         ),
                       ),
                       const SizedBox(width: 2),
                       const Icon(
                         Icons.arrow_drop_down,
                         size: 18,
-                        color: Color(0xFF888888),
+                        color: Color(0xFF7C8A7C),
                       ),
                     ],
                   ),
@@ -207,7 +209,7 @@ class _CalendarCard extends StatelessWidget {
                           d,
                           style: const TextStyle(
                             fontSize: 11,
-                            color: Color(0xFF888888),
+                            color: Color(0xFF7C8A7C),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -264,32 +266,40 @@ class _CalendarCard extends StatelessWidget {
                                   width: 30,
                                   height: 30,
                                   decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
+                                    borderRadius: BorderRadius.circular(5),
                                     color: isWorked
                                         ? accent
                                         : isToday
-                                        ? const Color(0xFFEAF5EA)
+                                        ? const Color(0xFF15181A)
                                         : Colors.transparent,
                                     border: isToday && !isWorked
                                         ? Border.all(
-                                            color: const Color(0xFF888888),
+                                            color: const Color(0xFF7C8A7C),
                                             width: 1,
                                           )
+                                        : null,
+                                    boxShadow: isWorked
+                                        ? [
+                                            BoxShadow(
+                                              color: accent.withValues(alpha: 0.35),
+                                              blurRadius: 8,
+                                            ),
+                                          ]
                                         : null,
                                   ),
                                   child: Center(
                                     child: Text(
                                       '$day',
-                                      style: TextStyle(
+                                      style: GoogleFonts.jetBrainsMono(
                                         fontSize: 12,
                                         fontWeight: isWorked
                                             ? FontWeight.w700
                                             : FontWeight.w400,
                                         color: isWorked
-                                            ? Colors.white
+                                            ? const Color(0xFF0A0C0A)
                                             : isFuture
-                                            ? const Color(0xFFBFDFBF)
-                                            : const Color(0xFF888888),
+                                            ? const Color(0xFF262A24)
+                                            : const Color(0xFF7C8A7C),
                                       ),
                                     ),
                                   ),
@@ -312,7 +322,7 @@ class _CalendarCard extends StatelessWidget {
                 _LegendDot(color: accent, label: 'เล่นแล้ว'),
                 const SizedBox(width: 16),
                 const _LegendDot(
-                  color: Color(0xFF888888),
+                  color: Color(0xFF7C8A7C),
                   label: 'ยังไม่ได้เล่น',
                 ),
                 const Spacer(),
@@ -354,15 +364,15 @@ class _NavBtn extends StatelessWidget {
         width: 30,
         height: 30,
         decoration: BoxDecoration(
-          color: const Color(0xFFBFDFBF),
+          color: const Color(0xFF262A24),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
           icon,
           size: 18,
           color: onTap == null
-              ? const Color(0xFFBFDFBF)
-              : const Color(0xFF888888),
+              ? const Color(0xFF262A24)
+              : const Color(0xFF7C8A7C),
         ),
       ),
     );
@@ -410,7 +420,7 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
-    const accent = Color(0xFF16A34A);
+    const accent = Color(0xFFC6FF3D);
     return AlertDialog(
       contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       content: Column(
@@ -463,11 +473,7 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
                         child: Container(
                           height: 36,
                           decoration: BoxDecoration(
-                            color: isCurrent
-                                ? accent
-                                : disabled
-                                ? const Color(0xFFF0F0F0)
-                                : const Color(0xFFEAF5EA),
+                            color: isCurrent ? accent : const Color(0xFF15181A),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           alignment: Alignment.center,
@@ -477,9 +483,9 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                               color: isCurrent
-                                  ? Colors.white
+                                  ? const Color(0xFF0A0C0A)
                                   : disabled
-                                  ? const Color(0xFFBBBBBB)
+                                  ? const Color(0xFF4A544A)
                                   : accent,
                             ),
                           ),
@@ -521,8 +527,8 @@ class _WeeklyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const textPrimary = Color(0xFF111111);
-    const textMuted = Color(0xFF888888);
+    const textPrimary = Color(0xFFF2F5EF);
+    const textMuted = Color(0xFF7C8A7C);
 
     final now = DateTime.now();
     final thisMonday = now.subtract(Duration(days: now.weekday - 1));
@@ -554,9 +560,9 @@ class _WeeklyCard extends StatelessWidget {
                     children: [
                       Text(
                         '$thisSessions',
-                        style: const TextStyle(
+                        style: GoogleFonts.spaceGrotesk(
                           fontSize: 32,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                           height: 1,
                           color: textPrimary,
                         ),
@@ -570,7 +576,7 @@ class _WeeklyCard extends StatelessWidget {
                   ),
                 ),
                 // Divider
-                Container(width: 1, height: 56, color: const Color(0xFFE0E0E0)),
+                Container(width: 1, height: 56, color: const Color(0xFF262A24)),
                 const SizedBox(width: 16),
                 // Sets
                 Expanded(
@@ -579,9 +585,9 @@ class _WeeklyCard extends StatelessWidget {
                     children: [
                       Text(
                         '$thisWeekSets',
-                        style: const TextStyle(
+                        style: GoogleFonts.spaceGrotesk(
                           fontSize: 32,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                           height: 1,
                           color: textPrimary,
                         ),
@@ -652,9 +658,9 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
 
   @override
   Widget build(BuildContext context) {
-    const textPrimary = Color(0xFF111111);
-    const textMuted = Color(0xFF888888);
-    const accent = Color(0xFF16A34A);
+    const textPrimary = Color(0xFFF2F5EF);
+    const textMuted = Color(0xFF7C8A7C);
+    const accent = Color(0xFFC6FF3D);
 
     final isLbs = ref.watch(isLbsProvider);
     final unit = isLbs ? 'lbs' : 'kg';
@@ -709,7 +715,7 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
                         const Icon(
                           Icons.arrow_drop_down,
                           size: 18,
-                          color: Color(0xFF888888),
+                          color: Color(0xFF7C8A7C),
                         ),
                       ],
                     ),
@@ -727,7 +733,7 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
                 padding: EdgeInsets.symmetric(vertical: 16),
                 child: Text(
                   'ยังไม่มีข้อมูล',
-                  style: TextStyle(color: Color(0xFF888888), fontSize: 13),
+                  style: TextStyle(color: Color(0xFF7C8A7C), fontSize: 13),
                 ),
               )
             else ...[
@@ -758,11 +764,11 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF888888),
+                              color: Color(0xFF7C8A7C),
                             ),
                           ),
                           SizedBox(width: 2),
-                          Icon(Icons.info_outline, size: 10, color: Color(0xFF888888)),
+                          Icon(Icons.info_outline, size: 10, color: Color(0xFF7C8A7C)),
                         ],
                       ),
                     ),
@@ -826,7 +832,7 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
                               child: Text(
                                 '${fmtNum(e1rmDisplay)} $unit',
                                 textAlign: TextAlign.right,
-                                style: const TextStyle(
+                                style: GoogleFonts.jetBrainsMono(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700,
                                   color: accent,
@@ -838,7 +844,7 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
                               child: Text(
                                 '${fmtNum(bestW)}×${p.prReps}',
                                 textAlign: TextAlign.right,
-                                style: const TextStyle(
+                                style: GoogleFonts.jetBrainsMono(
                                   fontSize: 11,
                                   color: textMuted,
                                 ),
@@ -849,7 +855,7 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
                               child: Text(
                                 '${p.totalSets}',
                                 textAlign: TextAlign.right,
-                                style: const TextStyle(
+                                style: GoogleFonts.jetBrainsMono(
                                   fontSize: 13,
                                   color: textMuted,
                                 ),
@@ -858,17 +864,7 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
                           ],
                         ),
                         const SizedBox(height: 5),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(2),
-                          child: LinearProgressIndicator(
-                            value: ratio,
-                            minHeight: 3,
-                            backgroundColor: const Color(0xFFF0F0F0),
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              accent.withValues(alpha: 0.7),
-                            ),
-                          ),
-                        ),
+                        PlateStack(ratio: ratio),
                       ],
                     ),
                   );
@@ -954,7 +950,7 @@ class _ExerciseChartState extends ConsumerState<_ExerciseChart> {
   Widget build(BuildContext context) {
     final isLbs = ref.watch(isLbsProvider);
     final unit = isLbs ? 'lbs' : 'kg';
-    const accent = Color(0xFF16A34A);
+    const accent = Color(0xFFC6FF3D);
 
     final displayData = _showMaxWeight
         ? widget.maxWeightHistory
@@ -1004,7 +1000,7 @@ class _ExerciseChartState extends ConsumerState<_ExerciseChart> {
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1,
-                color: Color(0xFF888888),
+                color: Color(0xFF7C8A7C),
               ),
             ),
             const SizedBox(height: 6),
@@ -1018,7 +1014,7 @@ class _ExerciseChartState extends ConsumerState<_ExerciseChart> {
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF111111),
+                      color: Color(0xFFF2F5EF),
                     ),
                   ),
                 ),
@@ -1030,9 +1026,9 @@ class _ExerciseChartState extends ConsumerState<_ExerciseChart> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEAF5EA),
+                      color: const Color(0xFF15181A),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFBFDFBF)),
+                      border: Border.all(color: const Color(0xFF262A24)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -1043,8 +1039,8 @@ class _ExerciseChartState extends ConsumerState<_ExerciseChart> {
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: _showMaxWeight
-                                ? const Color(0xFF3A3845)
-                                : const Color(0xFF111111),
+                                ? const Color(0xFF7C8A7C)
+                                : const Color(0xFFF2F5EF),
                           ),
                         ),
                         const Padding(
@@ -1053,7 +1049,7 @@ class _ExerciseChartState extends ConsumerState<_ExerciseChart> {
                             '|',
                             style: TextStyle(
                               fontSize: 10,
-                              color: Color(0xFF3A3845),
+                              color: Color(0xFF7C8A7C),
                             ),
                           ),
                         ),
@@ -1063,8 +1059,8 @@ class _ExerciseChartState extends ConsumerState<_ExerciseChart> {
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: _showMaxWeight
-                                ? const Color(0xFF111111)
-                                : const Color(0xFF3A3845),
+                                ? const Color(0xFFF2F5EF)
+                                : const Color(0xFF7C8A7C),
                           ),
                         ),
                       ],
@@ -1084,7 +1080,7 @@ class _ExerciseChartState extends ConsumerState<_ExerciseChart> {
                     show: true,
                     horizontalInterval: interval,
                     getDrawingHorizontalLine: (_) =>
-                        const FlLine(color: Color(0xFFBFDFBF), strokeWidth: 1),
+                        const FlLine(color: Color(0xFF262A24), strokeWidth: 1),
                     drawVerticalLine: false,
                   ),
                   borderData: FlBorderData(show: false),
@@ -1105,7 +1101,7 @@ class _ExerciseChartState extends ConsumerState<_ExerciseChart> {
                             display,
                             style: const TextStyle(
                               fontSize: 10,
-                              color: Color(0xFF888888),
+                              color: Color(0xFF7C8A7C),
                             ),
                           );
                         },
@@ -1129,7 +1125,7 @@ class _ExerciseChartState extends ConsumerState<_ExerciseChart> {
                               label,
                               style: const TextStyle(
                                 fontSize: 9,
-                                color: Color(0xFF888888),
+                                color: Color(0xFF7C8A7C),
                               ),
                             ),
                           );
@@ -1213,14 +1209,14 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
   Widget build(BuildContext context) {
     final isLbs = ref.watch(isLbsProvider);
     final unit = isLbs ? 'lbs' : 'kg';
-    const accent = Color(0xFF16A34A);
+    const accent = Color(0xFFC6FF3D);
     final dateLabel = _formatDate(widget.dateStr);
 
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFFF4FAF4),
+        color: Color(0xFF1B1F1B),
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        border: Border(top: BorderSide(color: Color(0xFFBFDFBF), width: 0.5)),
+        border: Border(top: BorderSide(color: Color(0xFF262A24), width: 0.5)),
       ),
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
@@ -1236,7 +1232,7 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: const Color(0xFFBFDFBF),
+                color: const Color(0xFF262A24),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -1252,7 +1248,7 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
                   height: 8,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: widget.isWorked ? accent : const Color(0xFF888888),
+                    color: widget.isWorked ? accent : const Color(0xFF7C8A7C),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -1261,7 +1257,7 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF111111),
+                    color: Color(0xFFF2F5EF),
                   ),
                 ),
               ],
@@ -1282,14 +1278,14 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
                   const Icon(
                     Icons.hotel_outlined,
                     size: 18,
-                    color: Color(0xFF888888),
+                    color: Color(0xFF7C8A7C),
                   ),
                   const SizedBox(width: 10),
                   Text(
                     'วันพักผ่อน',
                     style: TextStyle(
                       fontSize: 14,
-                      color: const Color(0xFF888888),
+                      color: const Color(0xFF7C8A7C),
                     ),
                   ),
                 ],
@@ -1315,7 +1311,7 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF111111),
+                          color: Color(0xFFF2F5EF),
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -1333,7 +1329,7 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
                                   '${e.key + 1}',
                                   style: const TextStyle(
                                     fontSize: 12,
-                                    color: Color(0xFF888888),
+                                    color: Color(0xFF7C8A7C),
                                   ),
                                 ),
                               ),
@@ -1341,7 +1337,7 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
                                 '$wStr × ${s.reps} reps',
                                 style: const TextStyle(
                                   fontSize: 13,
-                                  color: Color(0xFF888888),
+                                  color: Color(0xFF7C8A7C),
                                 ),
                               ),
                             ],

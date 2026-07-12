@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/database/exercise_dao.dart';
 import '../../core/database/set_dao.dart';
 import '../../core/models/exercise.dart';
@@ -8,9 +9,9 @@ import '../../core/models/workout_set.dart';
 import '../../core/providers/unit_provider.dart';
 import 'history_provider.dart';
 
-const _kTextPrimary = Color(0xFF111111);
-const _kTextSec = Color(0xFF444444);
-const _kTextMuted = Color(0xFF888888);
+const _kTextPrimary = Color(0xFFF2F5EF);
+const _kTextSec = Color(0xFFB8C2B4);
+const _kTextMuted = Color(0xFF7C8A7C);
 
 class SessionDetailScreen extends ConsumerStatefulWidget {
   final int sessionId;
@@ -124,7 +125,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                         Expanded(
                           child: Text(
                             item.exercise.name,
-                            style: const TextStyle(
+                            style: GoogleFonts.spaceGrotesk(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
                               letterSpacing: -0.2,
@@ -167,12 +168,12 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                                     ? Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: Colors.orange.withValues(alpha: 0.18),
+                                          color: const Color(0xFFFF9F1C).withValues(alpha: 0.18),
                                           borderRadius: BorderRadius.circular(4),
                                         ),
                                         child: const Text('W',
                                             style: TextStyle(
-                                                fontSize: 11, color: Colors.orange, fontWeight: FontWeight.w700)),
+                                                fontSize: 11, color: Color(0xFFFF9F1C), fontWeight: FontWeight.w700)),
                                       )
                                     : Text('${s.setNumber}',
                                         style: const TextStyle(fontSize: 13, color: _kTextSec)),
@@ -181,7 +182,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                                 child: Text(
                                   s.weightKg.display(isLbs),
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(
+                                  style: GoogleFonts.jetBrainsMono(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
                                       color: s.isWarmup ? _kTextSec : _kTextPrimary),
@@ -191,7 +192,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                                 child: Text(
                                   '${s.reps}',
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(
+                                  style: GoogleFonts.jetBrainsMono(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
                                       color: s.isWarmup ? _kTextSec : _kTextPrimary),
