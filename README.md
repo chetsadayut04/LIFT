@@ -1,4 +1,4 @@
-# weightlifting_tracker
+#  LIFT
 
 A new Flutter project.
 
