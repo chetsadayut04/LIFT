@@ -6,23 +6,22 @@ import 'core/database/db_factory.dart';
 import 'core/providers/unit_provider.dart';
 import 'app.dart';
 
-// TODO: Replace with your actual Supabase URL and Anon Key
-const String _supabaseUrl = 'YOUR_SUPABASE_URL';
-const String _supabaseAnonKey = 'YOUR_ANON_KEY';
+const String _supabaseUrl = 'https://tscsqdhnkfqvqcadvkdx.supabase.co';
+const String _supabaseAnonKey =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzY3NxaGRua2ZxdnFjYWR2a2R4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwNjc4MTksImV4cCI6MjA2MjY0MzgxOX0.D26d-j8Q2y09sR-4t9nQ-3y1b4UfJc6s7UjXyN6d2uA';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  await Supabase.initialize(
-    url: _supabaseUrl,
-    anonKey: _supabaseAnonKey,
-  );
+
+  await Supabase.initialize(url: _supabaseUrl, anonKey: _supabaseAnonKey);
 
   initDatabaseFactory();
   final prefs = await SharedPreferences.getInstance();
   final isLbs = prefs.getBool('is_lbs') ?? false;
-  runApp(ProviderScope(
-    overrides: [unitInitProvider.overrideWithValue(isLbs)],
-    child: const App(),
-  ));
+  runApp(
+    ProviderScope(
+      overrides: [unitInitProvider.overrideWithValue(isLbs)],
+      child: const App(),
+    ),
+  );
 }
