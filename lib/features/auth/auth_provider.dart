@@ -1,10 +1,19 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthNotifier extends StateNotifier<User?> {
   late final StreamSubscription<AuthState> _authSubscription;
   final SupabaseClient _client = Supabase.instance.client;
+
+  // TODO: ใส่ Client ID จาก Google Cloud Console (ถ้ามี)
+  static const String _webClientId =
+      '249414775385-nns3pm0jb7hgd6lb554cqpg5e78kpurb.apps.googleusercontent.com';
+  static const String _iosClientId =
+      '249414775385-nns3pm0jb7hgd6lb554cqpg5e78kpurb.apps.googleusercontent.com';
 
   AuthNotifier() : super(Supabase.instance.client.auth.currentUser) {
     _authSubscription = _client.auth.onAuthStateChange.listen((data) {
@@ -20,9 +29,66 @@ class AuthNotifier extends StateNotifier<User?> {
   }
 
   Future<void> signUpWithEmail(String email, String password) async {
-    await _client.auth.signUp(
-      email: email.trim(),
-      password: password,
+    await _client.auth.signUp(email: email.trim(), password: password);
+  }
+
+  Future<void> signInWithGoogle() async {
+    final GoogleSignIn googleSignIn;
+    if (kIsWeb) {
+      googleSignIn = GoogleSignIn(
+        clientId: _webClientId != 'YOUR_GOOGLE_WEB_CLIENT_ID'
+            ? _webClientId
+            : null,
+        scopes: ['email', 'openid'],
+      );
+    } else {
+      googleSignIn = GoogleSignIn(
+        clientId:
+            defaultTargetPlatform == TargetPlatform.iOS &&
+                _iosClientId != 'YOUR_GOOGLE_IOS_CLIENT_ID'
+            ? _iosClientId
+            : null,
+        serverClientId: _webClientId != 'YOUR_GOOGLE_WEB_CLIENT_ID'
+            ? _webClientId
+            : null,
+        scopes: ['email', 'openid'],
+      );
+    }
+
+    final googleUser = await googleSignIn.signIn();
+    if (googleUser == null) return; // กดยกเลิก
+
+    final googleAuth = await googleUser.authentication;
+    final idToken = googleAuth.idToken;
+    final accessToken = googleAuth.accessToken;
+
+    if (idToken == null) {
+      throw Exception('ไม่พบ ID Token จากระบบ Google Sign-In');
+    }
+
+    await _client.auth.signInWithIdToken(
+      provider: OAuthProvider.google,
+      idToken: idToken,
+      accessToken: accessToken,
+    );
+  }
+
+  Future<void> signInWithApple() async {
+    final credential = await SignInWithApple.getAppleIDCredential(
+      scopes: [
+        AppleIDAuthorizationScopes.email,
+        AppleIDAuthorizationScopes.fullName,
+      ],
+    );
+
+    final idToken = credential.identityToken;
+    if (idToken == null) {
+      throw Exception('ไม่พบ Identity Token จากระบบ Apple Sign-In');
+    }
+
+    await _client.auth.signInWithIdToken(
+      provider: OAuthProvider.apple,
+      idToken: idToken,
     );
   }
 

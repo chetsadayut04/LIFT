@@ -67,6 +67,50 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  Future<void> _loginWithGoogle() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      await ref.read(authProvider.notifier).signInWithGoogle();
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString().replaceAll('Exception: ', '').replaceAll('AuthException: ', '');
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loginWithApple() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      await ref.read(authProvider.notifier).signInWithApple();
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString().replaceAll('Exception: ', '').replaceAll('AuthException: ', '');
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     const bg = Color(0xFF0A0C0A);
@@ -265,6 +309,72 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               _isSignUp ? 'สร้างบัญชีผู้ใช้' : 'เข้าสู่ระบบ',
                               style: const TextStyle(fontSize: 15),
                             ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Divider "หรือ"
+                  const Row(
+                    children: [
+                      Expanded(child: Divider()),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'หรือเข้าสู่ระบบด้วย',
+                          style: TextStyle(color: textMuted, fontSize: 12),
+                        ),
+                      ),
+                      Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Google Login Button
+                  OutlinedButton(
+                    onPressed: _isLoading ? null : _loginWithGoogle,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: textPrimary,
+                      side: const BorderSide(color: border),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.g_mobiledata, size: 28),
+                        SizedBox(width: 4),
+                        Text(
+                          'Google',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Apple Login Button
+                  OutlinedButton(
+                    onPressed: _isLoading ? null : _loginWithApple,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: textPrimary,
+                      side: const BorderSide(color: border),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.apple, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Apple',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ],
                     ),
                   ),
                 ],

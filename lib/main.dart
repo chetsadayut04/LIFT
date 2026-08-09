@@ -8,12 +8,15 @@ import 'app.dart';
 
 const String _supabaseUrl = 'https://tscsqdhnkfqvqcadvkdx.supabase.co';
 const String _supabaseAnonKey =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzY3NxaGRua2ZxdnFjYWR2a2R4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcwNjc4MTksImV4cCI6MjA2MjY0MzgxOX0.D26d-j8Q2y09sR-4t9nQ-3y1b4UfJc6s7UjXyN6d2uA';
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzY3NxZGhua2ZxdnFjYWR2a2R4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYyODI3NTAsImV4cCI6MjEwMTg1ODc1MH0.Cck9mgHyZugIki8pM2wHE9BeZPVnT_um1Ue1ygDTva8';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Supabase.initialize(url: _supabaseUrl, anonKey: _supabaseAnonKey);
+  await Supabase.initialize(
+    url: _supabaseUrl,
+    anonKey: _supabaseAnonKey,
+  );
 
   initDatabaseFactory();
   final prefs = await SharedPreferences.getInstance();
