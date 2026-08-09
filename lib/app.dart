@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'features/auth/auth_provider.dart';
+import 'features/auth/login_screen.dart';
+import 'features/profile/profile_screen.dart';
 import 'features/history/history_provider.dart';
 import 'features/history/history_screen.dart';
 import 'features/home/home_provider.dart';
@@ -30,45 +33,55 @@ class _AppState extends ConsumerState<App> {
     HomeScreen(),
     HistoryScreen(),
     StatsScreen(),
+    ProfileScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(authProvider);
+
     return MaterialApp(
       title: 'LIFT',
       debugShowCheckedModeBanner: false,
       theme: _theme(),
-      home: Scaffold(
-        body: IndexedStack(index: _currentIndex, children: _screens),
-        bottomNavigationBar: Container(
-          decoration: const BoxDecoration(
-            border: Border(
-              top: BorderSide(color: Color(0xFF262A24), width: 0.5),
+      home: user == null
+          ? const LoginScreen()
+          : Scaffold(
+              body: IndexedStack(index: _currentIndex, children: _screens),
+              bottomNavigationBar: Container(
+                decoration: const BoxDecoration(
+                  border: Border(
+                    top: BorderSide(color: Color(0xFF262A24), width: 0.5),
+                  ),
+                ),
+                child: NavigationBar(
+                  selectedIndex: _currentIndex,
+                  onDestinationSelected: _onTabChanged,
+                  destinations: const [
+                    NavigationDestination(
+                      icon: Icon(Icons.home_outlined),
+                      selectedIcon: Icon(Icons.home),
+                      label: 'หน้าหลัก',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.history_outlined),
+                      selectedIcon: Icon(Icons.history),
+                      label: 'ประวัติ',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.bar_chart_outlined),
+                      selectedIcon: Icon(Icons.bar_chart),
+                      label: 'สถิติ',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.person_outline),
+                      selectedIcon: Icon(Icons.person),
+                      label: 'โปรไฟล์',
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-          child: NavigationBar(
-            selectedIndex: _currentIndex,
-            onDestinationSelected: _onTabChanged,
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home),
-                label: 'หน้าหลัก',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.history_outlined),
-                selectedIcon: Icon(Icons.history),
-                label: 'ประวัติ',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.bar_chart_outlined),
-                selectedIcon: Icon(Icons.bar_chart),
-                label: 'สถิติ',
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 

@@ -41,6 +41,7 @@ dependencies:
   sqflite_common_ffi_web: ^1.0.2
   shared_preferences: ^2.5.5
   google_fonts: ^6.2.1
+  supabase_flutter: ^2.8.3
 
 dev_dependencies:
   flutter_test:
