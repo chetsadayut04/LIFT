@@ -352,31 +352,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
-
                   // Apple Login Button
-                  OutlinedButton(
-                    onPressed: _isLoading ? null : _loginWithApple,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: textPrimary,
-                      side: const BorderSide(color: border),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                  if (Theme.of(context).platform == TargetPlatform.iOS) ...[
+                    const SizedBox(height: 12),
+                    OutlinedButton(
+                      onPressed: _isLoading ? null : _loginWithApple,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: textPrimary,
+                        side: const BorderSide(color: border),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.apple, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'Apple',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ],
                       ),
                     ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.apple, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          'Apple',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-                  ),
+                  ],
                 ],
               ),
             ),

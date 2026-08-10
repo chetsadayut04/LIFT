@@ -228,6 +228,12 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState> {
     state = state.copyWith(session: state.session!.copyWith(name: name));
   }
 
+  Future<void> finishSession() async {
+    if (state.session == null) return;
+    await _sessionDao.finishSession(state.session!.id!);
+    clearSession();
+  }
+
   void clearSession() {
     state = const ActiveWorkoutState();
   }

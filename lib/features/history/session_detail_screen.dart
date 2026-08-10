@@ -7,11 +7,8 @@ import '../../core/models/exercise.dart';
 import '../../core/models/session.dart';
 import '../../core/models/workout_set.dart';
 import '../../core/providers/unit_provider.dart';
+import '../../core/providers/translation_provider.dart';
 import 'history_provider.dart';
-
-const _kTextPrimary = Color(0xFFF2F5EF);
-const _kTextSec = Color(0xFFB8C2B4);
-const _kTextMuted = Color(0xFF7C8A7C);
 
 class SessionDetailScreen extends ConsumerStatefulWidget {
   final int sessionId;
@@ -67,10 +64,15 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   Widget build(BuildContext context) {
     final isLbs = ref.watch(isLbsProvider);
     final unit = isLbs ? 'lbs' : 'kg';
+    final lang = ref.watch(languageProvider);
+
+    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
+    final textSec = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+    final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
 
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('รายละเอียด')),
+        appBar: AppBar(title: Text(lang.tr('history_detail_title'))),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -88,9 +90,9 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
             if (session.name != null)
               Text(
                 dateStr,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: _kTextSec,
+                  color: textSec,
                   fontWeight: FontWeight.w400,
                 ),
               ),
@@ -117,9 +119,9 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                       children: [
                         ReorderableDragStartListener(
                           index: i,
-                          child: const Padding(
-                            padding: EdgeInsets.only(right: 10),
-                            child: Icon(Icons.drag_handle, size: 18, color: _kTextMuted),
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 10),
+                            child: Icon(Icons.drag_handle, size: 18, color: textMuted),
                           ),
                         ),
                         Expanded(
@@ -129,7 +131,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
                               letterSpacing: -0.2,
-                              color: _kTextPrimary,
+                              color: textPrimary,
                             ),
                           ),
                         ),
@@ -140,20 +142,21 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const SizedBox(
+                        SizedBox(
                           width: 36,
                           child: Text('Set',
-                              style: TextStyle(fontSize: 11, color: _kTextSec, fontWeight: FontWeight.w600)),
+                              style: TextStyle(fontSize: 11, color: textSec, fontWeight: FontWeight.w600)),
                         ),
                         Expanded(
                           child: Text(unit,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 11, color: _kTextSec, fontWeight: FontWeight.w600)),
+                              style: TextStyle(fontSize: 11, color: textSec, fontWeight: FontWeight.w600)),
                         ),
-                        const Expanded(
+                        SizedBox(
+                          width: 60,
                           child: Text('Reps',
                               textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 11, color: _kTextSec, fontWeight: FontWeight.w600)),
+                              style: TextStyle(fontSize: 11, color: textSec, fontWeight: FontWeight.w600)),
                         ),
                       ],
                     ),
@@ -176,7 +179,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                                                 fontSize: 11, color: Color(0xFFFF9F1C), fontWeight: FontWeight.w700)),
                                       )
                                     : Text('${s.setNumber}',
-                                        style: const TextStyle(fontSize: 13, color: _kTextSec)),
+                                        style: TextStyle(fontSize: 13, color: textSec)),
                               ),
                               Expanded(
                                 child: Text(
@@ -185,17 +188,18 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                                   style: GoogleFonts.jetBrainsMono(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
-                                      color: s.isWarmup ? _kTextSec : _kTextPrimary),
+                                      color: s.isWarmup ? textSec : textPrimary),
                                 ),
                               ),
-                              Expanded(
+                              SizedBox(
+                                width: 60,
                                 child: Text(
                                   '${s.reps}',
                                   textAlign: TextAlign.center,
                                   style: GoogleFonts.jetBrainsMono(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
-                                      color: s.isWarmup ? _kTextSec : _kTextPrimary),
+                                      color: s.isWarmup ? textSec : textPrimary),
                                 ),
                               ),
                             ],
@@ -212,12 +216,12 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                           children: [
                             const Divider(),
                             const SizedBox(height: 4),
-                            const Text(
-                              'ครั้งก่อน',
+                            Text(
+                              lang.tr('history_prev_sets'),
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w600,
-                                color: _kTextMuted,
+                                color: textMuted,
                                 letterSpacing: 0.5,
                               ),
                             ),
@@ -231,7 +235,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                                 final wStr = '${fmtNum(w)} $unit';
                                 return Text(
                                   '${e.key + 1}: $wStr × ${p.reps}',
-                                  style: const TextStyle(fontSize: 12, color: _kTextSec),
+                                  style: TextStyle(fontSize: 12, color: textSec),
                                 );
                               }).toList(),
                             ),

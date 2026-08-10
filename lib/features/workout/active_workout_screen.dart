@@ -2,17 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/providers/unit_provider.dart';
+import '../../core/providers/translation_provider.dart';
 import 'active_workout_provider.dart';
 import 'add_exercise_dialog.dart';
 import 'add_set_form.dart';
 import 'rest_timer_provider.dart';
 import 'rest_timer_widget.dart';
-
-const _kAccent = Color(0xFFC6FF3D);
-const _kTextPrimary = Color(0xFFF2F5EF);
-const _kTextSec = Color(0xFFB8C2B4);
-const _kTextMuted = Color(0xFF7C8A7C);
-const _kBorder = Color(0xFF262A24);
 
 class ActiveWorkoutScreen extends ConsumerWidget {
   final bool readOnly;
@@ -39,26 +34,27 @@ class ActiveWorkoutScreen extends ConsumerWidget {
 
   Future<void> _renameSession(
       BuildContext context, WidgetRef ref, String? currentName) async {
+    final lang = ref.read(languageProvider);
     final controller = TextEditingController(text: currentName ?? '');
     final name = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('ตั้งชื่อ Workout'),
+        title: Text(lang == AppLanguage.th ? 'ตั้งชื่อ Workout' : 'Name Workout'),
         content: TextField(
           controller: controller,
           autofocus: true,
           textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(hintText: 'เช่น Chest Day, Leg Day...'),
+          decoration: InputDecoration(hintText: lang.tr('dialog_program_hint')),
           onSubmitted: (v) => Navigator.of(dialogContext).pop(v.trim()),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('ยกเลิก'),
+            child: Text(lang.tr('btn_cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()),
-            child: const Text('บันทึก'),
+            child: Text(lang.tr('btn_save')),
           ),
         ],
       ),
@@ -71,15 +67,21 @@ class ActiveWorkoutScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(activeWorkoutProvider);
+    final lang = ref.watch(languageProvider);
+
+    final accent = Theme.of(context).colorScheme.primary;
+    final textSec = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+    final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
+    final border = Theme.of(context).colorScheme.outline;
 
     if (state.session == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Workout')),
+        appBar: AppBar(title: Text(lang.tr('home_start'))),
         body: Center(
           child: FilledButton.icon(
             onPressed: () => ref.read(activeWorkoutProvider.notifier).startSession(),
             icon: const Icon(Icons.fitness_center),
-            label: const Text('เริ่ม Workout'),
+            label: Text(lang.tr('home_start')),
           ),
         ),
       );
@@ -98,7 +100,7 @@ class ActiveWorkoutScreen extends ConsumerWidget {
                   children: [
                     Flexible(child: Text(displayTitle, overflow: TextOverflow.ellipsis)),
                     const SizedBox(width: 6),
-                    const Icon(Icons.edit_outlined, size: 14, color: _kTextMuted),
+                    Icon(Icons.edit_outlined, size: 14, color: textMuted),
                   ],
                 ),
               ),
@@ -106,7 +108,7 @@ class ActiveWorkoutScreen extends ConsumerWidget {
           if (!readOnly)
             IconButton(
               icon: const Icon(Icons.timer_outlined),
-              tooltip: 'พัก',
+              tooltip: lang.tr('label_rest'),
               onPressed: () => _showRestTimer(context, ref),
             ),
         ],
@@ -116,23 +118,23 @@ class ActiveWorkoutScreen extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.fitness_center, size: 40, color: _kBorder),
+                  Icon(Icons.fitness_center, size: 40, color: border),
                   const SizedBox(height: 16),
-                  const Text(
-                    'ยังไม่มีท่า',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _kTextSec),
+                  Text(
+                    lang.tr('workout_no_exercises'),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textSec),
                   ),
                   const SizedBox(height: 6),
                   if (!readOnly) ...[
-                    const Text(
-                      'กด + เพื่อเพิ่มท่าออกกำลังกาย',
-                      style: TextStyle(fontSize: 13, color: _kTextMuted),
+                    Text(
+                      lang.tr('workout_add_exercise_hint'),
+                      style: TextStyle(fontSize: 13, color: textMuted),
                     ),
                     const SizedBox(height: 24),
                     FilledButton.icon(
                       onPressed: () => _addExercise(context, ref),
                       icon: const Icon(Icons.add),
-                      label: const Text('เพิ่มท่า'),
+                      label: Text(lang.tr('workout_add_exercise')),
                     ),
                   ],
                 ],
@@ -180,9 +182,9 @@ class ActiveWorkoutScreen extends ConsumerWidget {
           ? FloatingActionButton.extended(
               onPressed: () => _addExercise(context, ref),
               icon: const Icon(Icons.add),
-              label: const Text('เพิ่มท่า'),
-              backgroundColor: _kAccent,
-              foregroundColor: const Color(0xFF050A05),
+              label: Text(lang.tr('workout_add_exercise')),
+              backgroundColor: accent,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
             )
           : null,
     );
@@ -216,9 +218,15 @@ class _ExerciseCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isLbs = ref.watch(isLbsProvider);
     final unit = isLbs ? 'lbs' : 'kg';
+    final lang = ref.watch(languageProvider);
     final ex = exerciseWithSets.exercise;
     final sets = exerciseWithSets.sets;
     final prKg = exerciseWithSets.prKg;
+
+    final accent = Theme.of(context).colorScheme.primary;
+    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
+    final textSec = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+    final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -226,221 +234,223 @@ class _ExerciseCard extends ConsumerWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(width: 3, color: _kAccent),
+            Container(width: 3, color: accent),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-            // Exercise header
-            Row(
-              children: [
-                if (!readOnly)
-                  ReorderableDragStartListener(
-                    index: index,
-                    child: const Padding(
-                      padding: EdgeInsets.only(right: 10),
-                      child: Icon(Icons.drag_handle, size: 18, color: _kTextMuted),
-                    ),
-                  ),
-                Expanded(
-                  child: Text(
-                    ex.name,
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.2,
-                      color: _kTextPrimary,
-                    ),
-                  ),
-                ),
-                if (!readOnly)
-                  GestureDetector(
-                    onTap: () => _showRepRangeDialog(context),
-                    child: const Padding(
-                      padding: EdgeInsets.only(left: 8, right: 4),
-                      child: Icon(Icons.tune, size: 15, color: _kTextMuted),
-                    ),
-                  ),
-                if (!readOnly)
-                  GestureDetector(
-                    onTap: () => _showRenameDialog(context, ex.name),
-                    child: const Padding(
-                      padding: EdgeInsets.only(left: 4, right: 4),
-                      child: Icon(Icons.edit_outlined, size: 15, color: _kTextMuted),
-                    ),
-                  ),
-                if (!readOnly)
-                  GestureDetector(
-                    onTap: () => showDialog(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: const Text('ลบท่า?'),
-                        content: Text('ลบ "${ex.name}" และ sets ทั้งหมด?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('ยกเลิก'),
-                          ),
-                          FilledButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                              onDeleteExercise();
-                            },
-                            style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFF1A0800),
-                              foregroundColor: const Color(0xFFFF5A3C),
-                            ),
-                            child: const Text('ลบ'),
-                          ),
-                        ],
-                      ),
-                    ),
-                    child: const Padding(
-                      padding: EdgeInsets.all(4),
-                      child: Icon(Icons.delete_outline, size: 17, color: _kTextMuted),
-                    ),
-                  ),
-              ],
-            ),
-
-            // Sets table
-            if (sets.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              const Divider(),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const SizedBox(
-                    width: 36,
-                    child: Text('Set',
-                        style: TextStyle(fontSize: 11, color: _kTextSec, fontWeight: FontWeight.w600)),
-                  ),
-                  Expanded(
-                    child: Text(unit,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 11, color: _kTextSec, fontWeight: FontWeight.w600)),
-                  ),
-                  const Expanded(
-                    child: Text('Reps',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 11, color: _kTextSec, fontWeight: FontWeight.w600)),
-                  ),
-                  Expanded(
-                    child: Tooltip(
-                      message: 'น้ำหนักสูงสุดที่ประเมินว่ายกได้ 1 ครั้ง\nสูตร Epley: น้ำหนัก × (1 + reps/30)',
-                      triggerMode: TooltipTriggerMode.tap,
-                      showDuration: const Duration(seconds: 4),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Text('e1RM',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 11, color: _kTextSec, fontWeight: FontWeight.w600)),
-                          SizedBox(width: 2),
-                          Icon(Icons.info_outline, size: 10, color: _kTextMuted),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 28),
-                ],
-              ),
-              const SizedBox(height: 6),
-              ...sets.map((s) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 5),
-                    child: Row(
+                    // Exercise header
+                    Row(
                       children: [
-                        SizedBox(
-                          width: 36,
-                          child: s.isWarmup
-                              ? Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFFF9F1C).withValues(alpha: 0.18),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: const Text('W',
-                                      style: TextStyle(
-                                          fontSize: 11, color: Color(0xFFFF9F1C), fontWeight: FontWeight.w700)),
-                                )
-                              : Text('${s.setNumber}',
-                                  style: const TextStyle(fontSize: 13, color: _kTextSec)),
-                        ),
-                        Expanded(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                s.weightKg.display(isLbs),
-                                style: GoogleFonts.jetBrainsMono(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: s.isWarmup ? _kTextSec : _kTextPrimary),
-                              ),
-                              if (!s.isWarmup && prKg != null && s.weightKg >= prKg) ...[
-                                const SizedBox(width: 4),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFFF5A3C),
-                                    borderRadius: BorderRadius.circular(3),
-                                  ),
-                                  child: const Text('PR',
-                                      style: TextStyle(
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.w800,
-                                          color: Color(0xFF1A0800))),
-                                ),
-                              ],
-                            ],
+                        if (!readOnly)
+                          ReorderableDragStartListener(
+                            index: index,
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 10),
+                              child: Icon(Icons.drag_handle, size: 18, color: textMuted),
+                            ),
                           ),
-                        ),
                         Expanded(
                           child: Text(
-                            '${s.reps}',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.jetBrainsMono(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: s.isWarmup ? _kTextSec : _kTextPrimary),
+                            ex.name,
+                            style: GoogleFonts.spaceGrotesk(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
+                              color: textPrimary,
+                            ),
                           ),
                         ),
-                        Expanded(
-                          child: s.isWarmup
-                              ? const SizedBox.shrink()
-                              : Text(
-                                  fmtNum(calc1RM(s.weightKg, s.reps) * (isLbs ? kgToLbs : 1)),
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.jetBrainsMono(fontSize: 12, color: _kTextMuted),
-                                ),
-                        ),
-                        SizedBox(
-                          width: 28,
-                          child: readOnly
-                              ? const SizedBox.shrink()
-                              : GestureDetector(
-                                  onTap: () => onDeleteSet(s.id!),
-                                  child: const Icon(Icons.close, size: 14, color: _kTextMuted),
-                                ),
-                        ),
+                        if (!readOnly)
+                          GestureDetector(
+                            onTap: () => _showRepRangeDialog(context, lang, textSec, textMuted),
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 8, right: 4),
+                              child: Icon(Icons.tune, size: 15, color: textMuted),
+                            ),
+                          ),
+                        if (!readOnly)
+                          GestureDetector(
+                            onTap: () => _showRenameDialog(context, ex.name, lang),
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 4, right: 4),
+                              child: Icon(Icons.edit_outlined, size: 15, color: textMuted),
+                            ),
+                          ),
+                        if (!readOnly)
+                          GestureDetector(
+                            onTap: () => showDialog(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                title: Text(lang.tr('dialog_delete_exercise')),
+                                content: Text('${lang.tr('dialog_delete_exercise_desc')} "${ex.name}"?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: Text(lang.tr('btn_cancel')),
+                                  ),
+                                  FilledButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      onDeleteExercise();
+                                    },
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: const Color(0xFF1A0800),
+                                      foregroundColor: const Color(0xFFFF5A3C),
+                                    ),
+                                    child: Text(lang.tr('btn_delete')),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(4),
+                              child: Icon(Icons.delete_outline, size: 17, color: textMuted),
+                            ),
+                          ),
                       ],
                     ),
-                  )),
-              const SizedBox(height: 14),
-            ] else
-              const SizedBox(height: 12),
 
-            if (!readOnly)
-              AddSetForm(
-                onAdd: onAddSet,
-                onAfterAdd: onAfterAdd,
-                previousSets: sets.map((s) => (weight: s.weightKg, reps: s.reps)).toList(),
-                lastSessionSets: exerciseWithSets.lastSessionSets,
-                repMin: exerciseWithSets.repMin,
-                repMax: exerciseWithSets.repMax,
-              ),
+                    // Sets table
+                    if (sets.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      const Divider(),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 36,
+                            child: Text('Set',
+                                style: TextStyle(fontSize: 11, color: textSec, fontWeight: FontWeight.w600)),
+                          ),
+                          Expanded(
+                            child: Text(unit,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 11, color: textSec, fontWeight: FontWeight.w600)),
+                          ),
+                          Expanded(
+                            child: Text('Reps',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 11, color: textSec, fontWeight: FontWeight.w600)),
+                          ),
+                          Expanded(
+                            child: Tooltip(
+                              message: lang == AppLanguage.th 
+                                  ? 'น้ำหนักสูงสุดที่ประเมินว่ายกได้ 1 ครั้ง\nสูตร Epley: น้ำหนัก × (1 + reps/30)'
+                                  : 'Estimated One Rep Max\nEpley Formula: weight × (1 + reps/30)',
+                              triggerMode: TooltipTriggerMode.tap,
+                              showDuration: const Duration(seconds: 4),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('e1RM',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(fontSize: 11, color: textSec, fontWeight: FontWeight.w600)),
+                                  const SizedBox(width: 2),
+                                  Icon(Icons.info_outline, size: 10, color: textMuted),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 28),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      ...sets.map((s) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 5),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 36,
+                                  child: s.isWarmup
+                                      ? Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFFF9F1C).withValues(alpha: 0.18),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: const Text('W',
+                                              style: TextStyle(
+                                                  fontSize: 11, color: Color(0xFFFF9F1C), fontWeight: FontWeight.w700)),
+                                        )
+                                      : Text('${s.setNumber}',
+                                          style: TextStyle(fontSize: 13, color: textSec)),
+                                ),
+                                Expanded(
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        s.weightKg.display(isLbs),
+                                        style: GoogleFonts.jetBrainsMono(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: s.isWarmup ? textSec : textPrimary),
+                                      ),
+                                      if (!s.isWarmup && prKg != null && s.weightKg >= prKg) ...[
+                                        const SizedBox(width: 4),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFFF5A3C),
+                                            borderRadius: BorderRadius.circular(3),
+                                          ),
+                                          child: const Text('PR',
+                                              style: TextStyle(
+                                                  fontSize: 9,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: Color(0xFF1A0800))),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    '${s.reps}',
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.jetBrainsMono(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: s.isWarmup ? textSec : textPrimary),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: s.isWarmup
+                                      ? const SizedBox.shrink()
+                                      : Text(
+                                          fmtNum(calc1RM(s.weightKg, s.reps) * (isLbs ? kgToLbs : 1)),
+                                          textAlign: TextAlign.center,
+                                          style: GoogleFonts.jetBrainsMono(fontSize: 12, color: textMuted),
+                                        ),
+                                ),
+                                SizedBox(
+                                  width: 28,
+                                  child: readOnly
+                                      ? const SizedBox.shrink()
+                                      : GestureDetector(
+                                          onTap: () => onDeleteSet(s.id!),
+                                          child: Icon(Icons.close, size: 14, color: textMuted),
+                                        ),
+                                ),
+                              ],
+                            ),
+                          )),
+                      const SizedBox(height: 14),
+                    ] else
+                      const SizedBox(height: 12),
+
+                    if (!readOnly)
+                      AddSetForm(
+                        onAdd: onAddSet,
+                        onAfterAdd: onAfterAdd,
+                        previousSets: sets.map((s) => (weight: s.weightKg, reps: s.reps)).toList(),
+                        lastSessionSets: exerciseWithSets.lastSessionSets,
+                        repMin: exerciseWithSets.repMin,
+                        repMax: exerciseWithSets.repMax,
+                      ),
                   ],
                 ),
               ),
@@ -451,7 +461,7 @@ class _ExerciseCard extends ConsumerWidget {
     );
   }
 
-  void _showRepRangeDialog(BuildContext context) {
+  void _showRepRangeDialog(BuildContext context, AppLanguage lang, Color textSec, Color textMuted) {
     int repMin = exerciseWithSets.repMin;
     int repMax = exerciseWithSets.repMax;
 
@@ -464,7 +474,7 @@ class _ExerciseCard extends ConsumerWidget {
                 children: [
                   SizedBox(
                     width: 60,
-                    child: Text(label, style: const TextStyle(fontSize: 13, color: _kTextSec)),
+                    child: Text(label, style: TextStyle(fontSize: 13, color: textSec)),
                   ),
                   IconButton(
                     icon: const Icon(Icons.remove, size: 16),
@@ -488,13 +498,13 @@ class _ExerciseCard extends ConsumerWidget {
               );
 
           return AlertDialog(
-            title: Text('เป้าหมาย ${exerciseWithSets.exercise.name}',
+            title: Text('${lang.tr('dialog_target_title')} ${exerciseWithSets.exercise.name}',
                 style: const TextStyle(fontSize: 15)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Rep range', style: TextStyle(fontSize: 11, color: _kTextMuted)),
+                Text('Rep range', style: TextStyle(fontSize: 11, color: textMuted)),
                 const SizedBox(height: 8),
                 stepper(
                   'Min',
@@ -513,14 +523,14 @@ class _ExerciseCard extends ConsumerWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('ยกเลิก'),
+                child: Text(lang.tr('btn_cancel')),
               ),
               FilledButton(
                 onPressed: () {
                   Navigator.pop(ctx);
                   onUpdateRepRange(repMin, repMax);
                 },
-                child: const Text('บันทึก'),
+                child: Text(lang.tr('btn_save')),
               ),
             ],
           );
@@ -529,12 +539,12 @@ class _ExerciseCard extends ConsumerWidget {
     );
   }
 
-  void _showRenameDialog(BuildContext context, String currentName) {
+  void _showRenameDialog(BuildContext context, String currentName, AppLanguage lang) {
     final controller = TextEditingController(text: currentName);
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('เปลี่ยนชื่อท่า'),
+        title: Text(lang.tr('dialog_rename_exercise')),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -547,14 +557,14 @@ class _ExerciseCard extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('ยกเลิก'),
+            child: Text(lang.tr('btn_cancel')),
           ),
           FilledButton(
             onPressed: () {
               onRenameExercise(controller.text);
               Navigator.pop(ctx);
             },
-            child: const Text('บันทึก'),
+            child: Text(lang.tr('btn_save')),
           ),
         ],
       ),

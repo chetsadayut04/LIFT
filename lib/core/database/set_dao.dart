@@ -204,15 +204,24 @@ class SetDao {
   Future<List<({String name, double prKg, int prReps, int totalSets})>> getAllExercisePrs() async {
     final db = await DatabaseHelper.database;
     final rows = await db.rawQuery('''
-      SELECT e.name,
-             s.weight_kg AS pr_kg,
-             s.reps      AS pr_reps,
-             COUNT(s.id) AS total_sets,
-             MAX(s.weight_kg * (1.0 + CAST(s.reps AS REAL) / 30.0)) AS e1rm
-      FROM sets s
-      JOIN exercises e ON s.exercise_id = e.id
-      WHERE s.is_warmup = 0
-      GROUP BY e.name
+      WITH ranked_sets AS (
+        SELECT e.name,
+               s.weight_kg,
+               s.reps,
+               s.weight_kg * (1.0 + CAST(s.reps AS REAL) / 30.0) AS e1rm,
+               ROW_NUMBER() OVER (PARTITION BY e.name ORDER BY s.weight_kg * (1.0 + CAST(s.reps AS REAL) / 30.0) DESC) as rn,
+               COUNT(s.id) OVER (PARTITION BY e.name) as total_sets
+        FROM sets s
+        JOIN exercises e ON s.exercise_id = e.id
+        WHERE s.is_warmup = 0
+      )
+      SELECT name,
+             weight_kg AS pr_kg,
+             reps      AS pr_reps,
+             total_sets,
+             e1rm
+      FROM ranked_sets
+      WHERE rn = 1
       ORDER BY e1rm DESC
     ''');
     return rows
@@ -230,17 +239,26 @@ class SetDao {
       String sessionName) async {
     final db = await DatabaseHelper.database;
     final rows = await db.rawQuery('''
-      SELECT e.name,
-             s.weight_kg AS pr_kg,
-             s.reps      AS pr_reps,
-             COUNT(s.id) AS total_sets,
-             MAX(s.weight_kg * (1.0 + CAST(s.reps AS REAL) / 30.0)) AS e1rm
-      FROM sets s
-      JOIN exercises e ON s.exercise_id = e.id
-      JOIN sessions ss ON e.session_id = ss.id
-      WHERE s.is_warmup = 0
-        AND ss.name = ?
-      GROUP BY e.name
+      WITH ranked_sets AS (
+        SELECT e.name,
+               s.weight_kg,
+               s.reps,
+               s.weight_kg * (1.0 + CAST(s.reps AS REAL) / 30.0) AS e1rm,
+               ROW_NUMBER() OVER (PARTITION BY e.name ORDER BY s.weight_kg * (1.0 + CAST(s.reps AS REAL) / 30.0) DESC) as rn,
+               COUNT(s.id) OVER (PARTITION BY e.name) as total_sets
+        FROM sets s
+        JOIN exercises e ON s.exercise_id = e.id
+        JOIN sessions ss ON e.session_id = ss.id
+        WHERE s.is_warmup = 0
+          AND ss.name = ?
+      )
+      SELECT name,
+             weight_kg AS pr_kg,
+             reps      AS pr_reps,
+             total_sets,
+             e1rm
+      FROM ranked_sets
+      WHERE rn = 1
       ORDER BY e1rm DESC
     ''', [sessionName]);
     return rows
@@ -258,17 +276,26 @@ class SetDao {
       String from, String to) async {
     final db = await DatabaseHelper.database;
     final rows = await db.rawQuery('''
-      SELECT e.name,
-             s.weight_kg AS pr_kg,
-             s.reps      AS pr_reps,
-             COUNT(s.id) AS total_sets,
-             MAX(s.weight_kg * (1.0 + CAST(s.reps AS REAL) / 30.0)) AS e1rm
-      FROM sets s
-      JOIN exercises e ON s.exercise_id = e.id
-      JOIN sessions ss ON e.session_id = ss.id
-      WHERE s.is_warmup = 0
-        AND ss.date >= ? AND ss.date <= ?
-      GROUP BY e.name
+      WITH ranked_sets AS (
+        SELECT e.name,
+               s.weight_kg,
+               s.reps,
+               s.weight_kg * (1.0 + CAST(s.reps AS REAL) / 30.0) AS e1rm,
+               ROW_NUMBER() OVER (PARTITION BY e.name ORDER BY s.weight_kg * (1.0 + CAST(s.reps AS REAL) / 30.0) DESC) as rn,
+               COUNT(s.id) OVER (PARTITION BY e.name) as total_sets
+        FROM sets s
+        JOIN exercises e ON s.exercise_id = e.id
+        JOIN sessions ss ON e.session_id = ss.id
+        WHERE s.is_warmup = 0
+          AND ss.date >= ? AND ss.date <= ?
+      )
+      SELECT name,
+             weight_kg AS pr_kg,
+             reps      AS pr_reps,
+             total_sets,
+             e1rm
+      FROM ranked_sets
+      WHERE rn = 1
       ORDER BY e1rm DESC
     ''', [from, to]);
     return rows

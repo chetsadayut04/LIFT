@@ -9,11 +9,10 @@ class AuthNotifier extends StateNotifier<User?> {
   late final StreamSubscription<AuthState> _authSubscription;
   final SupabaseClient _client = Supabase.instance.client;
 
-  // TODO: ใส่ Client ID จาก Google Cloud Console (ถ้ามี)
   static const String _webClientId =
-      '249414775385-nns3pm0jb7hgd6lb554cqpg5e78kpurb.apps.googleusercontent.com';
+      '249414775385-4og8f2a4ctag3u1ukkps6rkuf43s5clt.apps.googleusercontent.com';
   static const String _iosClientId =
-      '249414775385-nns3pm0jb7hgd6lb554cqpg5e78kpurb.apps.googleusercontent.com';
+      '249414775385-ju36kgitjsjb1dt7r35tk9cnggromobc.apps.googleusercontent.com';
 
   AuthNotifier() : super(Supabase.instance.client.auth.currentUser) {
     _authSubscription = _client.auth.onAuthStateChange.listen((data) {
@@ -33,30 +32,24 @@ class AuthNotifier extends StateNotifier<User?> {
   }
 
   Future<void> signInWithGoogle() async {
-    final GoogleSignIn googleSignIn;
     if (kIsWeb) {
-      googleSignIn = GoogleSignIn(
-        clientId: _webClientId != 'YOUR_GOOGLE_WEB_CLIENT_ID'
-            ? _webClientId
-            : null,
-        scopes: ['email', 'openid'],
+      await _client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'https://lift-9ecb1.web.app',
       );
-    } else {
-      googleSignIn = GoogleSignIn(
-        clientId:
-            defaultTargetPlatform == TargetPlatform.iOS &&
-                _iosClientId != 'YOUR_GOOGLE_IOS_CLIENT_ID'
-            ? _iosClientId
-            : null,
-        serverClientId: _webClientId != 'YOUR_GOOGLE_WEB_CLIENT_ID'
-            ? _webClientId
-            : null,
-        scopes: ['email', 'openid'],
-      );
+      return;
     }
 
+    final googleSignIn = GoogleSignIn(
+      clientId: defaultTargetPlatform == TargetPlatform.iOS
+          ? _iosClientId
+          : null,
+      serverClientId: _webClientId,
+      scopes: ['email', 'openid'],
+    );
+
     final googleUser = await googleSignIn.signIn();
-    if (googleUser == null) return; // กดยกเลิก
+    if (googleUser == null) return;
 
     final googleAuth = await googleUser.authentication;
     final idToken = googleAuth.idToken;

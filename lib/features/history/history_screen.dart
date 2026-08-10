@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/providers/translation_provider.dart';
 import '../home/home_provider.dart';
 import '../stats/stats_provider.dart';
 import 'history_provider.dart';
 import 'session_detail_screen.dart';
-
-const _kAccent = Color(0xFFC6FF3D);
-const _kTextPrimary = Color(0xFFF2F5EF);
-const _kTextSec = Color(0xFFB8C2B4);
-const _kTextMuted = Color(0xFF7C8A7C);
 
 class HistoryScreen extends ConsumerWidget {
   const HistoryScreen({super.key});
@@ -17,18 +13,22 @@ class HistoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final history = ref.watch(historyProvider);
+    final lang = ref.watch(languageProvider);
+
+    final textSec = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+    final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('ประวัติ')),
+      appBar: AppBar(title: Text(lang.tr('nav_history'))),
       body: history.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
-          child: Text('เกิดข้อผิดพลาด: $e', style: const TextStyle(color: _kTextSec)),
+          child: Text(lang == AppLanguage.th ? 'เกิดข้อผิดพลาด: $e' : 'Error: $e', style: TextStyle(color: textSec)),
         ),
         data: (sessions) {
           if (sessions.isEmpty) {
-            return const Center(
-              child: Text('ยังไม่มีประวัติ', style: TextStyle(color: _kTextMuted)),
+            return Center(
+              child: Text(lang.tr('history_no_records'), style: TextStyle(color: textMuted)),
             );
           }
           // Build grouped list: interleave month headers
@@ -54,11 +54,15 @@ class HistoryScreen extends ConsumerWidget {
                 final y = int.tryParse(parts[0]) ?? 0;
                 final m = int.tryParse(parts[1]) ?? 1;
                 const thaiMonths = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+                const enMonths = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                
+                final monthStr = lang == AppLanguage.th ? thaiMonths[m] : enMonths[m];
+                final yearStr = lang == AppLanguage.th ? '${y + 543}' : '$y';
                 return Padding(
                   padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
                   child: Text(
-                    '${thaiMonths[m]} ${y + 543}',
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _kTextMuted, letterSpacing: 0.5),
+                    '$monthStr $yearStr',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: textMuted, letterSpacing: 0.5),
                   ),
                 );
               }
@@ -73,6 +77,7 @@ class HistoryScreen extends ConsumerWidget {
                     ).then((_) => ref.read(historyProvider.notifier).load()),
                     onDelete: () => _confirmDelete(
                       context,
+                      lang,
                       s.session.date,
                       () async {
                         await ref.read(historyProvider.notifier).deleteSession(s.session.id!);
@@ -92,18 +97,18 @@ class HistoryScreen extends ConsumerWidget {
   }
 
   Future<void> _confirmDelete(
-      BuildContext context, String date, VoidCallback onConfirm) {
+      BuildContext context, AppLanguage lang, String date, VoidCallback onConfirm) {
     final parts = date.split('-');
     final dateStr = parts.length == 3 ? '${parts[2]}/${parts[1]}/${parts[0]}' : date;
     return showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('ลบ session?'),
-        content: Text('ลบ workout วันที่ $dateStr?'),
+        title: Text(lang.tr('dialog_delete_session')),
+        content: Text('${lang.tr('dialog_delete_session_desc')}$dateStr?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('ยกเลิก'),
+            child: Text(lang.tr('btn_cancel')),
           ),
           FilledButton(
             onPressed: () {
@@ -114,7 +119,7 @@ class HistoryScreen extends ConsumerWidget {
               backgroundColor: const Color(0xFF1A0800),
               foregroundColor: const Color(0xFFFF5A3C),
             ),
-            child: const Text('ลบ'),
+            child: Text(lang.tr('btn_delete')),
           ),
         ],
       ),
@@ -122,7 +127,7 @@ class HistoryScreen extends ConsumerWidget {
   }
 }
 
-class _SessionTile extends StatelessWidget {
+class _SessionTile extends ConsumerWidget {
   final SessionSummary summary;
   final VoidCallback onTap;
   final VoidCallback onDelete;
@@ -130,11 +135,18 @@ class _SessionTile extends StatelessWidget {
   const _SessionTile({required this.summary, required this.onTap, required this.onDelete});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(languageProvider);
     final s = summary.session;
     final parts = s.date.split('-');
     final day = parts.length == 3 ? parts[2] : '?';
-    final month = parts.length == 3 ? _monthStr(int.tryParse(parts[1]) ?? 1) : s.date;
+    final month = parts.length == 3 ? _monthStr(int.tryParse(parts[1]) ?? 1, lang) : s.date;
+    final exerciseLabel = lang == AppLanguage.th ? 'ท่า' : 'exercises';
+
+    final accent = Theme.of(context).colorScheme.primary;
+    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
+    final textSec = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+    final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
 
     return InkWell(
       onTap: onTap,
@@ -155,12 +167,12 @@ class _SessionTile extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                       height: 1,
                       letterSpacing: -0.5,
-                      color: _kTextPrimary,
+                      color: textPrimary,
                     ),
                   ),
                   Text(
                     month,
-                    style: const TextStyle(fontSize: 11, color: _kTextSec, height: 1.3),
+                    style: TextStyle(fontSize: 11, color: textSec, height: 1.3),
                   ),
                 ],
               ),
@@ -174,16 +186,16 @@ class _SessionTile extends StatelessWidget {
                   if (s.name != null)
                     Text(
                       s.name!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         height: 1.2,
-                        color: _kTextPrimary,
+                        color: textPrimary,
                       ),
                     ),
                   Text(
-                    '${summary.exerciseCount} ท่า · ${summary.setCount} sets',
-                    style: const TextStyle(fontSize: 13, color: _kTextSec, height: 1.3),
+                    '${summary.exerciseCount} $exerciseLabel · ${summary.setCount} sets',
+                    style: TextStyle(fontSize: 13, color: textSec, height: 1.3),
                   ),
                 ],
               ),
@@ -197,35 +209,40 @@ class _SessionTile extends StatelessWidget {
                   color: const Color(0xFFFF9F1C).withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: const Text('กำลังเล่น',
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFFFF9F1C))),
+                child: Text(lang.tr('history_active_badge'),
+                    style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFFFF9F1C))),
               )
             else
               Container(
                 width: 5,
                 height: 5,
                 margin: const EdgeInsets.only(right: 12),
-                decoration: const BoxDecoration(color: _kAccent, shape: BoxShape.circle),
+                decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
               ),
             GestureDetector(
               onTap: onDelete,
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: Icon(Icons.delete_outline, size: 17, color: _kTextMuted),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Icon(Icons.delete_outline, size: 17, color: textMuted),
               ),
             ),
-            const Icon(Icons.chevron_right, size: 18, color: _kTextMuted),
+            Icon(Icons.chevron_right, size: 18, color: textMuted),
           ],
         ),
       ),
     );
   }
 
-  String _monthStr(int m) {
-    const months = [
+  String _monthStr(int m, AppLanguage lang) {
+    const monthsTh = [
       '', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
       'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.',
     ];
-    return m >= 1 && m <= 12 ? months[m] : '';
+    const monthsEn = [
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    final list = lang == AppLanguage.th ? monthsTh : monthsEn;
+    return m >= 1 && m <= 12 ? list[m] : '';
   }
 }

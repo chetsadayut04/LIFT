@@ -204,59 +204,91 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
         ),
         const SizedBox(height: 8),
 
-        // ── Weight / Reps inputs with steppers ────────────────
-        if (isLbs) ...[
-          Row(
-            children: [
-              const SizedBox(width: 34),
-              _microStepBtn('−2.5', () => _stepField(_weightCtrl, -2.5)),
-              const SizedBox(width: 4),
-              _microStepBtn('+2.5', () => _stepField(_weightCtrl, 2.5)),
-            ],
-          ),
-          const SizedBox(height: 4),
-        ],
+        // ── Weight / Reps inputs with steppers (Two-Column Layout) ──
         Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            _stepBtn(Icons.remove, () => _stepField(_weightCtrl, -weightStep)),
-            const SizedBox(width: 4),
+            // Left Column: Weight
             Expanded(
-              child: TextField(
-                controller: _weightCtrl,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                textAlign: TextAlign.center,
-                decoration: InputDecoration(labelText: unit),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isLbs) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _microStepBtn('−2.5', () => _stepField(_weightCtrl, -2.5)),
+                        const SizedBox(width: 4),
+                        _microStepBtn('+2.5', () => _stepField(_weightCtrl, 2.5)),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                  ],
+                  Row(
+                    children: [
+                      _stepBtn(Icons.remove, () => _stepField(_weightCtrl, -weightStep)),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: TextField(
+                          controller: _weightCtrl,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 14),
+                          decoration: InputDecoration(
+                            labelText: unit,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      _stepBtn(Icons.add, () => _stepField(_weightCtrl, weightStep)),
+                    ],
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 4),
-            _stepBtn(Icons.add, () => _stepField(_weightCtrl, weightStep)),
-            const SizedBox(width: 10),
-            _stepBtn(Icons.remove, () => _stepField(_repsCtrl, -1, isInt: true)),
-            const SizedBox(width: 4),
-            SizedBox(
-              width: 56,
-              child: TextField(
-                controller: _repsCtrl,
-                keyboardType: TextInputType.number,
-                textAlign: TextAlign.center,
-                decoration: const InputDecoration(labelText: 'reps'),
-                onSubmitted: (_) => _submit(isLbs),
+            const SizedBox(width: 12), // Spacer between columns
+            // Right Column: Reps
+            Expanded(
+              child: Row(
+                children: [
+                  _stepBtn(Icons.remove, () => _stepField(_repsCtrl, -1, isInt: true)),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: TextField(
+                      controller: _repsCtrl,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 14),
+                      decoration: const InputDecoration(
+                        labelText: 'reps',
+                        contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                      ),
+                      onSubmitted: (_) => _submit(isLbs),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  _stepBtn(Icons.add, () => _stepField(_repsCtrl, 1, isInt: true)),
+                ],
               ),
-            ),
-            const SizedBox(width: 4),
-            _stepBtn(Icons.add, () => _stepField(_repsCtrl, 1, isInt: true)),
-            const SizedBox(width: 8),
-            FilledButton(
-              onPressed: () => _submit(isLbs),
-              style: _isWarmup
-                  ? FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF9F1C).withValues(alpha: 0.7),
-                      foregroundColor: Colors.white,
-                    )
-                  : null,
-              child: Text(_isWarmup ? '+ W' : '+ Set'),
             ),
           ],
+        ),
+        const SizedBox(height: 12),
+        // Full Width Add Set Button
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: () => _submit(isLbs),
+            style: _isWarmup
+                ? FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF9F1C).withValues(alpha: 0.7),
+                    foregroundColor: Colors.white,
+                  )
+                : null,
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('เพิ่มเซ็ต'),
+          ),
         ),
       ],
     );

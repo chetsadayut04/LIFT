@@ -35,14 +35,18 @@ class DatabaseHelper {
   static Future<Database> _open() async {
     return openDatabase(
       await _dbPath(),
-      version: 5,
+      version: 6,
+      onConfigure: (db) async {
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE sessions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             date TEXT NOT NULL,
             name TEXT,
-            created_at INTEGER NOT NULL
+            created_at INTEGER NOT NULL,
+            finished_at INTEGER
           )
         ''');
         await db.execute('''
@@ -92,6 +96,13 @@ class DatabaseHelper {
               rep_max INTEGER NOT NULL DEFAULT 12
             )
           ''');
+        }
+        if (oldVersion < 6) {
+          try {
+            await db.execute('ALTER TABLE sessions ADD COLUMN finished_at INTEGER');
+          } catch (_) {
+            // Ignore if column already exists
+          }
         }
       },
     );

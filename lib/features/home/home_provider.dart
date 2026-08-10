@@ -136,8 +136,15 @@ class HomeNotifier extends StateNotifier<HomeState> {
   }
 
   int _calcStreak(Set<String> dates, DateTime from) {
-    int streak = 0;
     var d = from;
+    if (!dates.contains(_fmt(d))) {
+      d = d.subtract(const Duration(days: 1));
+      if (!dates.contains(_fmt(d))) {
+        return 0;
+      }
+    }
+
+    int streak = 0;
     while (dates.contains(_fmt(d))) {
       streak++;
       d = d.subtract(const Duration(days: 1));

@@ -6,6 +6,7 @@ import 'dart:math' as math;
 import '../../core/database/session_dao.dart';
 import '../../core/database/set_dao.dart';
 import '../../core/providers/unit_provider.dart';
+import '../../core/providers/translation_provider.dart';
 import '../../core/widgets/plate_stack.dart';
 import 'stats_provider.dart';
 
@@ -35,10 +36,11 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(statsProvider);
+    final lang = ref.watch(languageProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('สถิติ'),
+        title: Text(lang.tr('nav_stats')),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -54,6 +56,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                 _WeeklyCard(
                   workoutDates: state.workoutDates,
                   thisWeekSets: state.thisWeekSets,
+                  lang: lang,
                 ),
                 const SizedBox(height: 12),
                 _CalendarCard(
@@ -62,6 +65,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
                   onMonthChanged: (m) => setState(() => _focusedMonth = m),
                   onDayTap: (dateStr, isWorked) =>
                       _showDaySheet(context, dateStr, isWorked),
+                  lang: lang,
                 ),
                 const SizedBox(height: 12),
                 const _ExercisePrTable(),
@@ -78,12 +82,14 @@ class _CalendarCard extends StatelessWidget {
   final DateTime focusedMonth;
   final void Function(DateTime) onMonthChanged;
   final void Function(String dateStr, bool isWorked) onDayTap;
+  final AppLanguage lang;
 
   const _CalendarCard({
     required this.workoutDates,
     required this.focusedMonth,
     required this.onMonthChanged,
     required this.onDayTap,
+    required this.lang,
   });
 
   String _fmt(DateTime d) =>
@@ -95,6 +101,7 @@ class _CalendarCard extends StatelessWidget {
       builder: (_) => _MonthPickerDialog(
         current: focusedMonth,
         maxMonth: DateTime(DateTime.now().year, DateTime.now().month),
+        lang: lang,
       ),
     ).then((picked) {
       if (picked != null) onMonthChanged(picked);
@@ -119,22 +126,20 @@ class _CalendarCard extends StatelessWidget {
 
     // Month/year label
     const thaiMonths = [
-      '',
-      'มกราคม',
-      'กุมภาพันธ์',
-      'มีนาคม',
-      'เมษายน',
-      'พฤษภาคม',
-      'มิถุนายน',
-      'กรกฎาคม',
-      'สิงหาคม',
-      'กันยายน',
-      'ตุลาคม',
-      'พฤศจิกายน',
-      'ธันวาคม',
+      '', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม',
     ];
-    final monthLabel =
-        '${thaiMonths[focusedMonth.month]} ${focusedMonth.year + 543}';
+    const enMonths = [
+      '', 'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December',
+    ];
+    final monthName = lang == AppLanguage.th ? thaiMonths[focusedMonth.month] : enMonths[focusedMonth.month];
+    final yearStr = lang == AppLanguage.th ? '${focusedMonth.year + 543}' : '${focusedMonth.year}';
+    final monthLabel = '$monthName $yearStr';
+
+    final dayHeaders = lang == AppLanguage.th 
+        ? const ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา']
+        : const ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
     return Card(
       child: Padding(
@@ -145,9 +150,9 @@ class _CalendarCard extends StatelessWidget {
             // Header row
             Row(
               children: [
-                const Text(
-                  'ปฏิทิน',
-                  style: TextStyle(
+                Text(
+                  lang == AppLanguage.th ? 'ปฏิทิน' : 'Calendar',
+                  style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 1,
@@ -201,7 +206,7 @@ class _CalendarCard extends StatelessWidget {
 
             // Day-of-week headers
             Row(
-              children: const ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา']
+              children: dayHeaders
                   .map(
                     (d) => Expanded(
                       child: Center(
@@ -319,11 +324,11 @@ class _CalendarCard extends StatelessWidget {
             const SizedBox(height: 10),
             Row(
               children: [
-                _LegendDot(color: accent, label: 'เล่นแล้ว'),
+                _LegendDot(color: accent, label: lang == AppLanguage.th ? 'เล่นแล้ว' : 'Worked'),
                 const SizedBox(width: 16),
-                const _LegendDot(
-                  color: Color(0xFF7C8A7C),
-                  label: 'ยังไม่ได้เล่น',
+                _LegendDot(
+                  color: const Color(0xFF7C8A7C),
+                  label: lang == AppLanguage.th ? 'ยังไม่ได้เล่น' : 'Rest',
                 ),
                 const Spacer(),
                 () {
@@ -334,7 +339,7 @@ class _CalendarCard extends StatelessWidget {
                       .length;
                   if (count == 0) return const SizedBox.shrink();
                   return Text(
-                    'เดือนนี้ $count ครั้ง',
+                    lang == AppLanguage.th ? 'เดือนนี้ $count ครั้ง' : '$count times this month',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -384,7 +389,8 @@ class _NavBtn extends StatelessWidget {
 class _MonthPickerDialog extends StatefulWidget {
   final DateTime current;
   final DateTime maxMonth;
-  const _MonthPickerDialog({required this.current, required this.maxMonth});
+  final AppLanguage lang;
+  const _MonthPickerDialog({required this.current, required this.maxMonth, required this.lang});
 
   @override
   State<_MonthPickerDialog> createState() => _MonthPickerDialogState();
@@ -393,20 +399,8 @@ class _MonthPickerDialog extends StatefulWidget {
 class _MonthPickerDialogState extends State<_MonthPickerDialog> {
   late int _year;
 
-  static const _thaiMonths = [
-    'ม.ค.',
-    'ก.พ.',
-    'มี.ค.',
-    'เม.ย.',
-    'พ.ค.',
-    'มิ.ย.',
-    'ก.ค.',
-    'ส.ค.',
-    'ก.ย.',
-    'ต.ค.',
-    'พ.ย.',
-    'ธ.ค.',
-  ];
+  static const _thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+  static const _enMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   @override
   void initState() {
@@ -421,6 +415,8 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
   @override
   Widget build(BuildContext context) {
     const accent = Color(0xFFC6FF3D);
+    final displayYear = widget.lang == AppLanguage.th ? _year + 543 : _year;
+    final list = widget.lang == AppLanguage.th ? _thaiMonths : _enMonths;
     return AlertDialog(
       contentPadding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       content: Column(
@@ -434,7 +430,7 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
                 onPressed: () => setState(() => _year--),
               ),
               Text(
-                '${_year + 543}',
+                '$displayYear',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -478,7 +474,7 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
                           ),
                           alignment: Alignment.center,
                           child: Text(
-                            _thaiMonths[i],
+                            list[i],
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -508,10 +504,12 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
 class _WeeklyCard extends StatelessWidget {
   final Set<String> workoutDates;
   final int thisWeekSets;
+  final AppLanguage lang;
 
   const _WeeklyCard({
     required this.workoutDates,
     required this.thisWeekSets,
+    required this.lang,
   });
 
   int _countSessions(DateTime monday) {
@@ -541,9 +539,9 @@ class _WeeklyCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'สัปดาห์นี้',
-              style: TextStyle(
+            Text(
+              lang.tr('stats_this_week'),
+              style: const TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 1,
@@ -568,9 +566,9 @@ class _WeeklyCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      const Text(
-                        'ครั้ง',
-                        style: TextStyle(fontSize: 12, color: textMuted),
+                      Text(
+                        lang == AppLanguage.th ? 'ครั้ง' : 'sessions',
+                        style: const TextStyle(fontSize: 12, color: textMuted),
                       ),
                     ],
                   ),
@@ -658,12 +656,14 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
 
   @override
   Widget build(BuildContext context) {
-    const textPrimary = Color(0xFFF2F5EF);
-    const textMuted = Color(0xFF7C8A7C);
-    const accent = Color(0xFFC6FF3D);
+    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
+    final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
+    final accent = Theme.of(context).colorScheme.primary;
 
     final isLbs = ref.watch(isLbsProvider);
     final unit = isLbs ? 'lbs' : 'kg';
+    final lang = ref.watch(languageProvider);
+    final allLabel = lang == AppLanguage.th ? 'ทั้งหมด' : 'All';
 
     return Card(
       child: Padding(
@@ -673,8 +673,8 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
           children: [
             Row(
               children: [
-                const Text(
-                  'สถิติ',
+                Text(
+                  lang.tr('nav_stats'),
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
@@ -690,9 +690,9 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
                       _load();
                     },
                     itemBuilder: (_) => [
-                      const PopupMenuItem<String?>(
+                      PopupMenuItem<String?>(
                         value: null,
-                        child: Text('ทั้งหมด'),
+                        child: Text(allLabel),
                       ),
                       ..._programs.map(
                         (name) => PopupMenuItem<String?>(
@@ -705,7 +705,7 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          _selectedProgram ?? 'ทั้งหมด',
+                          _selectedProgram ?? allLabel,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
@@ -729,20 +729,20 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
                 child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
               )
             else if (_prs.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Text(
-                  'ยังไม่มีข้อมูล',
-                  style: TextStyle(color: Color(0xFF7C8A7C), fontSize: 13),
+                  lang == AppLanguage.th ? 'ยังไม่มีข้อมูล' : 'No data available',
+                  style: const TextStyle(color: Color(0xFF7C8A7C), fontSize: 13),
                 ),
               )
             else ...[
               Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     flex: 5,
                     child: Text(
-                      'ท่า',
+                      lang == AppLanguage.th ? 'ท่า' : 'Exercise',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -753,7 +753,9 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
                   Expanded(
                     flex: 3,
                     child: Tooltip(
-                      message: 'น้ำหนักสูงสุดที่ประเมินว่ายกได้ 1 ครั้ง\nสูตร Epley: น้ำหนัก × (1 + reps/30)',
+                      message: lang == AppLanguage.th 
+                          ? 'น้ำหนักสูงสุดที่ประเมินว่ายกได้ 1 ครั้ง\nสูตร Epley: น้ำหนัก × (1 + reps/30)'
+                          : 'Estimated One Rep Max\nEpley Formula: weight × (1 + reps/30)',
                       triggerMode: TooltipTriggerMode.tap,
                       showDuration: const Duration(seconds: 4),
                       child: Row(
@@ -773,7 +775,7 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
                       ),
                     ),
                   ),
-                  const Expanded(
+                  Expanded(
                     flex: 3,
                     child: Text(
                       'Best set',
@@ -785,7 +787,7 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
                       ),
                     ),
                   ),
-                  const Expanded(
+                  Expanded(
                     flex: 2,
                     child: Text(
                       'sets',
@@ -819,7 +821,7 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
                               flex: 5,
                               child: Text(
                                 p.name,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                   color: textPrimary,
@@ -951,6 +953,7 @@ class _ExerciseChartState extends ConsumerState<_ExerciseChart> {
     final isLbs = ref.watch(isLbsProvider);
     final unit = isLbs ? 'lbs' : 'kg';
     const accent = Color(0xFFC6FF3D);
+    final lang = ref.watch(languageProvider);
 
     final displayData = _showMaxWeight
         ? widget.maxWeightHistory
@@ -996,11 +999,11 @@ class _ExerciseChartState extends ConsumerState<_ExerciseChart> {
           children: [
             Text(
               widget.exerciseName.toUpperCase(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1,
-                color: Color(0xFF7C8A7C),
+                color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
               ),
             ),
             const SizedBox(height: 6),
@@ -1009,8 +1012,8 @@ class _ExerciseChartState extends ConsumerState<_ExerciseChart> {
                 Expanded(
                   child: Text(
                     _showMaxWeight
-                        ? 'น้ำหนักสูงสุด ย้อนหลัง ($unit)'
-                        : 'Volume รายวัน ย้อนหลัง ($unit)',
+                        ? (lang == AppLanguage.th ? 'น้ำหนักสูงสุด ย้อนหลัง ($unit)' : 'Max Weight History ($unit)')
+                        : (lang == AppLanguage.th ? 'Volume รายวัน ย้อนหลัง ($unit)' : 'Daily Volume History ($unit)'),
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -1026,9 +1029,9 @@ class _ExerciseChartState extends ConsumerState<_ExerciseChart> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF15181A),
+                      color: Theme.of(context).inputDecorationTheme.fillColor ?? const Color(0xFF15181A),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFF262A24)),
+                      border: Border.all(color: Theme.of(context).colorScheme.outline),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -1039,17 +1042,17 @@ class _ExerciseChartState extends ConsumerState<_ExerciseChart> {
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: _showMaxWeight
-                                ? const Color(0xFF7C8A7C)
-                                : const Color(0xFFF2F5EF),
+                                ? Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey
+                                : Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white,
                           ),
                         ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 5),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
                           child: Text(
                             '|',
                             style: TextStyle(
                               fontSize: 10,
-                              color: Color(0xFF7C8A7C),
+                              color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
                             ),
                           ),
                         ),
@@ -1059,8 +1062,8 @@ class _ExerciseChartState extends ConsumerState<_ExerciseChart> {
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: _showMaxWeight
-                                ? const Color(0xFFF2F5EF)
-                                : const Color(0xFF7C8A7C),
+                                ? Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white
+                                : Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
                           ),
                         ),
                       ],
@@ -1183,40 +1186,32 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
     });
   }
 
-  String _formatDate(String dateStr) {
+  String _formatDate(String dateStr, AppLanguage lang) {
     final parts = dateStr.split('-');
     if (parts.length != 3) return dateStr;
-    const thaiMonths = [
-      '',
-      'ม.ค.',
-      'ก.พ.',
-      'มี.ค.',
-      'เม.ย.',
-      'พ.ค.',
-      'มิ.ย.',
-      'ก.ค.',
-      'ส.ค.',
-      'ก.ย.',
-      'ต.ค.',
-      'พ.ย.',
-      'ธ.ค.',
-    ];
+    const thaiMonths = ['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+    const enMonths = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     final month = int.tryParse(parts[1]) ?? 0;
-    return '${parts[2]} ${thaiMonths[month]} ${int.parse(parts[0]) + 543}';
+    if (lang == AppLanguage.th) {
+      return '${parts[2]} ${thaiMonths[month]} ${int.parse(parts[0]) + 543}';
+    } else {
+      return '${parts[2]} ${enMonths[month]} ${parts[0]}';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final isLbs = ref.watch(isLbsProvider);
     final unit = isLbs ? 'lbs' : 'kg';
+    final lang = ref.watch(languageProvider);
     const accent = Color(0xFFC6FF3D);
-    final dateLabel = _formatDate(widget.dateStr);
+    final dateLabel = _formatDate(widget.dateStr, lang);
 
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF1B1F1B),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        border: Border(top: BorderSide(color: Color(0xFF262A24), width: 0.5)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardTheme.color ?? const Color(0xFF1B1F1B),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        border: Border(top: BorderSide(color: Theme.of(context).colorScheme.outline, width: 0.5)),
       ),
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
@@ -1232,7 +1227,7 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: const Color(0xFF262A24),
+                color: Theme.of(context).colorScheme.outline,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -1248,16 +1243,16 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
                   height: 8,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: widget.isWorked ? accent : const Color(0xFF7C8A7C),
+                    color: widget.isWorked ? accent : Theme.of(context).textTheme.bodySmall?.color ?? const Color(0xFF7C8A7C),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Text(
                   dateLabel,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFFF2F5EF),
+                    color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white,
                   ),
                 ),
               ],
@@ -1282,10 +1277,10 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    'วันพักผ่อน',
+                    lang == AppLanguage.th ? 'วันพักผ่อน' : 'Rest Day',
                     style: TextStyle(
                       fontSize: 14,
-                      color: const Color(0xFF7C8A7C),
+                      color: Theme.of(context).textTheme.bodySmall?.color ?? const Color(0xFF7C8A7C),
                     ),
                   ),
                 ],
@@ -1308,10 +1303,10 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
                     children: [
                       Text(
                         ex.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFFF2F5EF),
+                          color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -1327,17 +1322,17 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
                                 width: 28,
                                 child: Text(
                                   '${e.key + 1}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 12,
-                                    color: Color(0xFF7C8A7C),
+                                    color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
                                   ),
                                 ),
                               ),
                               Text(
                                 '$wStr × ${s.reps} reps',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
-                                  color: Color(0xFF7C8A7C),
+                                  color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
                                 ),
                               ),
                             ],

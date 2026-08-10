@@ -5,40 +5,16 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/database/exercise_dao.dart';
 import '../../core/database/session_dao.dart';
 import '../../core/providers/unit_provider.dart';
+import '../../core/providers/translation_provider.dart';
 import '../../core/widgets/plate_stack.dart';
 import '../workout/active_workout_provider.dart';
 import '../workout/active_workout_screen.dart';
 import 'home_provider.dart';
+const _thaiDays = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัส', 'ศุกร์', 'เสาร์', 'อาทิตย์'];
+const _thaiMonths = ['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 
-const _kAccent = Color(0xFFC6FF3D);
-const _kTextPrimary = Color(0xFFF2F5EF);
-const _kTextMuted = Color(0xFF7C8A7C);
-const _kDivider = Color(0xFF262A24);
-
-const _thaiDays = [
-  'จันทร์',
-  'อังคาร',
-  'พุธ',
-  'พฤหัส',
-  'ศุกร์',
-  'เสาร์',
-  'อาทิตย์',
-];
-const _thaiMonths = [
-  '',
-  'ม.ค.',
-  'ก.พ.',
-  'มี.ค.',
-  'เม.ย.',
-  'พ.ค.',
-  'มิ.ย.',
-  'ก.ค.',
-  'ส.ค.',
-  'ก.ย.',
-  'ต.ค.',
-  'พ.ย.',
-  'ธ.ค.',
-];
+const _enDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const _enMonths = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 String _fmtVol(double v, bool isLbs) {
   final val = isLbs ? v * kgToLbs : v;
@@ -73,7 +49,17 @@ class _HomeBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isLbs = ref.watch(isLbsProvider);
+    final lang = ref.watch(languageProvider);
     final now = DateTime.now();
+
+    final accent = Theme.of(context).colorScheme.primary;
+    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
+    final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
+    final divider = Theme.of(context).colorScheme.outline;
+
+    final dayStr = lang == AppLanguage.th ? _thaiDays[now.weekday - 1] : _enDays[now.weekday - 1];
+    final monthStr = lang == AppLanguage.th ? _thaiMonths[now.month] : _enMonths[now.month];
+    final dateText = lang == AppLanguage.th ? '$dayStr  ${now.day} $monthStr' : '$dayStr, ${now.day} $monthStr';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
@@ -83,19 +69,19 @@ class _HomeBody extends ConsumerWidget {
           // ── Top bar ──────────────────────────────────────────────
           Row(
             children: [
-              const Text(
+              Text(
                 'LIFT',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1,
-                  color: _kTextMuted,
+                  color: textMuted,
                 ),
               ),
               const Spacer(),
               Text(
-                '${_thaiDays[now.weekday - 1]}  ${now.day} ${_thaiMonths[now.month]}',
-                style: const TextStyle(fontSize: 11, color: _kTextMuted),
+                dateText,
+                style: TextStyle(fontSize: 11, color: textMuted),
               ),
               const SizedBox(width: 14),
               GestureDetector(
@@ -107,14 +93,14 @@ class _HomeBody extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: isLbs ? _kTextMuted : _kAccent,
+                        color: isLbs ? textMuted : accent,
                       ),
                     ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 4),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: Text(
                         '·',
-                        style: TextStyle(fontSize: 11, color: _kTextMuted),
+                        style: TextStyle(fontSize: 11, color: textMuted),
                       ),
                     ),
                     Text(
@@ -122,7 +108,7 @@ class _HomeBody extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: isLbs ? _kAccent : _kTextMuted,
+                        color: isLbs ? accent : textMuted,
                       ),
                     ),
                   ],
@@ -137,13 +123,13 @@ class _HomeBody extends ConsumerWidget {
             state.sessionName ??
                 (state.todayVolume > 0
                     ? _fmtVol(state.todayVolume, isLbs)
-                    : 'พร้อมแล้ว?'),
+                    : lang.tr('home_ready')),
             style: GoogleFonts.spaceGrotesk(
               fontSize: 38,
               fontWeight: FontWeight.w700,
               letterSpacing: -1.5,
               height: 1,
-              color: _kTextPrimary,
+              color: textPrimary,
             ),
           ),
           const SizedBox(height: 20),
@@ -157,22 +143,31 @@ class _HomeBody extends ConsumerWidget {
           ],
 
           const SizedBox(height: 20),
-          const Divider(height: 1, thickness: 0.5, color: _kDivider),
+          Divider(height: 1, thickness: 0.5, color: divider),
           const SizedBox(height: 16),
 
-          // ── Today label + streak ──────────────────────────────────
+          // ── Today label ───────────────────────────────────────────
           Row(
             children: [
-              const Text(
-                'วันนี้',
+              Text(
+                lang.tr('home_today'),
                 style: TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1,
-                  color: _kTextMuted,
+                  color: textMuted,
                 ),
               ),
               const Spacer(),
+              if (state.streak > 0)
+                Text(
+                  '${state.streak} ${lang.tr('home_streak')}',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: accent,
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 12),
@@ -185,13 +180,13 @@ class _HomeBody extends ConsumerWidget {
           const SizedBox(height: 16),
 
           // ── Action buttons ────────────────────────────────────────
-          _buildActions(context, ref),
+          _buildActions(context, ref, lang, accent),
         ],
       ),
     );
   }
 
-  Widget _buildActions(BuildContext context, WidgetRef ref) {
+  Widget _buildActions(BuildContext context, WidgetRef ref, AppLanguage lang, Color accent) {
     if (state.isFinishedToday) {
       return Row(
         children: [
@@ -200,7 +195,7 @@ class _HomeBody extends ConsumerWidget {
               height: 52,
               child: OutlinedButton(
                 onPressed: () => _viewFinished(context, ref),
-                child: const Text('ดูสรุป'),
+                child: Text(lang.tr('home_view_summary')),
               ),
             ),
           ),
@@ -212,11 +207,11 @@ class _HomeBody extends ConsumerWidget {
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.edit_outlined, size: 15),
-                  SizedBox(width: 6),
-                  Text('แก้ไข'),
+                  const Icon(Icons.edit_outlined, size: 15),
+                  const SizedBox(width: 6),
+                  Text(lang.tr('home_edit')),
                 ],
               ),
             ),
@@ -232,7 +227,7 @@ class _HomeBody extends ConsumerWidget {
               height: 52,
               child: FilledButton(
                 onPressed: () => _continue(context, ref),
-                child: const Text('ทำต่อ →'),
+                child: Text(lang.tr('home_continue')),
               ),
             ),
           ),
@@ -240,17 +235,17 @@ class _HomeBody extends ConsumerWidget {
           SizedBox(
             height: 52,
             child: OutlinedButton(
-              onPressed: () => _finish(context, ref),
+              onPressed: () => _finish(context, ref, lang, accent),
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFFFF5A3C),
                 side: const BorderSide(color: Color(0xFFFF5A3C)),
                 padding: const EdgeInsets.symmetric(horizontal: 20),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.check_circle_outline, size: 16),
-                  SizedBox(width: 6),
-                  Text('เสร็จ'),
+                  const Icon(Icons.check_circle_outline, size: 16),
+                  const SizedBox(width: 6),
+                  Text(lang.tr('home_finish')),
                 ],
               ),
             ),
@@ -262,13 +257,13 @@ class _HomeBody extends ConsumerWidget {
       width: double.infinity,
       height: 52,
       child: FilledButton(
-        onPressed: () => _start(context, ref),
-        child: const Text('เริ่ม Workout'),
+        onPressed: () => _start(context, ref, lang),
+        child: Text(lang.tr('home_start')),
       ),
     );
   }
 
-  Future<void> _start(BuildContext context, WidgetRef ref) async {
+  Future<void> _start(BuildContext context, WidgetRef ref, AppLanguage lang) async {
     final result = await showDialog<({String? name, List<String> exercises})>(
       context: context,
       builder: (_) => const _WorkoutNameDialog(),
@@ -324,18 +319,20 @@ class _HomeBody extends ConsumerWidget {
     }
   }
 
-  Future<void> _finish(BuildContext context, WidgetRef ref) async {
+  Future<void> _finish(BuildContext context, WidgetRef ref, AppLanguage lang, Color accent) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('เสร็จสิ้นการออกกำลังกาย?'),
-        content: const Text(
-          'ข้อมูลทั้งหมดที่บันทึกไปจะถูกเก็บไว้เรียบร้อยแล้ว\nจะไม่สามารถเพิ่มท่าหรือ set ได้อีกสำหรับวันนี้',
+        title: Text(lang == AppLanguage.th ? 'เสร็จสิ้นการออกกำลังกาย?' : 'Finish Workout?'),
+        content: Text(
+          lang == AppLanguage.th 
+              ? 'ข้อมูลทั้งหมดที่บันทึกไปจะถูกเก็บไว้เรียบร้อยแล้ว\nจะไม่สามารถเพิ่มท่าหรือ set ได้อีกสำหรับวันนี้'
+              : 'All logged data is saved.\nYou will not be able to add exercises or sets today.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('ยกเลิก'),
+            child: Text(lang.tr('btn_cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -343,7 +340,7 @@ class _HomeBody extends ConsumerWidget {
               backgroundColor: const Color(0xFF1A0800),
               foregroundColor: const Color(0xFFFF5A3C),
             ),
-            child: const Text('เสร็จสิ้น'),
+            child: Text(lang.tr('home_finish')),
           ),
         ],
       ),
@@ -354,25 +351,25 @@ class _HomeBody extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Row(
+            content: Row(
               children: [
-                Icon(Icons.check_circle, size: 16, color: _kAccent),
-                SizedBox(width: 8),
+                Icon(Icons.check_circle, size: 16, color: accent),
+                const SizedBox(width: 8),
                 Text(
-                  'ออกกำลังกายเสร็จสิ้นแล้ววันนี้ 💪',
+                  lang.tr('home_finished_today_alert'),
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: _kTextPrimary,
+                    color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white,
                   ),
                 ),
               ],
             ),
-            backgroundColor: const Color(0xFF1B1F1B),
+            backgroundColor: Theme.of(context).cardTheme.color ?? const Color(0xFF1B1F1B),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
-              side: const BorderSide(color: Color(0xFF262A24)),
+              side: BorderSide(color: Theme.of(context).colorScheme.outline),
             ),
             duration: const Duration(seconds: 2),
           ),
@@ -445,6 +442,9 @@ class _TimerRowState extends ConsumerState<_TimerRow> {
     final hasSession = s.sessionStartedAt != null;
     final isActive = hasSession && s.sessionFinishedAt == null;
 
+    final accent = Theme.of(context).colorScheme.primary;
+    final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
+
     String timerStr = '--:--';
     if (hasSession) {
       final startDt = DateTime.fromMillisecondsSinceEpoch(s.sessionStartedAt!);
@@ -461,7 +461,7 @@ class _TimerRowState extends ConsumerState<_TimerRow> {
           height: 6,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isActive ? _kAccent : _kTextMuted,
+            color: isActive ? accent : textMuted,
           ),
         ),
         const SizedBox(width: 10),
@@ -471,9 +471,9 @@ class _TimerRowState extends ConsumerState<_TimerRow> {
             fontSize: 22,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.5,
-            color: isActive ? _kAccent : _kTextMuted,
+            color: isActive ? accent : textMuted,
             shadows: isActive
-                ? [Shadow(color: _kAccent.withValues(alpha: 0.4), blurRadius: 14)]
+                ? [Shadow(color: accent.withValues(alpha: 0.4), blurRadius: 14)]
                 : null,
           ),
         ),
@@ -486,20 +486,17 @@ class _TimerRowState extends ConsumerState<_TimerRow> {
 
 typedef _Template = ({String name, int sessionId, List<String> exercises});
 
-class _WorkoutNameDialog extends StatefulWidget {
+class _WorkoutNameDialog extends ConsumerStatefulWidget {
   const _WorkoutNameDialog();
 
   @override
-  State<_WorkoutNameDialog> createState() => _WorkoutNameDialogState();
+  ConsumerState<_WorkoutNameDialog> createState() => _WorkoutNameDialogState();
 }
 
-class _WorkoutNameDialogState extends State<_WorkoutNameDialog> {
+class _WorkoutNameDialogState extends ConsumerState<_WorkoutNameDialog> {
   final _ctrl = TextEditingController();
   List<_Template> _templates = [];
   String? _selectedName;
-
-  static const _kBorder = Color(0xFF262A24);
-  static const _kSurface = Color(0xFF15181A);
 
   @override
   void initState() {
@@ -510,7 +507,7 @@ class _WorkoutNameDialogState extends State<_WorkoutNameDialog> {
   Future<void> _load() async {
     final sessionDao = SessionDao();
     final exerciseDao = ExerciseDao();
-    final sessions = await sessionDao.getRecentNamedSessions();
+    final sessions = await sessionDao.getRecentNamedSessions(limit: 20);
     final templates = await Future.wait(sessions.map((s) async {
       final exs = await exerciseDao.getBySession(s.id!);
       return (name: s.name!, sessionId: s.id!, exercises: exs.map((e) => e.name).toList());
@@ -534,8 +531,15 @@ class _WorkoutNameDialogState extends State<_WorkoutNameDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(languageProvider);
+    final accent = Theme.of(context).colorScheme.primary;
+    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
+    final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
+    final border = Theme.of(context).colorScheme.outline;
+    final surface = Theme.of(context).inputDecorationTheme.fillColor ?? const Color(0xFF15181A);
+
     return AlertDialog(
-      title: const Text('ชื่อโปรแกรมวันนี้'),
+      title: Text(lang.tr('dialog_program_title')),
       content: SizedBox(
         width: double.maxFinite,
         child: Column(
@@ -546,7 +550,7 @@ class _WorkoutNameDialogState extends State<_WorkoutNameDialog> {
               controller: _ctrl,
               autofocus: _templates.isEmpty,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(hintText: 'เช่น Push Day, Leg Day...'),
+              decoration: InputDecoration(hintText: lang.tr('dialog_program_hint')),
               onSubmitted: (_) => Navigator.pop(context, (name: _ctrl.text, exercises: _selectedExercises)),
               onChanged: (_) {
                 if (_selectedName != null) setState(() => _selectedName = null);
@@ -554,9 +558,9 @@ class _WorkoutNameDialogState extends State<_WorkoutNameDialog> {
             ),
             if (_templates.isNotEmpty) ...[
               const SizedBox(height: 12),
-              const Text(
-                'โปรแกรมที่เคยทำ',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _kTextMuted, letterSpacing: 0.5),
+              Text(
+                lang.tr('dialog_program_past'),
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: textMuted, letterSpacing: 0.5),
               ),
               const SizedBox(height: 6),
               Flexible(
@@ -571,8 +575,8 @@ class _WorkoutNameDialogState extends State<_WorkoutNameDialog> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                           decoration: BoxDecoration(
-                            color: selected ? _kAccent.withValues(alpha: 0.1) : _kSurface,
-                            border: Border.all(color: selected ? _kAccent : _kBorder),
+                            color: selected ? accent.withValues(alpha: 0.1) : surface,
+                            border: Border.all(color: selected ? accent : border),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Column(
@@ -584,7 +588,7 @@ class _WorkoutNameDialogState extends State<_WorkoutNameDialog> {
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
-                                  color: selected ? _kAccent : _kTextPrimary,
+                                  color: selected ? accent : textPrimary,
                                 ),
                               ),
                             ],
@@ -602,11 +606,11 @@ class _WorkoutNameDialogState extends State<_WorkoutNameDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, (name: '', exercises: <String>[])),
-          child: const Text('ข้าม'),
+          child: Text(lang.tr('btn_skip')),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(context, (name: _ctrl.text, exercises: _selectedExercises)),
-          child: const Text('เริ่ม'),
+          child: Text(lang.tr('btn_start')),
         ),
       ],
     );
@@ -615,24 +619,28 @@ class _WorkoutNameDialogState extends State<_WorkoutNameDialog> {
 
 // ─── Volume Summary Row ───────────────────────────────────────────────────────
 
-class _VolumeSummaryRow extends StatelessWidget {
+class _VolumeSummaryRow extends ConsumerWidget {
   final HomeState state;
   final bool isLbs;
   const _VolumeSummaryRow({required this.state, required this.isLbs});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(languageProvider);
+    final accent = Theme.of(context).colorScheme.primary;
+    final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
+
     final vol = _fmtVol(state.todayVolume, isLbs);
     final last = state.lastSessionVolume;
     final unit = isLbs ? 'lbs' : 'kg';
 
     String? changeStr;
-    Color changeColor = _kTextMuted;
+    Color changeColor = textMuted;
     if (last > 0) {
       final pct = (state.todayVolume - last) / last * 100;
       final sign = pct >= 0 ? '+' : '';
       changeStr = '$sign${pct.toStringAsFixed(1)}%';
-      changeColor = pct >= 0 ? _kAccent : const Color(0xFFFF5A3C);
+      changeColor = pct >= 0 ? accent : const Color(0xFFFF5A3C);
     }
 
     return Column(
@@ -642,7 +650,7 @@ class _VolumeSummaryRow extends StatelessWidget {
           children: [
             Text(
               '$vol total',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _kTextMuted),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: textMuted),
             ),
             if (changeStr != null) ...[
               const SizedBox(width: 6),
@@ -651,8 +659,8 @@ class _VolumeSummaryRow extends StatelessWidget {
                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: changeColor),
               ),
               Text(
-                ' จากครั้งก่อน',
-                style: const TextStyle(fontSize: 11, color: _kTextMuted),
+                lang.tr('home_vs_prev'),
+                style: TextStyle(fontSize: 11, color: textMuted),
               ),
             ],
           ],
@@ -661,7 +669,7 @@ class _VolumeSummaryRow extends StatelessWidget {
           const SizedBox(height: 3),
           Text(
             'Best e1RM: ${fmtNum(isLbs ? state.bestE1RMToday * kgToLbs : state.bestE1RMToday)} $unit  (${state.bestE1RMExercise})',
-            style: const TextStyle(fontSize: 11, color: _kTextMuted),
+            style: TextStyle(fontSize: 11, color: textMuted),
           ),
         ],
       ],
@@ -671,29 +679,33 @@ class _VolumeSummaryRow extends StatelessWidget {
 
 // ─── Exercise List ────────────────────────────────────────────────────────────
 
-class _ExerciseList extends StatelessWidget {
+class _ExerciseList extends ConsumerWidget {
   final HomeState state;
   final bool isLbs;
   const _ExerciseList({required this.state, required this.isLbs});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(languageProvider);
+    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
+    final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
+
     final exercises = state.todayExercises;
     final hasWorkout = state.hasSessionToday || state.isFinishedToday;
 
     if (!hasWorkout) {
-      return const Center(
+      return Center(
         child: Text(
-          'ยังไม่ได้เริ่มวันนี้',
-          style: TextStyle(fontSize: 13, color: _kTextMuted),
+          lang.tr('home_not_started'),
+          style: TextStyle(fontSize: 13, color: textMuted),
         ),
       );
     }
     if (exercises.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          'กำลังอุ่นเครื่อง...',
-          style: TextStyle(fontSize: 13, color: _kTextMuted),
+          lang.tr('home_warming_up'),
+          style: TextStyle(fontSize: 13, color: textMuted),
         ),
       );
     }
@@ -722,10 +734,10 @@ class _ExerciseList extends StatelessWidget {
                       Flexible(
                         child: Text(
                           ex.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: _kTextPrimary,
+                            color: textPrimary,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -753,7 +765,7 @@ class _ExerciseList extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     '${ex.setCount} sets · ${fmtNum(w)} $unit',
-                    style: const TextStyle(fontSize: 12, color: _kTextMuted),
+                    style: TextStyle(fontSize: 12, color: textMuted),
                   ),
                 ],
               ),
@@ -765,11 +777,11 @@ class _ExerciseList extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '${fmtNum(vol)} $unit',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _kTextMuted),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: textMuted),
                 ),
-                const Text(
+                Text(
                   'vol.',
-                  style: TextStyle(fontSize: 10, color: _kTextMuted),
+                  style: TextStyle(fontSize: 10, color: textMuted),
                 ),
               ],
             ),
