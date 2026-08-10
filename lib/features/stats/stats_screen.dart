@@ -7,6 +7,7 @@ import '../../core/database/session_dao.dart';
 import '../../core/database/set_dao.dart';
 import '../../core/providers/unit_provider.dart';
 import '../../core/providers/translation_provider.dart';
+import '../../core/providers/cache_provider.dart';
 import '../../core/widgets/plate_stack.dart';
 import 'stats_provider.dart';
 
@@ -44,7 +45,7 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => ref.read(statsProvider.notifier).load(),
+            onPressed: () => ref.refresh(cacheInitProvider),
           ),
         ],
       ),
@@ -177,14 +178,14 @@ class _CalendarCard extends StatelessWidget {
                         style: GoogleFonts.spaceGrotesk(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFFF2F5EF),
+                          color: Theme.of(context).textTheme.bodyLarge?.color,
                         ),
                       ),
                       const SizedBox(width: 2),
-                      const Icon(
+                      Icon(
                         Icons.arrow_drop_down,
                         size: 18,
-                        color: Color(0xFF7C8A7C),
+                        color: Theme.of(context).textTheme.bodySmall?.color,
                       ),
                     ],
                   ),
@@ -275,11 +276,11 @@ class _CalendarCard extends StatelessWidget {
                                     color: isWorked
                                         ? accent
                                         : isToday
-                                        ? const Color(0xFF15181A)
+                                        ? Theme.of(context).inputDecorationTheme.fillColor ?? Theme.of(context).colorScheme.surface
                                         : Colors.transparent,
                                     border: isToday && !isWorked
                                         ? Border.all(
-                                            color: const Color(0xFF7C8A7C),
+                                            color: Theme.of(context).colorScheme.outline,
                                             width: 1,
                                           )
                                         : null,
@@ -301,10 +302,10 @@ class _CalendarCard extends StatelessWidget {
                                             ? FontWeight.w700
                                             : FontWeight.w400,
                                         color: isWorked
-                                            ? const Color(0xFF0A0C0A)
+                                            ? Theme.of(context).colorScheme.onPrimary
                                             : isFuture
-                                            ? const Color(0xFF262A24)
-                                            : const Color(0xFF7C8A7C),
+                                            ? Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.3)
+                                            : Theme.of(context).textTheme.bodyMedium?.color,
                                       ),
                                     ),
                                   ),
@@ -327,7 +328,7 @@ class _CalendarCard extends StatelessWidget {
                 _LegendDot(color: accent, label: lang == AppLanguage.th ? 'เล่นแล้ว' : 'Worked'),
                 const SizedBox(width: 16),
                 _LegendDot(
-                  color: const Color(0xFF7C8A7C),
+                  color: Theme.of(context).colorScheme.outline,
                   label: lang == AppLanguage.th ? 'ยังไม่ได้เล่น' : 'Rest',
                 ),
                 const Spacer(),
@@ -369,15 +370,15 @@ class _NavBtn extends StatelessWidget {
         width: 30,
         height: 30,
         decoration: BoxDecoration(
-          color: const Color(0xFF262A24),
+          color: Theme.of(context).inputDecorationTheme.fillColor ?? Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
           icon,
           size: 18,
           color: onTap == null
-              ? const Color(0xFF262A24)
-              : const Color(0xFF7C8A7C),
+              ? (Theme.of(context).inputDecorationTheme.fillColor ?? Theme.of(context).colorScheme.surface)
+              : Theme.of(context).textTheme.bodySmall?.color,
         ),
       ),
     );
@@ -469,7 +470,7 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
                         child: Container(
                           height: 36,
                           decoration: BoxDecoration(
-                            color: isCurrent ? accent : const Color(0xFF15181A),
+                            color: isCurrent ? accent : (Theme.of(context).inputDecorationTheme.fillColor ?? Theme.of(context).colorScheme.surface),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           alignment: Alignment.center,
@@ -479,9 +480,9 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                               color: isCurrent
-                                  ? const Color(0xFF0A0C0A)
+                                  ? Theme.of(context).colorScheme.onPrimary
                                   : disabled
-                                  ? const Color(0xFF4A544A)
+                                  ? Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.3)
                                   : accent,
                             ),
                           ),
@@ -525,8 +526,8 @@ class _WeeklyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const textPrimary = Color(0xFFF2F5EF);
-    const textMuted = Color(0xFF7C8A7C);
+    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
+    final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
 
     final now = DateTime.now();
     final thisMonday = now.subtract(Duration(days: now.weekday - 1));
@@ -541,7 +542,7 @@ class _WeeklyCard extends StatelessWidget {
           children: [
             Text(
               lang.tr('stats_this_week'),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 1,
@@ -568,13 +569,13 @@ class _WeeklyCard extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         lang == AppLanguage.th ? 'ครั้ง' : 'sessions',
-                        style: const TextStyle(fontSize: 12, color: textMuted),
+                        style: TextStyle(fontSize: 12, color: textMuted),
                       ),
                     ],
                   ),
                 ),
                 // Divider
-                Container(width: 1, height: 56, color: const Color(0xFF262A24)),
+                Container(width: 1, height: 56, color: Theme.of(context).colorScheme.outline),
                 const SizedBox(width: 16),
                 // Sets
                 Expanded(
@@ -591,7 +592,7 @@ class _WeeklyCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      const Text(
+                      Text(
                         'sets',
                         style: TextStyle(fontSize: 12, color: textMuted),
                       ),
@@ -1014,10 +1015,10 @@ class _ExerciseChartState extends ConsumerState<_ExerciseChart> {
                     _showMaxWeight
                         ? (lang == AppLanguage.th ? 'น้ำหนักสูงสุด ย้อนหลัง ($unit)' : 'Max Weight History ($unit)')
                         : (lang == AppLanguage.th ? 'Volume รายวัน ย้อนหลัง ($unit)' : 'Daily Volume History ($unit)'),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFFF2F5EF),
+                      color: Theme.of(context).textTheme.bodyLarge?.color,
                     ),
                   ),
                 ),
@@ -1029,7 +1030,7 @@ class _ExerciseChartState extends ConsumerState<_ExerciseChart> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).inputDecorationTheme.fillColor ?? const Color(0xFF15181A),
+                      color: Theme.of(context).inputDecorationTheme.fillColor ?? Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: Theme.of(context).colorScheme.outline),
                     ),
@@ -1204,12 +1205,12 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
     final isLbs = ref.watch(isLbsProvider);
     final unit = isLbs ? 'lbs' : 'kg';
     final lang = ref.watch(languageProvider);
-    const accent = Color(0xFFC6FF3D);
+    final accent = Theme.of(context).colorScheme.primary;
     final dateLabel = _formatDate(widget.dateStr, lang);
 
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color ?? const Color(0xFF1B1F1B),
+        color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         border: Border(top: BorderSide(color: Theme.of(context).colorScheme.outline, width: 0.5)),
       ),
@@ -1243,7 +1244,7 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
                   height: 8,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: widget.isWorked ? accent : Theme.of(context).textTheme.bodySmall?.color ?? const Color(0xFF7C8A7C),
+                    color: widget.isWorked ? accent : Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -1270,17 +1271,17 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.hotel_outlined,
                     size: 18,
-                    color: Color(0xFF7C8A7C),
+                    color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
                   ),
                   const SizedBox(width: 10),
                   Text(
                     lang == AppLanguage.th ? 'วันพักผ่อน' : 'Rest Day',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Theme.of(context).textTheme.bodySmall?.color ?? const Color(0xFF7C8A7C),
+                      color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
                     ),
                   ),
                 ],

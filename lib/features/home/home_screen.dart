@@ -297,14 +297,25 @@ class _HomeBody extends ConsumerWidget {
   }
 
   Future<void> _reopen(BuildContext context, WidgetRef ref) async {
-    await ref.read(homeProvider.notifier).reopenSession();
-    await ref.read(activeWorkoutProvider.notifier).loadTodaySession();
-    if (!context.mounted) return;
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const ActiveWorkoutScreen()),
-    );
-    ref.read(homeProvider.notifier).load();
+    try {
+      await ref.read(homeProvider.notifier).reopenSession();
+      await ref.read(activeWorkoutProvider.notifier).loadTodaySession();
+      if (!context.mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ActiveWorkoutScreen()),
+      );
+      ref.read(homeProvider.notifier).load();
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error reopening workout: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _viewFinished(BuildContext context, WidgetRef ref) async {
@@ -346,8 +357,19 @@ class _HomeBody extends ConsumerWidget {
       ),
     );
     if (confirmed == true) {
-      ref.read(activeWorkoutProvider.notifier).clearSession();
-      await ref.read(homeProvider.notifier).finishSession();
+      try {
+        ref.read(activeWorkoutProvider.notifier).clearSession();
+        await ref.read(homeProvider.notifier).finishSession();
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error finishing workout: $e'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      }
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

@@ -1,11 +1,36 @@
+import 'package:sqflite/sqflite.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide Session;
 import '../models/session.dart';
 import 'database_helper.dart';
 
 class SessionDao {
+  final _supabase = Supabase.instance.client;
+
   Future<Session> insert(Session session) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) throw Exception("User not authenticated");
+
+    final response = await _supabase.from('sessions').insert({
+      'user_id': user.id,
+      'date': session.date,
+      'name': session.name,
+      'created_at': session.createdAt,
+      'finished_at': session.finishedAt,
+    }).select().single();
+
+    final inserted = Session.fromMap(response);
+
+    // Save to SQLite read cache
     final db = await DatabaseHelper.database;
-    final id = await db.insert('sessions', session.toMap());
-    return session.copyWith(id: id);
+    await db.insert('sessions', {
+      'id': inserted.id,
+      'date': inserted.date,
+      'name': inserted.name,
+      'created_at': inserted.createdAt,
+      'finished_at': inserted.finishedAt,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+
+    return inserted;
   }
 
   Future<List<Session>> getAll() async {
@@ -52,8 +77,17 @@ class SessionDao {
   }
 
   Future<void> updateName(int id, String name) async {
+    // 1. Update on Supabase
+    await _supabase.from('sessions').update({'name': name}).eq('id', id);
+
+    // 2. Update SQLite Read Cache
     final db = await DatabaseHelper.database;
-    await db.update('sessions', {'name': name}, where: 'id = ?', whereArgs: [id]);
+    await db.update(
+      'sessions',
+      {'name': name},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   Future<List<Session>> getStaleActiveSessions(String beforeDate) async {
@@ -73,6 +107,13 @@ class SessionDao {
     final elapsed = session.finishedAt! - session.createdAt;
     final newCreatedAt = DateTime.now().millisecondsSinceEpoch - elapsed;
 
+    // 1. Update on Supabase
+    await _supabase.from('sessions').update({
+      'finished_at': null,
+      'created_at': newCreatedAt,
+    }).eq('id', id);
+
+    // 2. Update SQLite Read Cache
     await db.update(
       'sessions',
       {'finished_at': null, 'created_at': newCreatedAt},
@@ -82,16 +123,21 @@ class SessionDao {
   }
 
   Future<void> finishSession(int id) async {
+    final finishedAt = DateTime.now().millisecondsSinceEpoch;
+
+    // 1. Update on Supabase
+    await _supabase.from('sessions').update({'finished_at': finishedAt}).eq('id', id);
+
+    // 2. Update SQLite Read Cache
     final db = await DatabaseHelper.database;
     await db.update(
       'sessions',
-      {'finished_at': DateTime.now().millisecondsSinceEpoch},
+      {'finished_at': finishedAt},
       where: 'id = ?',
       whereArgs: [id],
     );
   }
 
-  /// Returns the most recent session per distinct name (non-null names only).
   Future<List<Session>> getRecentNamedSessions({int limit = 8}) async {
     final db = await DatabaseHelper.database;
     final maps = await db.rawQuery('''
@@ -109,6 +155,10 @@ class SessionDao {
   }
 
   Future<void> delete(int id) async {
+    // 1. Delete from Supabase
+    await _supabase.from('sessions').delete().eq('id', id);
+
+    // 2. Delete from SQLite (cascade deletions will handle exercises and sets locally)
     final db = await DatabaseHelper.database;
     await db.delete('sessions', where: 'id = ?', whereArgs: [id]);
   }

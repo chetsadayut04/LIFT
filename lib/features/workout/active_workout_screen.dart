@@ -28,7 +28,18 @@ class ActiveWorkoutScreen extends ConsumerWidget {
   Future<void> _addExercise(BuildContext context, WidgetRef ref) async {
     final name = await showAddExerciseSheet(context);
     if (name != null && context.mounted) {
-      await ref.read(activeWorkoutProvider.notifier).addExercise(name);
+      try {
+        await ref.read(activeWorkoutProvider.notifier).addExercise(name);
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error adding exercise: $e'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -60,7 +71,18 @@ class ActiveWorkoutScreen extends ConsumerWidget {
       ),
     );
     if (name != null && name.isNotEmpty && context.mounted) {
-      await ref.read(activeWorkoutProvider.notifier).renameSession(name);
+      try {
+        await ref.read(activeWorkoutProvider.notifier).renameSession(name);
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error renaming workout: $e'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -68,6 +90,21 @@ class ActiveWorkoutScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(activeWorkoutProvider);
     final lang = ref.watch(languageProvider);
+
+    Future<void> runSafe(Future<void> Function() action) async {
+      try {
+        await action();
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      }
+    }
 
     final accent = Theme.of(context).colorScheme.primary;
     final textSec = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
@@ -156,23 +193,21 @@ class ActiveWorkoutScreen extends ConsumerWidget {
                     exerciseWithSets: ex,
                     readOnly: readOnly,
                     index: i,
-                    onAddSet: (weight, reps, isWarmup) async {
-                      await ref
-                          .read(activeWorkoutProvider.notifier)
-                          .addSet(ex.exercise.id!, weight, reps, isWarmup: isWarmup);
-                    },
-                    onDeleteSet: (setId) => ref
+                    onAddSet: (weight, reps, isWarmup) => runSafe(() => ref
                         .read(activeWorkoutProvider.notifier)
-                        .deleteSet(ex.exercise.id!, setId),
-                    onDeleteExercise: () => ref
+                        .addSet(ex.exercise.id!, weight, reps, isWarmup: isWarmup)),
+                    onDeleteSet: (setId) => runSafe(() => ref
                         .read(activeWorkoutProvider.notifier)
-                        .deleteExercise(ex.exercise.id!),
-                    onRenameExercise: (name) => ref
+                        .deleteSet(ex.exercise.id!, setId)),
+                    onDeleteExercise: () => runSafe(() => ref
                         .read(activeWorkoutProvider.notifier)
-                        .renameExercise(ex.exercise.id!, name),
-                    onUpdateRepRange: (repMin, repMax) => ref
+                        .deleteExercise(ex.exercise.id!)),
+                    onRenameExercise: (name) => runSafe(() => ref
                         .read(activeWorkoutProvider.notifier)
-                        .updateRepRange(ex.exercise.id!, repMin, repMax),
+                        .renameExercise(ex.exercise.id!, name)),
+                    onUpdateRepRange: (repMin, repMax) => runSafe(() => ref
+                        .read(activeWorkoutProvider.notifier)
+                        .updateRepRange(ex.exercise.id!, repMin, repMax)),
                     onAfterAdd: () => _showRestTimer(context, ref),
                   ),
                 );

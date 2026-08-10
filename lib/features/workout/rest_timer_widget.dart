@@ -17,6 +17,12 @@ class RestTimerBottomSheet extends ConsumerWidget {
     final isDone = timer.secondsLeft == 0 && timer.isRunning == false && timer.totalSeconds > 0;
     final isReady = !timer.isRunning && !isDone && timer.secondsLeft > 0;
 
+    final theme = Theme.of(context);
+    final textMuted = theme.textTheme.bodySmall?.color ?? Colors.grey;
+    final textPrimary = theme.textTheme.bodyLarge?.color ?? Colors.white;
+    final accent = theme.colorScheme.primary;
+    final border = theme.colorScheme.outline;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(28, 16, 28, 32),
       child: Column(
@@ -27,18 +33,18 @@ class RestTimerBottomSheet extends ConsumerWidget {
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: const Color(0xFF262A24),
+              color: border,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
           const SizedBox(height: 28),
-          const Text(
+          Text(
             'REST',
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 1,
-              color: Color(0xFF7C8A7C),
+              color: textMuted,
             ),
           ),
           const SizedBox(height: 28),
@@ -53,12 +59,12 @@ class RestTimerBottomSheet extends ConsumerWidget {
                   child: CircularProgressIndicator(
                     value: isReady ? 1.0 : timer.progress,
                     strokeWidth: 6,
-                    backgroundColor: const Color(0xFF262A24),
+                    backgroundColor: border,
                     color: isDone
-                        ? const Color(0xFFC6FF3D)
+                        ? accent
                         : isReady
-                            ? const Color(0xFF262A24)
-                            : const Color(0xFFC6FF3D),
+                            ? border
+                            : accent,
                   ),
                 ),
                 Text(
@@ -68,14 +74,14 @@ class RestTimerBottomSheet extends ConsumerWidget {
                     fontWeight: FontWeight.w700,
                     letterSpacing: -1.5,
                     color: isDone
-                        ? const Color(0xFFC6FF3D)
+                        ? accent
                         : isReady
-                            ? const Color(0xFF7C8A7C)
-                            : const Color(0xFFF2F5EF),
+                            ? textMuted
+                            : textPrimary,
                     shadows: !isReady
                         ? [
                             Shadow(
-                              color: const Color(0xFFC6FF3D).withValues(alpha: 0.4),
+                              color: accent.withValues(alpha: 0.4),
                               blurRadius: 14,
                             ),
                           ]

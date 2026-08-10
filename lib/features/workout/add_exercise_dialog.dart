@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/database/exercise_dao.dart';
 
-const _kAccent = Color(0xFFC6FF3D);
-const _kTextPrimary = Color(0xFFF2F5EF);
-const _kTextMuted = Color(0xFF7C8A7C);
+// ลบค่าสีคงที่เพื่อให้ดึงจาก Theme.of(context) ไดนามิก
 
 Future<String?> showAddExerciseSheet(BuildContext context) {
   return showModalBottomSheet<String>(
@@ -98,11 +96,16 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     final filtered = _filtered;
+    final theme = Theme.of(context);
+    final textMuted = theme.textTheme.bodySmall?.color ?? Colors.grey;
+    final accent = theme.colorScheme.primary;
+    final surfaceColor = theme.cardTheme.color ?? theme.colorScheme.surface;
+    final outlineColor = theme.colorScheme.outline;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF1B1F1B),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       padding: EdgeInsets.only(bottom: bottom),
       child: Column(
@@ -114,7 +117,7 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: const Color(0xFF262A24),
+              color: outlineColor,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -130,7 +133,7 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
               textCapitalization: TextCapitalization.words,
               decoration: InputDecoration(
                 hintText: 'ค้นหาท่า...',
-                prefixIcon: const Icon(Icons.search, size: 20, color: _kTextMuted),
+                prefixIcon: Icon(Icons.search, size: 20, color: textMuted),
                 suffixIcon: _query.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear, size: 18),
@@ -141,7 +144,7 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
                       )
                     : null,
                 filled: true,
-                fillColor: const Color(0xFF0A0C0A),
+                fillColor: theme.scaffoldBackgroundColor,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -167,29 +170,29 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
               children: [
                 // Recent section (only when not searching)
                 if (_query.isEmpty && _recent.isNotEmpty) ...[
-                  _SectionLabel('ล่าสุด'),
+                  const _SectionLabel('ล่าสุด'),
                   ..._recent.map((n) => _ExerciseItem(
                         name: n,
                         onTap: () => _select(n),
                         onLongPress: () => _deleteExercise(n),
                       )),
                   const SizedBox(height: 8),
-                  _SectionLabel('ทั้งหมด'),
+                  const _SectionLabel('ทั้งหมด'),
                 ],
 
                 // Filtered / all list
                 if (_all.isEmpty && _query.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
                     child: Column(
                       children: [
-                        Icon(Icons.fitness_center, size: 32, color: Color(0xFF262A24)),
-                        SizedBox(height: 10),
+                        Icon(Icons.fitness_center, size: 32, color: outlineColor),
+                        const SizedBox(height: 10),
                         Text('ยังไม่มีท่าในระบบ',
-                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _kTextMuted)),
-                        SizedBox(height: 4),
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textMuted)),
+                        const SizedBox(height: 4),
                         Text('พิมพ์ชื่อท่าด้านบนเพื่อเพิ่มใหม่',
-                            style: TextStyle(fontSize: 12, color: _kTextMuted)),
+                            style: TextStyle(fontSize: 12, color: textMuted)),
                       ],
                     ),
                   )
@@ -199,7 +202,7 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
                     child: Text(
                       'ไม่พบ "$_query"',
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 13, color: _kTextMuted),
+                      style: TextStyle(fontSize: 13, color: textMuted),
                     ),
                   )
                 else
@@ -215,8 +218,8 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
                   _ExerciseItem(
                     name: 'เพิ่ม "${_query.trim()}"',
                     icon: Icons.add_circle_outline,
-                    iconColor: _kAccent,
-                    nameColor: _kAccent,
+                    iconColor: accent,
+                    nameColor: accent,
                     onTap: () => _select(_query.trim()),
                   ),
                 ],
@@ -237,15 +240,16 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
     return Padding(
       padding: const EdgeInsets.only(top: 4, bottom: 6),
       child: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w700,
           letterSpacing: 1,
-          color: _kTextMuted,
+          color: textMuted,
         ),
       ),
     );
@@ -257,20 +261,24 @@ class _ExerciseItem extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
   final IconData icon;
-  final Color iconColor;
-  final Color nameColor;
+  final Color? iconColor;
+  final Color? nameColor;
 
   const _ExerciseItem({
     required this.name,
     required this.onTap,
     this.onLongPress,
     this.icon = Icons.fitness_center,
-    this.iconColor = const Color(0xFF7C8A7C),
-    this.nameColor = _kTextPrimary,
+    this.iconColor,
+    this.nameColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final resolvedIconColor = iconColor ?? theme.textTheme.bodySmall?.color ?? Colors.grey;
+    final resolvedNameColor = nameColor ?? theme.textTheme.bodyLarge?.color ?? Colors.white;
+
     return InkWell(
       onTap: onTap,
       onLongPress: onLongPress,
@@ -279,7 +287,7 @@ class _ExerciseItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: iconColor),
+            Icon(icon, size: 18, color: resolvedIconColor),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -287,7 +295,7 @@ class _ExerciseItem extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: nameColor,
+                  color: resolvedNameColor,
                 ),
               ),
             ),

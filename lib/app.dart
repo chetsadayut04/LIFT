@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/providers/translation_provider.dart';
+import 'core/providers/cache_provider.dart';
 import 'features/auth/auth_provider.dart';
 import 'features/auth/login_screen.dart';
 import 'features/profile/profile_screen.dart';
@@ -43,6 +44,47 @@ class _AppState extends ConsumerState<App> {
     final user = ref.watch(authProvider);
     final themeMode = ref.watch(themeProvider);
     final lang = ref.watch(languageProvider);
+    final cacheInit = user != null ? ref.watch(cacheInitProvider) : null;
+
+    final mainScaffold = Scaffold(
+      body: IndexedStack(index: _currentIndex, children: _screens),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: themeMode == ThemeMode.dark ? const Color(0xFF262A24) : const Color(0xFFE2E8DF),
+              width: 0.5,
+            ),
+          ),
+        ),
+        child: NavigationBar(
+          selectedIndex: _currentIndex,
+          onDestinationSelected: _onTabChanged,
+          destinations: [
+            NavigationDestination(
+              icon: const Icon(Icons.home_outlined),
+              selectedIcon: const Icon(Icons.home),
+              label: lang.tr('nav_home'),
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.history_outlined),
+              selectedIcon: const Icon(Icons.history),
+              label: lang.tr('nav_history'),
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.bar_chart_outlined),
+              selectedIcon: const Icon(Icons.bar_chart),
+              label: lang.tr('nav_stats'),
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.person_outline),
+              selectedIcon: const Icon(Icons.person),
+              label: lang.tr('nav_profile'),
+            ),
+          ],
+        ),
+      ),
+    );
 
     return MaterialApp(
       title: 'LIFT',
@@ -50,45 +92,60 @@ class _AppState extends ConsumerState<App> {
       theme: _theme(themeMode),
       home: user == null
           ? const LoginScreen()
-          : Scaffold(
-              body: IndexedStack(index: _currentIndex, children: _screens),
-              bottomNavigationBar: Container(
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(
-                      color: themeMode == ThemeMode.dark ? const Color(0xFF262A24) : const Color(0xFFE2E8DF),
-                      width: 0.5,
-                    ),
+          : cacheInit?.when(
+              data: (_) => mainScaffold,
+              loading: () => Scaffold(
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: CircularProgressIndicator(strokeWidth: 3),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        lang == AppLanguage.th
+                            ? 'กำลังโหลดข้อมูลจากคลาวด์...'
+                            : 'Loading data from cloud...',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: NavigationBar(
-                  selectedIndex: _currentIndex,
-                  onDestinationSelected: _onTabChanged,
-                  destinations: [
-                    NavigationDestination(
-                      icon: const Icon(Icons.home_outlined),
-                      selectedIcon: const Icon(Icons.home),
-                      label: lang.tr('nav_home'),
-                    ),
-                    NavigationDestination(
-                      icon: const Icon(Icons.history_outlined),
-                      selectedIcon: const Icon(Icons.history),
-                      label: lang.tr('nav_history'),
-                    ),
-                    NavigationDestination(
-                      icon: const Icon(Icons.bar_chart_outlined),
-                      selectedIcon: const Icon(Icons.bar_chart),
-                      label: lang.tr('nav_stats'),
-                    ),
-                    NavigationDestination(
-                      icon: const Icon(Icons.person_outline),
-                      selectedIcon: const Icon(Icons.person),
-                      label: lang.tr('nav_profile'),
-                    ),
-                  ],
+              ),
+              error: (err, stack) => Scaffold(
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 40, color: Colors.redAccent),
+                      const SizedBox(height: 16),
+                      Text(
+                        lang == AppLanguage.th
+                            ? 'เกิดข้อผิดพลาดในการโหลดข้อมูล'
+                            : 'Error loading data from cloud',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.redAccent,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton(
+                        onPressed: () => ref.refresh(cacheInitProvider),
+                        child: Text(lang == AppLanguage.th ? 'ลองใหม่' : 'Retry'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
+            ) ?? const Scaffold(body: Center(child: CircularProgressIndicator())),
     );
   }
 
@@ -101,8 +158,8 @@ class _AppState extends ConsumerState<App> {
     final accent = isDark ? const Color(0xFFC6FF3D) : const Color(0xFF4D8300);
     final onAccent = isDark ? const Color(0xFF0A0C0A) : const Color(0xFFFFFFFF);
     final textPrimary = isDark ? const Color(0xFFFFFFFF) : const Color(0xFF101410);
-    final textMuted = isDark ? const Color(0xFF8E9C8E) : const Color(0xFF5A655A);
-    final textSecondary = isDark ? const Color(0xFFCBD5CB) : const Color(0xFF384238);
+    final textMuted = isDark ? const Color(0xFF9FB09F) : const Color(0xFF4E594E);
+    final textSecondary = isDark ? const Color(0xFFD2DDD2) : const Color(0xFF323B32);
 
     final brightness = isDark ? Brightness.dark : Brightness.light;
 

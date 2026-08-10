@@ -5,6 +5,8 @@ import '../../core/database/set_dao.dart';
 import '../../core/models/exercise.dart';
 import '../../core/models/session.dart';
 import '../../core/models/workout_set.dart';
+import '../home/home_provider.dart';
+import '../stats/stats_provider.dart';
 
 class SessionSummary {
   final Session session;
@@ -26,7 +28,9 @@ class SessionDetail {
 }
 
 class HistoryNotifier extends StateNotifier<AsyncValue<List<SessionSummary>>> {
-  HistoryNotifier() : super(const AsyncValue.loading()) {
+  final Ref ref;
+
+  HistoryNotifier(this.ref) : super(const AsyncValue.loading()) {
     load();
   }
 
@@ -72,11 +76,13 @@ class HistoryNotifier extends StateNotifier<AsyncValue<List<SessionSummary>>> {
 
   Future<void> deleteSession(int id) async {
     await _sessionDao.delete(id);
+    ref.invalidate(homeProvider);
+    ref.invalidate(statsProvider);
     await load();
   }
 }
 
 final historyProvider =
     StateNotifierProvider<HistoryNotifier, AsyncValue<List<SessionSummary>>>(
-  (_) => HistoryNotifier(),
+  (ref) => HistoryNotifier(ref),
 );

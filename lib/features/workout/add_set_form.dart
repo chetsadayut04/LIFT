@@ -2,11 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers/unit_provider.dart';
 
-const _kAccent = Color(0xFFC6FF3D);
-const _kTextSec = Color(0xFFB8C2B4);
-const _kTextMuted = Color(0xFF7C8A7C);
-const _kBorder = Color(0xFF262A24);
-const _kSurfaceHi = Color(0xFF15181A);
+// ลบสีค่าคงที่ฮาร์ดโค้ดออกเพื่อให้ใช้สีระบบตาม Theme ได้อย่างสมบูรณ์แบบ
 
 class AddSetForm extends ConsumerStatefulWidget {
   final void Function(double weight, int reps, bool isWarmup) onAdd;
@@ -89,41 +85,60 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
     if (!_isWarmup) widget.onAfterAdd?.call();
   }
 
-  Widget _stepBtn(IconData icon, VoidCallback onTap) => InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          width: 30,
-          height: 40,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: _kSurfaceHi,
-            border: Border.all(color: _kBorder),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Icon(icon, size: 14, color: _kAccent),
+  Widget _stepBtn(IconData icon, VoidCallback onTap) {
+    final theme = Theme.of(context);
+    final accent = theme.colorScheme.primary;
+    final border = theme.colorScheme.outline;
+    final surfaceHi = theme.inputDecorationTheme.fillColor ?? theme.colorScheme.surface;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        width: 30,
+        height: 40,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: surfaceHi,
+          border: Border.all(color: border),
+          borderRadius: BorderRadius.circular(6),
         ),
-      );
+        child: Icon(icon, size: 14, color: accent),
+      ),
+    );
+  }
 
-  Widget _microStepBtn(String label, VoidCallback onTap) => InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(4),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: _kSurfaceHi,
-            border: Border.all(color: _kBorder),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(label, style: const TextStyle(fontSize: 11, color: _kAccent, fontWeight: FontWeight.w600)),
+  Widget _microStepBtn(String label, VoidCallback onTap) {
+    final theme = Theme.of(context);
+    final accent = theme.colorScheme.primary;
+    final border = theme.colorScheme.outline;
+    final surfaceHi = theme.inputDecorationTheme.fillColor ?? theme.colorScheme.surface;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: surfaceHi,
+          border: Border.all(color: border),
+          borderRadius: BorderRadius.circular(4),
         ),
-      );
+        child: Text(label, style: TextStyle(fontSize: 11, color: accent, fontWeight: FontWeight.w600)),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final isLbs = ref.watch(isLbsProvider);
     final unit = isLbs ? 'lbs' : 'kg';
     final weightStep = isLbs ? 5.0 : 2.5;
+
+    final theme = Theme.of(context);
+    final accent = theme.colorScheme.primary;
+    final textSec = theme.textTheme.bodyMedium?.color ?? Colors.grey;
+    final textMuted = theme.textTheme.bodySmall?.color ?? Colors.grey;
+    final border = theme.colorScheme.outline;
+    final surfaceHi = theme.inputDecorationTheme.fillColor ?? theme.colorScheme.surface;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,9 +147,9 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
         if (widget.lastSessionSets.isNotEmpty) ...[
           Row(
             children: [
-              const Text(
+              Text(
                 'ครั้งก่อน  ',
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: _kTextMuted, letterSpacing: 0.5),
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: textMuted, letterSpacing: 0.5),
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -151,7 +166,7 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
                           '${e.key + 1}: $wStr $unit × ${s.reps}',
                           style: TextStyle(
                             fontSize: 11,
-                            color: isCurrent ? _kAccent : _kTextSec,
+                            color: isCurrent ? accent : textSec,
                             fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w400,
                           ),
                         ),
@@ -182,10 +197,10 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
                 duration: const Duration(milliseconds: 150),
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: _isWarmup ? const Color(0xFFFF9F1C).withValues(alpha: 0.18) : _kSurfaceHi,
+                  color: _isWarmup ? const Color(0xFFFF9F1C).withValues(alpha: 0.18) : surfaceHi,
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: _isWarmup ? const Color(0xFFFF9F1C) : _kBorder,
+                    color: _isWarmup ? const Color(0xFFFF9F1C) : border,
                     width: 1,
                   ),
                 ),
@@ -194,7 +209,7 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: _isWarmup ? const Color(0xFFFF9F1C) : _kTextSec,
+                    color: _isWarmup ? const Color(0xFFFF9F1C) : textSec,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -323,13 +338,15 @@ class _ProgressionHint extends StatelessWidget {
         ? 'เพิ่มน้ำหนัก: ${fmtNum(display)} $unit × ${s.reps} reps'
         : 'เพิ่ม reps: ${fmtNum(display)} $unit × ${s.reps} reps';
 
+    final accent = Theme.of(context).colorScheme.primary;
+
     return Row(
       children: [
-        const Icon(Icons.trending_up, size: 11, color: _kAccent),
+        Icon(Icons.trending_up, size: 11, color: accent),
         const SizedBox(width: 3),
         Text(
           hint,
-          style: const TextStyle(fontSize: 10, color: _kAccent, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: 10, color: accent, fontWeight: FontWeight.w600),
         ),
       ],
     );

@@ -1,19 +1,40 @@
+import 'package:sqflite/sqflite.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/workout_set.dart';
 import 'database_helper.dart';
 
 class SetDao {
+  final _supabase = Supabase.instance.client;
+
   Future<WorkoutSet> insert(WorkoutSet set) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) throw Exception("User not authenticated");
+
+    final response = await _supabase.from('sets').insert({
+      'user_id': user.id,
+      'exercise_id': set.exerciseId,
+      'set_number': set.setNumber,
+      'weight_kg': set.weightKg,
+      'reps': set.reps,
+      'created_at': set.createdAt,
+      'is_warmup': set.isWarmup,
+    }).select().single();
+
+    final inserted = WorkoutSet.fromMap(response);
+
+    // Save to SQLite read cache
     final db = await DatabaseHelper.database;
-    final id = await db.insert('sets', set.toMap());
-    return WorkoutSet(
-      id: id,
-      exerciseId: set.exerciseId,
-      setNumber: set.setNumber,
-      weightKg: set.weightKg,
-      reps: set.reps,
-      createdAt: set.createdAt,
-      isWarmup: set.isWarmup,
-    );
+    await db.insert('sets', {
+      'id': inserted.id,
+      'exercise_id': inserted.exerciseId,
+      'set_number': inserted.setNumber,
+      'weight_kg': inserted.weightKg,
+      'reps': inserted.reps,
+      'created_at': inserted.createdAt,
+      'is_warmup': inserted.isWarmup ? 1 : 0,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+
+    return inserted;
   }
 
   Future<List<WorkoutSet>> getByExercise(int exerciseId) async {
@@ -327,12 +348,23 @@ class SetDao {
         whereArgs: [exerciseId],
         orderBy: 'set_number ASC');
     for (var i = 0; i < sets.length; i++) {
-      await db.update('sets', {'set_number': i + 1},
-          where: 'id = ?', whereArgs: [sets[i]['id']]);
+      final id = sets[i]['id'] as int;
+      final newNumber = i + 1;
+
+      // 1. Update on Supabase
+      await _supabase.from('sets').update({'set_number': newNumber}).eq('id', id);
+
+      // 2. Update SQLite
+      await db.update('sets', {'set_number': newNumber},
+          where: 'id = ?', whereArgs: [id]);
     }
   }
 
   Future<void> delete(int id) async {
+    // 1. Delete from Supabase
+    await _supabase.from('sets').delete().eq('id', id);
+
+    // 2. Delete from SQLite
     final db = await DatabaseHelper.database;
     await db.delete('sets', where: 'id = ?', whereArgs: [id]);
   }
