@@ -41,6 +41,7 @@ const Map<String, Map<AppLanguage, String>> _translations = {
   'nav_home': {AppLanguage.th: 'หน้าหลัก', AppLanguage.en: 'Home'},
   'nav_history': {AppLanguage.th: 'ประวัติ', AppLanguage.en: 'History'},
   'nav_stats': {AppLanguage.th: 'สถิติ', AppLanguage.en: 'Stats'},
+  'nav_ai': {AppLanguage.th: 'โค้ช AI', AppLanguage.en: 'AI Coach'},
   'nav_profile': {AppLanguage.th: 'โปรไฟล์', AppLanguage.en: 'Profile'},
 
   // Profile Screen
@@ -77,6 +78,11 @@ const Map<String, Map<AppLanguage, String>> _translations = {
   'goal_fitness': {AppLanguage.th: 'สุขภาพทั่วไป (Fitness)', AppLanguage.en: 'General Fitness'},
   'body_weight': {AppLanguage.th: 'น้ำหนักร่างกาย', AppLanguage.en: 'Body Weight'},
   'body_height': {AppLanguage.th: 'ส่วนสูง', AppLanguage.en: 'Height'},
+  'btn_view_history': {AppLanguage.th: 'ดูประวัติ', AppLanguage.en: 'View History'},
+  'weight_history_title': {AppLanguage.th: 'ประวัติน้ำหนักตัว', AppLanguage.en: 'Weight History'},
+  'weight_history_empty': {AppLanguage.th: 'ยังไม่มีบันทึกน้ำหนักตัว', AppLanguage.en: 'No weight logs recorded yet.'},
+  'btn_delete_confirm': {AppLanguage.th: 'ลบข้อมูลนี้', AppLanguage.en: 'Delete Entry'},
+  'btn_delete_desc': {AppLanguage.th: 'คุณแน่ใจหรือไม่ว่าต้องการลบประวัติน้ำหนักนี้?', AppLanguage.en: 'Are you sure you want to delete this weight log?'},
 
   // Home Screen
   'home_ready': {AppLanguage.th: 'พร้อมแล้ว?', AppLanguage.en: 'Ready?'},

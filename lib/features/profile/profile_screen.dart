@@ -1,12 +1,18 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/models/profile.dart';
+import '../../core/models/weight_log.dart';
+import '../../core/database/profile_dao.dart';
+import '../../core/database/weight_log_dao.dart';
 import '../../core/providers/theme_provider.dart';
 import '../../core/providers/translation_provider.dart';
 import '../../core/providers/unit_provider.dart';
 import '../auth/auth_provider.dart';
+import '../stats/stats_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -20,6 +26,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _weightController = TextEditingController();
   String _selectedGoal = 'Fitness';
   bool _isSaving = false;
+
+  List<WeightLog> _weightLogs = [];
+  final _profileDao = ProfileDao();
+  final _weightLogDao = WeightLogDao();
 
   static const _kHeight = 'profile_height';
   static const _kWeight = 'profile_weight';
@@ -39,34 +49,117 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _loadProfileData() async {
+    final user = ref.read(authProvider);
+    if (user == null) return;
+
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _heightController.text = prefs.getString(_kHeight) ?? '';
-      _weightController.text = prefs.getString(_kWeight) ?? '';
-      var goal = prefs.getString(_kGoal) ?? 'Fitness';
-      if (goal == 'General Fitness') goal = 'Fitness';
-      _selectedGoal = goal;
-    });
+    final spHeight = prefs.getString(_kHeight);
+    final spWeight = prefs.getString(_kWeight);
+    final spGoal = prefs.getString(_kGoal);
+
+    var profile = await _profileDao.getProfile(user.id);
+    var logs = await _weightLogDao.getAll();
+
+    // Migration bridge: SharedPreferences -> DB
+    if (profile == null && (spHeight != null || spGoal != null)) {
+      final height = double.tryParse(spHeight ?? '');
+      profile = Profile(
+        id: user.id,
+        height: height,
+        fitnessGoal: spGoal ?? 'Fitness',
+        updatedAt: DateTime.now().millisecondsSinceEpoch,
+      );
+      await _profileDao.saveProfile(profile);
+
+      if (spWeight != null) {
+        final w = double.tryParse(spWeight);
+        if (w != null && w > 0) {
+          await _weightLogDao.insert(w, DateTime.now().millisecondsSinceEpoch);
+          logs = await _weightLogDao.getAll();
+        }
+      }
+
+      await prefs.remove(_kHeight);
+      await prefs.remove(_kWeight);
+      await prefs.remove(_kGoal);
+    }
+
+    if (mounted) {
+      setState(() {
+        _heightController.text = profile?.height != null ? profile!.height!.toStringAsFixed(1) : '';
+        
+        if (logs.isNotEmpty) {
+          final latestWeight = logs.first.weightKg;
+          final isLbs = ref.read(isLbsProvider);
+          _weightController.text = isLbs 
+              ? (latestWeight * kgToLbs).toStringAsFixed(1)
+              : latestWeight.toStringAsFixed(1);
+        } else {
+          _weightController.text = '';
+        }
+        
+        var goal = profile?.fitnessGoal ?? 'Fitness';
+        if (goal == 'General Fitness') goal = 'Fitness';
+        _selectedGoal = goal;
+        _weightLogs = logs;
+      });
+    }
   }
 
   Future<void> _saveProfileData() async {
+    final user = ref.read(authProvider);
+    if (user == null) return;
+
     setState(() => _isSaving = true);
     final messenger = ScaffoldMessenger.of(context);
     final lang = ref.read(languageProvider);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kHeight, _heightController.text.trim());
-    await prefs.setString(_kWeight, _weightController.text.trim());
-    await prefs.setString(_kGoal, _selectedGoal);
+    final isLbs = ref.read(isLbsProvider);
 
-    if (mounted) {
-      setState(() => _isSaving = false);
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(lang.tr('saved_success')),
-          backgroundColor: const Color(0xFF1B1F1B),
-          duration: const Duration(seconds: 2),
-        ),
+    final heightVal = double.tryParse(_heightController.text.trim());
+    final rawWeight = double.tryParse(_weightController.text.trim());
+
+    try {
+      final profile = Profile(
+        id: user.id,
+        height: heightVal,
+        fitnessGoal: _selectedGoal,
+        updatedAt: DateTime.now().millisecondsSinceEpoch,
       );
+      await _profileDao.saveProfile(profile);
+
+      if (rawWeight != null && rawWeight > 0) {
+        final weightKg = isLbs ? rawWeight * lbsToKg : rawWeight;
+
+        final latestLog = _weightLogs.isNotEmpty ? _weightLogs.first : null;
+        final hasWeightChanged = latestLog == null || (latestLog.weightKg - weightKg).abs() > 0.05;
+
+        if (hasWeightChanged) {
+          await _weightLogDao.insert(weightKg, DateTime.now().millisecondsSinceEpoch);
+        }
+      }
+
+      await _loadProfileData();
+
+      if (mounted) {
+        setState(() => _isSaving = false);
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(lang.tr('saved_success')),
+            backgroundColor: const Color(0xFF1B1F1B),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('Failed to save: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
     }
   }
 
@@ -216,29 +309,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         user?.email?.split('@').first ??
         (lang == AppLanguage.th ? 'ผู้ใช้งาน LIFT' : 'LIFT User');
 
-    final goals = [
-      {
-        'key': 'Strength',
-        'label': lang.tr('goal_strength'),
-        'icon': Icons.fitness_center,
-      },
-      {
-        'key': 'Hypertrophy',
-        'label': lang.tr('goal_hypertrophy'),
-        'icon': Icons.accessibility_new,
-      },
-      {
-        'key': 'Fat Loss',
-        'label': lang.tr('goal_fatloss'),
-        'icon': Icons.local_fire_department,
-      },
-      {
-        'key': 'Fitness',
-        'label': lang.tr('goal_fitness'),
-        'icon': Icons.favorite_border,
-      },
-    ];
-
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
@@ -377,22 +447,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      FilledButton.icon(
-                        onPressed: _isSaving ? null : _saveProfileData,
-                        icon: _isSaving
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(Icons.save_outlined, size: 18),
-                        label: Text(
-                          lang == AppLanguage.th
-                              ? 'บันทึกข้อมูลร่างกาย'
-                              : 'Save Body Metrics',
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: FilledButton.icon(
+                              onPressed: _isSaving ? null : _saveProfileData,
+                              icon: _isSaving
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.save_outlined, size: 18),
+                              label: Text(
+                                lang == AppLanguage.th
+                                    ? 'บันทึกข้อมูล'
+                                    : 'Save Metrics',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          OutlinedButton.icon(
+                            onPressed: _showWeightHistoryBottomSheet,
+                            icon: const Icon(Icons.history, size: 18),
+                            label: Text(lang.tr('btn_view_history')),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -400,13 +482,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Training Goal Section
+              // Stats Section
               Row(
                 children: [
-                  Icon(Icons.track_changes, color: textMuted, size: 16),
+                  Icon(Icons.bar_chart, color: textMuted, size: 16),
                   const SizedBox(width: 8),
                   Text(
-                    lang.tr('goals_title'),
+                    lang.tr('nav_stats'),
                     style: GoogleFonts.spaceGrotesk(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -417,41 +499,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Column(
-                    children: goals.map((goal) {
-                      final isSelected = _selectedGoal == goal['key'];
-                      return ListTile(
-                        leading: Icon(
-                          goal['icon'] as IconData,
-                          color: isSelected ? accent : textMuted,
-                        ),
-                        title: Text(
-                          goal['label'] as String,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                            color: isSelected ? textPrimary : textMuted,
-                          ),
-                        ),
-                        trailing: isSelected
-                            ? Icon(Icons.check_circle, color: accent, size: 20)
-                            : null,
-                        onTap: () {
-                          setState(() {
-                            _selectedGoal = goal['key'] as String;
-                          });
-                          _saveProfileData(); // Auto save when changing goal
-                        },
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
+              const StatsSection(),
               const SizedBox(height: 24),
 
               // General Settings Header
@@ -889,5 +937,397 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
       ),
     );
+  }
+
+  void _showWeightHistoryBottomSheet() {
+    final lang = ref.read(languageProvider);
+    final isLbs = ref.read(isLbsProvider);
+    final accent = Theme.of(context).colorScheme.primary;
+    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
+    final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final startingLog = _weightLogs.isNotEmpty ? _weightLogs.last : null;
+            final currentLog = _weightLogs.isNotEmpty ? _weightLogs.first : null;
+            
+            final startingDisplay = startingLog != null 
+                ? (isLbs ? startingLog.weightKg * kgToLbs : startingLog.weightKg) 
+                : 0.0;
+            final currentDisplay = currentLog != null 
+                ? (isLbs ? currentLog.weightKg * kgToLbs : currentLog.weightKg) 
+                : 0.0;
+            final diffDisplay = currentDisplay - startingDisplay;
+            
+            final unit = isLbs ? 'lbs' : 'kg';
+
+            final chartLogs = _weightLogs.reversed.toList();
+            final spots = <FlSpot>[];
+            for (int i = 0; i < chartLogs.length; i++) {
+              final log = chartLogs[i];
+              final w = isLbs ? log.weightKg * kgToLbs : log.weightKg;
+              spots.add(FlSpot(i.toDouble(), w));
+            }
+
+            double minWeight = double.infinity;
+            double maxWeight = -double.infinity;
+            for (final log in chartLogs) {
+              final w = isLbs ? log.weightKg * kgToLbs : log.weightKg;
+              if (w < minWeight) minWeight = w;
+              if (w > maxWeight) maxWeight = w;
+            }
+
+            final range = maxWeight - minWeight;
+            final padding = range > 0 ? range * 0.15 : 2.0;
+            final yMin = spots.isNotEmpty ? minWeight - padding : 0.0;
+            final yMax = spots.isNotEmpty ? maxWeight + padding : 100.0;
+
+            int interval = 1;
+            if (chartLogs.length > 6) {
+              interval = (chartLogs.length / 5).ceil();
+            }
+
+            Widget metricCol({required String title, required String value, required Color color}) {
+              return Expanded(
+                child: Column(
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: textMuted,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      value,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            Widget dividerCol() {
+              return Container(
+                height: 24,
+                width: 0.5,
+                color: Theme.of(context).colorScheme.outline,
+              );
+            }
+
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.8,
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline,
+                  width: 0.5,
+                ),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 12),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[600],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          lang.tr('weight_history_title'),
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(),
+                  
+                  if (_weightLogs.length >= 2) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      height: 150,
+                      padding: const EdgeInsets.only(right: 24, left: 12),
+                      child: LineChart(
+                        LineChartData(
+                          minX: 0,
+                          maxX: (chartLogs.length - 1).toDouble(),
+                          minY: yMin,
+                          maxY: yMax,
+                          gridData: FlGridData(
+                            show: true,
+                            drawVerticalLine: false,
+                            horizontalInterval: range > 0 ? (range / 3) : 2.0,
+                            getDrawingHorizontalLine: (value) => FlLine(
+                              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.4),
+                              strokeWidth: 0.5,
+                              dashArray: [5, 5],
+                            ),
+                          ),
+                          titlesData: FlTitlesData(
+                            show: true,
+                            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                reservedSize: 22,
+                                interval: 1,
+                                getTitlesWidget: (value, meta) {
+                                  final index = value.toInt();
+                                  if (index < 0 || index >= chartLogs.length) return const SizedBox.shrink();
+                                  if (index % interval != 0) return const SizedBox.shrink();
+                                  final log = chartLogs[index];
+                                  final date = DateTime.fromMillisecondsSinceEpoch(log.loggedAt);
+                                  final label = "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}";
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 6.0),
+                                    child: Text(
+                                      label,
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        color: textMuted,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            leftTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                reservedSize: 32,
+                                getTitlesWidget: (value, meta) {
+                                  return Text(
+                                    value.toStringAsFixed(1),
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      color: textMuted,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                          borderData: FlBorderData(
+                            show: true,
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Theme.of(context).colorScheme.outline,
+                                width: 0.5,
+                              ),
+                            ),
+                          ),
+                          lineBarsData: [
+                            LineChartBarData(
+                              spots: spots,
+                              isCurved: true,
+                              preventCurveOverShooting: true,
+                              color: accent,
+                              barWidth: 3,
+                              isStrokeCapRound: true,
+                              dotData: FlDotData(
+                                show: true,
+                                getDotPainter: (spot, percent, barData, index) =>
+                                    FlDotCirclePainter(
+                                  radius: 4,
+                                  color: accent,
+                                  strokeWidth: 1,
+                                  strokeColor: Theme.of(context).scaffoldBackgroundColor,
+                                ),
+                              ),
+                              belowBarData: BarAreaData(
+                                show: true,
+                                gradient: LinearGradient(
+                                  colors: [
+                                    accent.withValues(alpha: 0.2),
+                                    accent.withValues(alpha: 0.0),
+                                  ],
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  if (_weightLogs.isNotEmpty) ...[
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).cardTheme.color,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outline,
+                          width: 0.5,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          metricCol(
+                            title: lang == AppLanguage.th ? 'เริ่มต้น' : 'Starting',
+                            value: "${startingDisplay.toStringAsFixed(1)} $unit",
+                            color: textPrimary,
+                          ),
+                          dividerCol(),
+                          metricCol(
+                            title: lang == AppLanguage.th ? 'ปัจจุบัน' : 'Current',
+                            value: "${currentDisplay.toStringAsFixed(1)} $unit",
+                            color: textPrimary,
+                          ),
+                          dividerCol(),
+                          metricCol(
+                            title: lang == AppLanguage.th ? 'เปลี่ยนแปลง' : 'Net Change',
+                            value: "${diffDisplay >= 0 ? '+' : ''}${diffDisplay.toStringAsFixed(1)} $unit",
+                            color: diffDisplay < 0 
+                                ? const Color(0xFFC6FF3D) 
+                                : (diffDisplay > 0 ? Colors.cyan : textMuted),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  const Divider(),
+                  Expanded(
+                    child: _weightLogs.isEmpty
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(24.0),
+                              child: Text(
+                                lang.tr('weight_history_empty'),
+                                style: const TextStyle(color: Colors.grey),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          )
+                        : ListView.separated(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            itemCount: _weightLogs.length,
+                            separatorBuilder: (_, __) => const Divider(height: 1),
+                            itemBuilder: (context, index) {
+                              final log = _weightLogs[index];
+                              final weightDisplay = isLbs ? log.weightKg * kgToLbs : log.weightKg;
+                              final date = DateTime.fromMillisecondsSinceEpoch(log.loggedAt);
+                              final dateFormatted = "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
+
+                              return ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: Icon(Icons.scale_outlined, color: accent, size: 20),
+                                title: Text(
+                                  "${weightDisplay.toStringAsFixed(1)} ${isLbs ? 'lbs' : 'kg'}",
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                ),
+                                subtitle: Text(
+                                  dateFormatted,
+                                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                ),
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                                  onPressed: () => _confirmDeleteWeightLog(log.id!, setModalState),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmDeleteWeightLog(int logId, void Function(void Function()) setModalState) async {
+    final lang = ref.read(languageProvider);
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(lang.tr('btn_delete_confirm')),
+        content: Text(lang.tr('btn_delete_desc')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              lang.tr('btn_cancel'),
+              style: const TextStyle(color: Color(0xFF7C8A7C)),
+            ),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              lang.tr('btn_delete'),
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (proceed == true) {
+      try {
+        await _weightLogDao.delete(logId);
+        final logs = await _weightLogDao.getAll();
+        setState(() {
+          _weightLogs = logs;
+          if (logs.isNotEmpty) {
+            final latestWeight = logs.first.weightKg;
+            final isLbs = ref.read(isLbsProvider);
+            _weightController.text = isLbs 
+                ? (latestWeight * kgToLbs).toStringAsFixed(1)
+                : latestWeight.toStringAsFixed(1);
+          } else {
+            _weightController.text = '';
+          }
+        });
+        setModalState(() {});
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to delete: $e'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      }
+    }
   }
 }

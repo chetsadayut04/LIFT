@@ -12,7 +12,8 @@ import 'features/history/history_screen.dart';
 import 'features/home/home_provider.dart';
 import 'features/home/home_screen.dart';
 import 'features/stats/stats_provider.dart';
-import 'features/stats/stats_screen.dart';
+import 'features/ai_coach/ai_chat_screen.dart';
+import 'features/ai_coach/ai_chat_provider.dart';
 
 class App extends ConsumerStatefulWidget {
   const App({super.key});
@@ -26,16 +27,17 @@ class _AppState extends ConsumerState<App> {
 
   void _onTabChanged(int i) {
     setState(() => _currentIndex = i);
-    // Reload data when switching to history or stats tab
+    // Reload data when switching tabs
     if (i == 0) ref.read(homeProvider.notifier).load();
     if (i == 1) ref.read(historyProvider.notifier).load();
-    if (i == 2) ref.read(statsProvider.notifier).load();
+    if (i == 2) ref.read(aiChatProvider.notifier).refreshContext();
+    if (i == 3) ref.read(statsProvider.notifier).load();
   }
 
   static const _screens = [
     HomeScreen(),
     HistoryScreen(),
-    StatsScreen(),
+    AiChatScreen(),
     ProfileScreen(),
   ];
 
@@ -72,9 +74,9 @@ class _AppState extends ConsumerState<App> {
               label: lang.tr('nav_history'),
             ),
             NavigationDestination(
-              icon: const Icon(Icons.bar_chart_outlined),
-              selectedIcon: const Icon(Icons.bar_chart),
-              label: lang.tr('nav_stats'),
+              icon: const Icon(Icons.smart_toy_outlined),
+              selectedIcon: const Icon(Icons.smart_toy),
+              label: lang.tr('nav_ai'),
             ),
             NavigationDestination(
               icon: const Icon(Icons.person_outline),

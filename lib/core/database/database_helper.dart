@@ -52,7 +52,7 @@ class DatabaseHelper {
   static Future<Database> _open() async {
     return openDatabase(
       await _dbPath(),
-      version: 7,
+      version: 8,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -108,6 +108,22 @@ class DatabaseHelper {
             deleted_at INTEGER NOT NULL
           )
         ''');
+        await db.execute('''
+          CREATE TABLE profiles (
+            id TEXT PRIMARY KEY,
+            height REAL,
+            fitness_goal TEXT,
+            updated_at INTEGER NOT NULL
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE weight_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            uuid TEXT UNIQUE,
+            weight_kg REAL NOT NULL,
+            logged_at INTEGER NOT NULL
+          )
+        ''');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -152,6 +168,24 @@ class DatabaseHelper {
           ''');
           await _backfillUUIDs(db);
         }
+        if (oldVersion < 8) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS profiles (
+              id TEXT PRIMARY KEY,
+              height REAL,
+              fitness_goal TEXT,
+              updated_at INTEGER NOT NULL
+            )
+          ''');
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS weight_logs (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              uuid TEXT UNIQUE,
+              weight_kg REAL NOT NULL,
+              logged_at INTEGER NOT NULL
+            )
+          ''');
+        }
       },
     );
   }
@@ -186,12 +220,16 @@ class DatabaseHelper {
       await txn.delete('exercises');
       await txn.delete('sessions');
       await txn.delete('exercise_configs');
+      await txn.delete('profiles');
+      await txn.delete('weight_logs');
 
       // Fetch all from Supabase
       final remoteSessions = await supabase.from('sessions').select().eq('user_id', user.id);
       final remoteExercises = await supabase.from('exercises').select().eq('user_id', user.id);
       final remoteSets = await supabase.from('sets').select().eq('user_id', user.id);
       final remoteConfigs = await supabase.from('exercise_configs').select().eq('user_id', user.id);
+      final remoteProfile = await supabase.from('profiles').select().eq('id', user.id).maybeSingle();
+      final remoteWeightLogs = await supabase.from('weight_logs').select().eq('user_id', user.id);
 
       // Insert into local SQLite
       for (final s in remoteSessions) {
@@ -230,6 +268,24 @@ class DatabaseHelper {
           'name': cfg['name'] as String,
           'rep_min': cfg['rep_min'] as int,
           'rep_max': cfg['rep_max'] as int,
+        });
+      }
+
+      if (remoteProfile != null) {
+        await txn.insert('profiles', {
+          'id': remoteProfile['id'] as String,
+          'height': (remoteProfile['height'] as num?)?.toDouble(),
+          'fitness_goal': remoteProfile['fitness_goal'] as String?,
+          'updated_at': remoteProfile['updated_at'] as int,
+        });
+      }
+
+      for (final wl in remoteWeightLogs) {
+        await txn.insert('weight_logs', {
+          'id': wl['id'] as int,
+          'uuid': wl['uuid'] as String,
+          'weight_kg': (wl['weight_kg'] as num).toDouble(),
+          'logged_at': wl['logged_at'] as int,
         });
       }
     });

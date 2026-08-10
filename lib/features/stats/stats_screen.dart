@@ -7,18 +7,17 @@ import '../../core/database/session_dao.dart';
 import '../../core/database/set_dao.dart';
 import '../../core/providers/unit_provider.dart';
 import '../../core/providers/translation_provider.dart';
-import '../../core/providers/cache_provider.dart';
 import '../../core/widgets/plate_stack.dart';
 import 'stats_provider.dart';
 
-class StatsScreen extends ConsumerStatefulWidget {
-  const StatsScreen({super.key});
+class StatsSection extends ConsumerStatefulWidget {
+  const StatsSection({super.key});
 
   @override
-  ConsumerState<StatsScreen> createState() => _StatsScreenState();
+  ConsumerState<StatsSection> createState() => _StatsSectionState();
 }
 
-class _StatsScreenState extends ConsumerState<StatsScreen> {
+class _StatsSectionState extends ConsumerState<StatsSection> {
   DateTime _focusedMonth = DateTime(DateTime.now().year, DateTime.now().month);
 
   void _showDaySheet(BuildContext context, String dateStr, bool isWorked) {
@@ -39,39 +38,33 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
     final state = ref.watch(statsProvider);
     final lang = ref.watch(languageProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(lang.tr('nav_stats')),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => ref.refresh(cacheInitProvider),
-          ),
-        ],
-      ),
-      body: state.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-              children: [
-                _WeeklyCard(
-                  workoutDates: state.workoutDates,
-                  thisWeekSets: state.thisWeekSets,
-                  lang: lang,
-                ),
-                const SizedBox(height: 12),
-                _CalendarCard(
-                  workoutDates: state.workoutDates,
-                  focusedMonth: _focusedMonth,
-                  onMonthChanged: (m) => setState(() => _focusedMonth = m),
-                  onDayTap: (dateStr, isWorked) =>
-                      _showDaySheet(context, dateStr, isWorked),
-                  lang: lang,
-                ),
-                const SizedBox(height: 12),
-                const _ExercisePrTable(),
-              ],
-            ),
+    if (state.isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _WeeklyCard(
+          workoutDates: state.workoutDates,
+          thisWeekSets: state.thisWeekSets,
+          lang: lang,
+        ),
+        const SizedBox(height: 12),
+        _CalendarCard(
+          workoutDates: state.workoutDates,
+          focusedMonth: _focusedMonth,
+          onMonthChanged: (m) => setState(() => _focusedMonth = m),
+          onDayTap: (dateStr, isWorked) =>
+              _showDaySheet(context, dateStr, isWorked),
+          lang: lang,
+        ),
+        const SizedBox(height: 12),
+        const _ExercisePrTable(),
+      ],
     );
   }
 }
