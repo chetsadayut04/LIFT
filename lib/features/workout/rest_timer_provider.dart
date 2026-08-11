@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/services/background_timer_service.dart';
 
 class RestTimerState {
   final bool isRunning;
@@ -32,9 +33,22 @@ class RestTimerState {
 }
 
 class RestTimerNotifier extends StateNotifier<RestTimerState> {
-  RestTimerNotifier() : super(const RestTimerState());
+  RestTimerNotifier() : super(const RestTimerState()) {
+    _listenToBackgroundActions();
+  }
 
   Timer? _timer;
+  StreamSubscription<String>? _actionSubscription;
+
+  void _listenToBackgroundActions() {
+    _actionSubscription = BackgroundTimerService().actionStream.listen((actionId) {
+      if (actionId == 'skip') {
+        skip();
+      } else if (actionId == 'add_30s') {
+        adjust(30);
+      }
+    });
+  }
 
   void start({int seconds = 90}) {
     _timer?.cancel();
@@ -45,6 +59,7 @@ class RestTimerNotifier extends StateNotifier<RestTimerState> {
       totalSeconds: seconds,
       endTime: endTime,
     );
+    BackgroundTimerService().start(endTime, seconds);
     _startTimer();
   }
 
@@ -59,6 +74,7 @@ class RestTimerNotifier extends StateNotifier<RestTimerState> {
       if (remaining <= 0) {
         t.cancel();
         state = state.copyWith(isRunning: false, secondsLeft: 0, clearEndTime: true);
+        BackgroundTimerService().stop();
       } else {
         if (state.secondsLeft != remaining) {
           state = state.copyWith(secondsLeft: remaining);
@@ -76,11 +92,13 @@ class RestTimerNotifier extends StateNotifier<RestTimerState> {
       secondsLeft: newSecs,
       totalSeconds: (state.totalSeconds + delta).clamp(1, 600),
     );
+    BackgroundTimerService().update(newEndTime);
   }
 
   void skip() {
     _timer?.cancel();
     state = state.copyWith(isRunning: false, secondsLeft: 0, clearEndTime: true);
+    BackgroundTimerService().stop();
   }
 
   void reset({int seconds = 90}) {
@@ -91,11 +109,13 @@ class RestTimerNotifier extends StateNotifier<RestTimerState> {
       totalSeconds: seconds,
       endTime: null,
     );
+    BackgroundTimerService().stop();
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _actionSubscription?.cancel();
     super.dispose();
   }
 }
