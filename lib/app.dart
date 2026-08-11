@@ -154,14 +154,14 @@ class _AppState extends ConsumerState<App> {
   ThemeData _theme(ThemeMode mode) {
     final isDark = mode == ThemeMode.dark;
 
-    final bg = isDark ? const Color(0xFF0A0C0A) : const Color(0xFFF4F6F3);
-    final surfaceSolid = isDark ? const Color(0xFF151815) : const Color(0xFFFFFFFF);
-    final border = isDark ? const Color(0xFF222822) : const Color(0xFFDCE2DC);
+    final bg = isDark ? const Color(0xFF090B09) : const Color(0xFFF4F6F3);
+    final surfaceSolid = isDark ? const Color(0xFF141914) : const Color(0xFFFFFFFF);
+    final border = isDark ? const Color(0xFF262F26) : const Color(0xFFDCE2DC);
     final accent = isDark ? const Color(0xFFC6FF3D) : const Color(0xFF4D8300);
-    final onAccent = isDark ? const Color(0xFF0A0C0A) : const Color(0xFFFFFFFF);
+    final onAccent = isDark ? const Color(0xFF000000) : const Color(0xFFFFFFFF);
     final textPrimary = isDark ? const Color(0xFFFFFFFF) : const Color(0xFF101410);
-    final textMuted = isDark ? const Color(0xFF9FB09F) : const Color(0xFF4E594E);
-    final textSecondary = isDark ? const Color(0xFFD2DDD2) : const Color(0xFF323B32);
+    final textMuted = isDark ? const Color(0xFFA8B5A8) : const Color(0xFF4E594E);
+    final textSecondary = isDark ? const Color(0xFFE2EBE2) : const Color(0xFF323B32);
 
     final brightness = isDark ? Brightness.dark : Brightness.light;
 
@@ -204,7 +204,7 @@ class _AppState extends ConsumerState<App> {
         centerTitle: false,
         titleTextStyle: GoogleFonts.spaceGrotesk(
           color: textPrimary,
-          fontSize: 17,
+          fontSize: 18,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.3,
         ),
@@ -216,24 +216,24 @@ class _AppState extends ConsumerState<App> {
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-          side: BorderSide(color: border),
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: border, width: 0.5),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: isDark ? const Color(0xFF15181A) : const Color(0xFFEDF1EC),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        fillColor: isDark ? const Color(0xFF121512) : const Color(0xFFEDF1EC),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: border),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: border, width: 0.5),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: border),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: border, width: 0.5),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: accent, width: 1.5),
         ),
         isDense: true,
@@ -248,8 +248,8 @@ class _AppState extends ConsumerState<App> {
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: bg,
         surfaceTintColor: Colors.transparent,
-        indicatorColor: accent.withValues(alpha: 0.16),
-        height: 60,
+        indicatorColor: accent.withValues(alpha: 0.1),
+        height: 64,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
@@ -267,16 +267,16 @@ class _AppState extends ConsumerState<App> {
             letterSpacing: 0.1,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: accent,
-          side: BorderSide(color: border),
+          side: BorderSide(color: border, width: 0.5),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
@@ -287,12 +287,12 @@ class _AppState extends ConsumerState<App> {
         backgroundColor: surfaceSolid,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: border),
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: border, width: 0.5),
         ),
         titleTextStyle: GoogleFonts.spaceGrotesk(
           color: textPrimary,
-          fontSize: 17,
+          fontSize: 18,
           fontWeight: FontWeight.w700,
         ),
         contentTextStyle: TextStyle(color: textMuted),
@@ -300,6 +300,12 @@ class _AppState extends ConsumerState<App> {
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: surfaceSolid,
         surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
       ),
     );
   }

@@ -26,7 +26,6 @@ class ProfileDao {
     await _supabase.from('profiles').upsert({
       'id': profile.id,
       'height': profile.height,
-      'fitness_goal': profile.fitnessGoal,
       'updated_at': profile.updatedAt,
     });
 

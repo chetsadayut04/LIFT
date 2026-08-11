@@ -275,7 +275,6 @@ class DatabaseHelper {
         await txn.insert('profiles', {
           'id': remoteProfile['id'] as String,
           'height': (remoteProfile['height'] as num?)?.toDouble(),
-          'fitness_goal': remoteProfile['fitness_goal'] as String?,
           'updated_at': remoteProfile['updated_at'] as int,
         });
       }

@@ -86,7 +86,6 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
       final exercisePrs = await SetDao().getAllExercisePrs();
 
       final heightVal = profile?.height?.toStringAsFixed(1) ?? 'Not set';
-      final goalVal = profile?.fitnessGoal ?? 'General Fitness';
       
       final weightHistoryStr = weightLogs.isNotEmpty
           ? weightLogs
@@ -103,7 +102,6 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
       final contextStr = """
 The user profile and stats context:
 - Height: $heightVal cm
-- Current Fitness Goal: $goalVal
 - Weight History Logs (newest first): $weightHistoryStr
 - Personal Records (PRs) in workouts:
 $prsStr

@@ -22,30 +22,18 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  final _heightController = TextEditingController();
-  final _weightController = TextEditingController();
-  String _selectedGoal = 'Fitness';
-  bool _isSaving = false;
-
+  Profile? _profile;
   List<WeightLog> _weightLogs = [];
   final _profileDao = ProfileDao();
   final _weightLogDao = WeightLogDao();
 
   static const _kHeight = 'profile_height';
   static const _kWeight = 'profile_weight';
-  static const _kGoal = 'profile_goal';
 
   @override
   void initState() {
     super.initState();
     _loadProfileData();
-  }
-
-  @override
-  void dispose() {
-    _heightController.dispose();
-    _weightController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadProfileData() async {
@@ -54,23 +42,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     final prefs = await SharedPreferences.getInstance();
     final spHeight = prefs.getString(_kHeight);
-    final spWeight = prefs.getString(_kWeight);
-    final spGoal = prefs.getString(_kGoal);
 
     var profile = await _profileDao.getProfile(user.id);
     var logs = await _weightLogDao.getAll();
 
     // Migration bridge: SharedPreferences -> DB
-    if (profile == null && (spHeight != null || spGoal != null)) {
-      final height = double.tryParse(spHeight ?? '');
+    if (profile == null && spHeight != null) {
+      final height = double.tryParse(spHeight);
       profile = Profile(
         id: user.id,
         height: height,
-        fitnessGoal: spGoal ?? 'Fitness',
         updatedAt: DateTime.now().millisecondsSinceEpoch,
       );
       await _profileDao.saveProfile(profile);
 
+      final spWeight = prefs.getString(_kWeight);
       if (spWeight != null) {
         final w = double.tryParse(spWeight);
         if (w != null && w > 0) {
@@ -81,86 +67,189 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
       await prefs.remove(_kHeight);
       await prefs.remove(_kWeight);
-      await prefs.remove(_kGoal);
     }
 
     if (mounted) {
       setState(() {
-        _heightController.text = profile?.height != null ? profile!.height!.toStringAsFixed(1) : '';
-        
-        if (logs.isNotEmpty) {
-          final latestWeight = logs.first.weightKg;
-          final isLbs = ref.read(isLbsProvider);
-          _weightController.text = isLbs 
-              ? (latestWeight * kgToLbs).toStringAsFixed(1)
-              : latestWeight.toStringAsFixed(1);
-        } else {
-          _weightController.text = '';
-        }
-        
-        var goal = profile?.fitnessGoal ?? 'Fitness';
-        if (goal == 'General Fitness') goal = 'Fitness';
-        _selectedGoal = goal;
+        _profile = profile;
         _weightLogs = logs;
       });
     }
   }
 
-  Future<void> _saveProfileData() async {
-    final user = ref.read(authProvider);
-    if (user == null) return;
-
-    setState(() => _isSaving = true);
-    final messenger = ScaffoldMessenger.of(context);
+  void _showEditHeightBottomSheet(double? currentHeight) {
+    final controller = TextEditingController(
+      text: currentHeight != null ? currentHeight.toStringAsFixed(1) : '',
+    );
     final lang = ref.read(languageProvider);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        final border = Theme.of(context).colorScheme.outline;
+        final bg = Theme.of(context).scaffoldBackgroundColor;
+        final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
+
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+              border: Border.all(color: border, width: 0.5),
+            ),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      lang == AppLanguage.th ? 'แก้ไขส่วนสูง' : 'Edit Height',
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: textPrimary,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    labelText: lang == AppLanguage.th ? 'ส่วนสูง (cm)' : 'Height (cm)',
+                    prefixIcon: const Icon(Icons.height),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                FilledButton(
+                  onPressed: () async {
+                    final val = double.tryParse(controller.text.trim());
+                    if (val != null && val > 0) {
+                      final user = ref.read(authProvider);
+                      if (user != null) {
+                        final updatedProfile = Profile(
+                          id: user.id,
+                          height: val,
+                          updatedAt: DateTime.now().millisecondsSinceEpoch,
+                        );
+                        await _profileDao.saveProfile(updatedProfile);
+                        await _loadProfileData();
+                      }
+                    }
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                  child: Text(lang == AppLanguage.th ? 'บันทึก' : 'Save'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showEditWeightBottomSheet(double? currentWeightKg) {
     final isLbs = ref.read(isLbsProvider);
+    final initialDisplay = currentWeightKg != null
+        ? (isLbs ? currentWeightKg * kgToLbs : currentWeightKg)
+        : null;
+    final controller = TextEditingController(
+      text: initialDisplay != null ? initialDisplay.toStringAsFixed(1) : '',
+    );
+    final lang = ref.read(languageProvider);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) {
+        final border = Theme.of(context).colorScheme.outline;
+        final bg = Theme.of(context).scaffoldBackgroundColor;
+        final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
+        final unit = isLbs ? 'lbs' : 'kg';
 
-    final heightVal = double.tryParse(_heightController.text.trim());
-    final rawWeight = double.tryParse(_weightController.text.trim());
-
-    try {
-      final profile = Profile(
-        id: user.id,
-        height: heightVal,
-        fitnessGoal: _selectedGoal,
-        updatedAt: DateTime.now().millisecondsSinceEpoch,
-      );
-      await _profileDao.saveProfile(profile);
-
-      if (rawWeight != null && rawWeight > 0) {
-        final weightKg = isLbs ? rawWeight * lbsToKg : rawWeight;
-
-        final latestLog = _weightLogs.isNotEmpty ? _weightLogs.first : null;
-        final hasWeightChanged = latestLog == null || (latestLog.weightKg - weightKg).abs() > 0.05;
-
-        if (hasWeightChanged) {
-          await _weightLogDao.insert(weightKg, DateTime.now().millisecondsSinceEpoch);
-        }
-      }
-
-      await _loadProfileData();
-
-      if (mounted) {
-        setState(() => _isSaving = false);
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(lang.tr('saved_success')),
-            backgroundColor: const Color(0xFF1B1F1B),
-            duration: const Duration(seconds: 2),
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+              border: Border.all(color: border, width: 0.5),
+            ),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      lang == AppLanguage.th ? 'บันทึกน้ำหนักตัว' : 'Log Weight',
+                      style: GoogleFonts.spaceGrotesk(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: textPrimary,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    labelText: lang == AppLanguage.th ? 'น้ำหนักตัว ($unit)' : 'Weight ($unit)',
+                    prefixIcon: const Icon(Icons.scale),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                FilledButton(
+                  onPressed: () async {
+                    final val = double.tryParse(controller.text.trim());
+                    if (val != null && val > 0) {
+                      final weightKg = isLbs ? val * lbsToKg : val;
+                      await _weightLogDao.insert(
+                        weightKg,
+                        DateTime.now().millisecondsSinceEpoch,
+                      );
+                      await _loadProfileData();
+                    }
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                  child: Text(lang == AppLanguage.th ? 'บันทึก' : 'Save'),
+                ),
+              ],
+            ),
           ),
         );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isSaving = false);
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text('Failed to save: $e'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
-      }
-    }
+      },
+    );
   }
 
   Future<void> _sendFeedback(String text) async {
@@ -174,7 +263,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final messenger = ScaffoldMessenger.of(context);
 
     try {
-      // บันทึกลงตาราง feedbacks ใน Supabase (หลีกเลี่ยงปัญหา CORS บน Web)
       final supabase = Supabase.instance.client;
       await supabase.from('feedbacks').insert({
         'user_id': user?.id,
@@ -296,18 +384,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final bg = Theme.of(context).scaffoldBackgroundColor;
     final border = Theme.of(context).colorScheme.outline;
     final accent = Theme.of(context).colorScheme.primary;
-    final textPrimary =
-        Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFFF2F5EF);
-    final textMuted =
-        Theme.of(context).textTheme.bodySmall?.color ?? const Color(0xFF7C8A7C);
+    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFFF2F5EF);
+    final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? const Color(0xFF7C8A7C);
 
-    // Extracting user metadata from Social Sign-In
     final avatarUrl = user?.userMetadata?['avatar_url'] as String?;
-    final displayName =
-        user?.userMetadata?['full_name'] as String? ??
+    final displayName = user?.userMetadata?['full_name'] as String? ??
         user?.userMetadata?['name'] as String? ??
         user?.email?.split('@').first ??
         (lang == AppLanguage.th ? 'ผู้ใช้งาน LIFT' : 'LIFT User');
+
+    String? memberSince;
+    if (user?.createdAt != null) {
+      try {
+        final dt = DateTime.parse(user!.createdAt);
+        final monthsEn = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        final monthsTh = ['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+        final m = lang == AppLanguage.th ? monthsTh[dt.month] : monthsEn[dt.month];
+        final year = lang == AppLanguage.th ? dt.year + 543 : dt.year;
+        memberSince = lang == AppLanguage.th 
+            ? 'สมาชิกตั้งแต่ $m $year' 
+            : 'Member since $m $year';
+      } catch (_) {}
+    }
 
     return Scaffold(
       backgroundColor: bg,
@@ -328,76 +426,106 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // User Info Card (Premium Glowing Header)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: accent, width: 2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: accent.withValues(alpha: 0.2),
-                              blurRadius: 10,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                        child: CircleAvatar(
-                          radius: 32,
-                          backgroundColor: accent.withValues(alpha: 0.1),
-                          backgroundImage: avatarUrl != null
-                              ? NetworkImage(avatarUrl)
-                              : null,
-                          child: avatarUrl == null
-                              ? Icon(Icons.person, color: accent, size: 32)
-                              : null,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              displayName,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: textPrimary,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              user?.email ??
-                                  (lang == AppLanguage.th
-                                      ? 'ไม่พบอีเมลผู้ใช้งาน'
-                                      : 'User email not found'),
-                              style: TextStyle(fontSize: 13, color: textMuted),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: border, width: 0.5),
+                  gradient: LinearGradient(
+                    colors: [
+                      accent.withValues(alpha: 0.08),
+                      Theme.of(context).cardTheme.color ?? const Color(0xFF151815),
                     ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
+                ),
+                padding: const EdgeInsets.all(20.0),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: accent, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: accent.withValues(alpha: 0.25),
+                            blurRadius: 12,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: CircleAvatar(
+                        radius: 32,
+                        backgroundColor: accent.withValues(alpha: 0.1),
+                        backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                        child: avatarUrl == null ? Icon(Icons.person, color: accent, size: 32) : null,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  displayName,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: textPrimary,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Container(
+                                width: 7,
+                                height: 7,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Color(0xFFC6FF3D),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Color(0xFFC6FF3D),
+                                      blurRadius: 4,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            user?.email ?? (lang == AppLanguage.th ? 'ไม่พบอีเมลผู้ใช้งาน' : 'User email not found'),
+                            style: TextStyle(fontSize: 13, color: textMuted),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (memberSince != null) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              memberSince,
+                              style: TextStyle(fontSize: 10, color: textMuted, fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 24),
 
-              // Body Metrics Card (Height & Weight inputs)
+              // Body Metrics Header
               Row(
                 children: [
                   Icon(Icons.accessibility, color: textMuted, size: 16),
                   const SizedBox(width: 8),
                   Text(
-                    lang == AppLanguage.th
-                        ? 'ข้อมูลสรีระร่างกาย'
-                        : 'Body Metrics',
+                    lang == AppLanguage.th ? 'ข้อมูลสรีระร่างกาย' : 'Body Metrics',
                     style: GoogleFonts.spaceGrotesk(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -408,79 +536,117 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _heightController,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                labelText: lang == AppLanguage.th
-                                    ? 'ส่วนสูง (cm)'
-                                    : 'Height (cm)',
-                                prefixIcon: Icon(
-                                  Icons.height,
-                                  color: textMuted,
+
+              // Bio Metrics Grid Panels
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _showEditHeightBottomSheet(_profile?.height),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardTheme.color,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: border, width: 0.5),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  lang == AppLanguage.th ? 'ส่วนสูง' : 'HEIGHT',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: textMuted,
+                                    letterSpacing: 0.8,
+                                  ),
                                 ),
+                                Icon(Icons.edit, size: 12, color: accent),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              _profile?.height != null
+                                  ? '${_profile!.height!.toStringAsFixed(1)} cm'
+                                  : (lang == AppLanguage.th ? 'ไม่ได้ตั้งค่า' : 'Not set'),
+                              style: GoogleFonts.spaceGrotesk(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: textPrimary,
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _weightController,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                labelText: lang == AppLanguage.th
-                                    ? 'น้ำหนักตัว (${isLbs ? "lbs" : "kg"})'
-                                    : 'Weight (${isLbs ? "lbs" : "kg"})',
-                                prefixIcon: Icon(Icons.scale, color: textMuted),
-                              ),
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: FilledButton.icon(
-                              onPressed: _isSaving ? null : _saveProfileData,
-                              icon: _isSaving
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.save_outlined, size: 18),
-                              label: Text(
-                                lang == AppLanguage.th
-                                    ? 'บันทึกข้อมูล'
-                                    : 'Save Metrics',
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          OutlinedButton.icon(
-                            onPressed: _showWeightHistoryBottomSheet,
-                            icon: const Icon(Icons.history, size: 18),
-                            label: Text(lang.tr('btn_view_history')),
-                          ),
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _showEditWeightBottomSheet(
+                        _weightLogs.isNotEmpty ? _weightLogs.first.weightKg : null,
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardTheme.color,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: border, width: 0.5),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  lang == AppLanguage.th ? 'น้ำหนักตัว' : 'WEIGHT',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: textMuted,
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
+                                Icon(Icons.scale, size: 12, color: accent),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              _weightLogs.isNotEmpty
+                                  ? '${(isLbs ? _weightLogs.first.weightKg * kgToLbs : _weightLogs.first.weightKg).toStringAsFixed(1)} ${isLbs ? 'lbs' : 'kg'}'
+                                  : (lang == AppLanguage.th ? 'ไม่ได้ตั้งค่า' : 'Not set'),
+                              style: GoogleFonts.spaceGrotesk(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton.icon(
+                    onPressed: _showWeightHistoryBottomSheet,
+                    icon: const Icon(Icons.history, size: 16),
+                    label: Text(
+                      lang.tr('btn_view_history'),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
 
               // Stats Section
               Row(
@@ -537,89 +703,65 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                         ),
                         subtitle: Text(
-                          isLbs
-                              ? lang.tr('weight_unit_lbs')
-                              : lang.tr('weight_unit_kg'),
+                          isLbs ? lang.tr('weight_unit_lbs') : lang.tr('weight_unit_kg'),
                           style: TextStyle(fontSize: 12, color: textMuted),
                         ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            GestureDetector(
-                              onTap: isLbs
-                                  ? () => ref
-                                        .read(isLbsProvider.notifier)
-                                        .toggle()
-                                  : null,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: !isLbs ? accent : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: !isLbs
-                                      ? null
-                                      : Border.all(color: border),
-                                ),
-                                child: Text(
-                                  'KG',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 11,
-                                    color: !isLbs
-                                        ? (themeMode == ThemeMode.dark
-                                              ? Colors.black
-                                              : Colors.white)
-                                        : textMuted,
+                        trailing: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).scaffoldBackgroundColor,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: border, width: 0.5),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              GestureDetector(
+                                onTap: isLbs ? () => ref.read(isLbsProvider.notifier).toggle() : null,
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: !isLbs ? accent : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    'KG',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 11,
+                                      color: !isLbs ? Colors.black : textMuted,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 6),
-                            GestureDetector(
-                              onTap: !isLbs
-                                  ? () => ref
-                                        .read(isLbsProvider.notifier)
-                                        .toggle()
-                                  : null,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isLbs ? accent : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: isLbs
-                                      ? null
-                                      : Border.all(color: border),
-                                ),
-                                child: Text(
-                                  'LBS',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 11,
-                                    color: isLbs
-                                        ? (themeMode == ThemeMode.dark
-                                              ? Colors.black
-                                              : Colors.white)
-                                        : textMuted,
+                              GestureDetector(
+                                onTap: !isLbs ? () => ref.read(isLbsProvider.notifier).toggle() : null,
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: isLbs ? accent : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    'LBS',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 11,
+                                      color: isLbs ? Colors.black : textMuted,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                       const Divider(indent: 56, endIndent: 16),
                       // Language Row
                       ListTile(
-                        leading: Icon(
-                          Icons.language_outlined,
-                          color: textMuted,
-                        ),
+                        leading: Icon(Icons.language_outlined, color: textMuted),
                         title: Text(
                           lang.tr('language_title'),
                           style: const TextStyle(
@@ -628,93 +770,70 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                         ),
                         subtitle: Text(
-                          lang == AppLanguage.th
-                              ? lang.tr('language_desc_th')
-                              : lang.tr('language_desc_en'),
+                          lang == AppLanguage.th ? lang.tr('language_desc_th') : lang.tr('language_desc_en'),
                           style: TextStyle(fontSize: 12, color: textMuted),
                         ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            GestureDetector(
-                              onTap: lang != AppLanguage.th
-                                  ? () => ref
-                                        .read(languageProvider.notifier)
-                                        .setLanguage(AppLanguage.th)
-                                  : null,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: lang == AppLanguage.th
-                                      ? accent
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: lang == AppLanguage.th
-                                      ? null
-                                      : Border.all(color: border),
-                                ),
-                                child: Text(
-                                  'TH',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 11,
-                                    color: lang == AppLanguage.th
-                                        ? (themeMode == ThemeMode.dark
-                                              ? Colors.black
-                                              : Colors.white)
-                                        : textMuted,
+                        trailing: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).scaffoldBackgroundColor,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: border, width: 0.5),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              GestureDetector(
+                                onTap: lang != AppLanguage.th
+                                    ? () => ref.read(languageProvider.notifier).setLanguage(AppLanguage.th)
+                                    : null,
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: lang == AppLanguage.th ? accent : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    'TH',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 11,
+                                      color: lang == AppLanguage.th ? Colors.black : textMuted,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 6),
-                            GestureDetector(
-                              onTap: lang != AppLanguage.en
-                                  ? () => ref
-                                        .read(languageProvider.notifier)
-                                        .setLanguage(AppLanguage.en)
-                                  : null,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: lang == AppLanguage.en
-                                      ? accent
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: lang == AppLanguage.en
-                                      ? null
-                                      : Border.all(color: border),
-                                ),
-                                child: Text(
-                                  'EN',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 11,
-                                    color: lang == AppLanguage.en
-                                        ? (themeMode == ThemeMode.dark
-                                              ? Colors.black
-                                              : Colors.white)
-                                        : textMuted,
+                              GestureDetector(
+                                onTap: lang != AppLanguage.en
+                                    ? () => ref.read(languageProvider.notifier).setLanguage(AppLanguage.en)
+                                    : null,
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: lang == AppLanguage.en ? accent : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    'EN',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 11,
+                                      color: lang == AppLanguage.en ? Colors.black : textMuted,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                       const Divider(indent: 56, endIndent: 16),
                       // Theme Row
                       ListTile(
                         leading: Icon(
-                          themeMode == ThemeMode.dark
-                              ? Icons.dark_mode_outlined
-                              : Icons.light_mode_outlined,
+                          themeMode == ThemeMode.dark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
                           color: textMuted,
                         ),
                         title: Text(
@@ -725,84 +844,63 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                         ),
                         subtitle: Text(
-                          themeMode == ThemeMode.dark
-                              ? lang.tr('theme_desc_dark')
-                              : lang.tr('theme_desc_light'),
+                          themeMode == ThemeMode.dark ? lang.tr('theme_desc_dark') : lang.tr('theme_desc_light'),
                           style: TextStyle(fontSize: 12, color: textMuted),
                         ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            GestureDetector(
-                              onTap: themeMode != ThemeMode.light
-                                  ? () => ref
-                                        .read(themeProvider.notifier)
-                                        .setThemeMode(ThemeMode.light)
-                                  : null,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: themeMode == ThemeMode.light
-                                      ? accent
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: themeMode == ThemeMode.light
-                                      ? null
-                                      : Border.all(color: border),
-                                ),
-                                child: Text(
-                                  lang == AppLanguage.th ? 'สว่าง' : 'Light',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 11,
-                                    color: themeMode == ThemeMode.light
-                                        ? (themeMode == ThemeMode.dark
-                                              ? Colors.black
-                                              : Colors.white)
-                                        : textMuted,
+                        trailing: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).scaffoldBackgroundColor,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: border, width: 0.5),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              GestureDetector(
+                                onTap: themeMode != ThemeMode.light
+                                    ? () => ref.read(themeProvider.notifier).setThemeMode(ThemeMode.light)
+                                    : null,
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: themeMode == ThemeMode.light ? accent : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    lang == AppLanguage.th ? 'สว่าง' : 'Light',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 11,
+                                      color: themeMode == ThemeMode.light ? Colors.black : textMuted,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 6),
-                            GestureDetector(
-                              onTap: themeMode != ThemeMode.dark
-                                  ? () => ref
-                                        .read(themeProvider.notifier)
-                                        .setThemeMode(ThemeMode.dark)
-                                  : null,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: themeMode == ThemeMode.dark
-                                      ? accent
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: themeMode == ThemeMode.dark
-                                      ? null
-                                      : Border.all(color: border),
-                                ),
-                                child: Text(
-                                  lang == AppLanguage.th ? 'มืด' : 'Dark',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 11,
-                                    color: themeMode == ThemeMode.dark
-                                        ? (themeMode == ThemeMode.dark
-                                              ? Colors.black
-                                              : Colors.white)
-                                        : textMuted,
+                              GestureDetector(
+                                onTap: themeMode != ThemeMode.dark
+                                    ? () => ref.read(themeProvider.notifier).setThemeMode(ThemeMode.dark)
+                                    : null,
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: themeMode == ThemeMode.dark ? accent : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    lang == AppLanguage.th ? 'มืด' : 'Dark',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 11,
+                                      color: themeMode == ThemeMode.dark ? Colors.black : textMuted,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -834,27 +932,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   child: Column(
                     children: [
                       ListTile(
-                        leading: Icon(
-                          Icons.chat_bubble_outline,
-                          color: textMuted,
-                        ),
+                        leading: Icon(Icons.chat_bubble_outline, color: textMuted),
                         title: Text(
                           lang.tr('feedback_title'),
                           style: const TextStyle(fontSize: 14),
                         ),
-                        trailing: Icon(
-                          Icons.chevron_right,
-                          color: textMuted,
-                          size: 18,
-                        ),
+                        trailing: Icon(Icons.chevron_right, color: textMuted, size: 18),
                         onTap: _showFeedbackDialog,
                       ),
                       const Divider(),
                       ListTile(
-                        leading: Icon(
-                          Icons.perm_device_info_outlined,
-                          color: textMuted,
-                        ),
+                        leading: Icon(Icons.perm_device_info_outlined, color: textMuted),
                         title: Text(
                           lang.tr('app_version'),
                           style: const TextStyle(fontSize: 14),
@@ -872,19 +960,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 36),
+              const SizedBox(height: 24),
 
               // Danger Zone Card
               Card(
-                color: themeMode == ThemeMode.dark
-                    ? const Color(0xFF1E1111)
-                    : const Color(0xFFFFF5F5),
+                color: themeMode == ThemeMode.dark ? const Color(0xFF1E1111) : const Color(0xFFFFF5F5),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                   side: BorderSide(
-                    color: themeMode == ThemeMode.dark
-                        ? const Color(0xFF3E1F1F)
-                        : const Color(0xFFFFD3D3),
+                    color: themeMode == ThemeMode.dark ? const Color(0xFF3E1F1F) : const Color(0xFFFFD3D3),
                   ),
                 ),
                 child: Padding(
@@ -892,10 +976,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   child: Column(
                     children: [
                       ListTile(
-                        leading: const Icon(
-                          Icons.delete_forever_outlined,
-                          color: Colors.redAccent,
-                        ),
+                        leading: const Icon(Icons.delete_forever_outlined, color: Colors.redAccent),
                         title: Text(
                           lang.tr('delete_account'),
                           style: const TextStyle(
@@ -907,15 +988,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         onTap: _showDeleteAccountDialog,
                       ),
                       Divider(
-                        color: themeMode == ThemeMode.dark
-                            ? const Color(0xFF3E1F1F)
-                            : const Color(0xFFFFD3D3),
+                        color: themeMode == ThemeMode.dark ? const Color(0xFF3E1F1F) : const Color(0xFFFFD3D3),
                       ),
                       ListTile(
-                        leading: const Icon(
-                          Icons.logout,
-                          color: Colors.redAccent,
-                        ),
+                        leading: const Icon(Icons.logout, color: Colors.redAccent),
                         title: Text(
                           lang.tr('sign_out'),
                           style: const TextStyle(
@@ -1307,15 +1383,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         final logs = await _weightLogDao.getAll();
         setState(() {
           _weightLogs = logs;
-          if (logs.isNotEmpty) {
-            final latestWeight = logs.first.weightKg;
-            final isLbs = ref.read(isLbsProvider);
-            _weightController.text = isLbs 
-                ? (latestWeight * kgToLbs).toStringAsFixed(1)
-                : latestWeight.toStringAsFixed(1);
-          } else {
-            _weightController.text = '';
-          }
         });
         setModalState(() {});
       } catch (e) {
