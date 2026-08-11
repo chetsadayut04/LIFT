@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "lift-9ecb1",
     "public": "build/web",
     "ignore": [
       "firebase.json",

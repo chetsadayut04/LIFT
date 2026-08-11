@@ -83,37 +83,6 @@ class _HomeBody extends ConsumerWidget {
                 dateText,
                 style: TextStyle(fontSize: 11, color: textMuted),
               ),
-              const SizedBox(width: 14),
-              GestureDetector(
-                onTap: () => ref.read(isLbsProvider.notifier).toggle(),
-                child: Row(
-                  children: [
-                    Text(
-                      'kg',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: isLbs ? textMuted : accent,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Text(
-                        '·',
-                        style: TextStyle(fontSize: 11, color: textMuted),
-                      ),
-                    ),
-                    Text(
-                      'lbs',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: isLbs ? accent : textMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 36),
