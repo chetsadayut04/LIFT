@@ -89,28 +89,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  Future<void> _loginWithApple() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-    try {
-      await ref.read(authProvider.notifier).signInWithApple();
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = e.toString().replaceAll('Exception: ', '').replaceAll('AuthException: ', '');
-        });
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     const bg = Color(0xFF0A0C0A);
@@ -352,32 +330,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ],
                     ),
                   ),
-                  // Apple Login Button
-                  if (Theme.of(context).platform == TargetPlatform.iOS) ...[
-                    const SizedBox(height: 12),
-                    OutlinedButton(
-                      onPressed: _isLoading ? null : _loginWithApple,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: textPrimary,
-                        side: const BorderSide(color: border),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.apple, size: 20),
-                          SizedBox(width: 8),
-                          Text(
-                            'Apple',
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+
                 ],
               ),
             ),

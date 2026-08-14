@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthNotifier extends StateNotifier<User?> {
@@ -66,24 +65,6 @@ class AuthNotifier extends StateNotifier<User?> {
     );
   }
 
-  Future<void> signInWithApple() async {
-    final credential = await SignInWithApple.getAppleIDCredential(
-      scopes: [
-        AppleIDAuthorizationScopes.email,
-        AppleIDAuthorizationScopes.fullName,
-      ],
-    );
-
-    final idToken = credential.identityToken;
-    if (idToken == null) {
-      throw Exception('ไม่พบ Identity Token จากระบบ Apple Sign-In');
-    }
-
-    await _client.auth.signInWithIdToken(
-      provider: OAuthProvider.apple,
-      idToken: idToken,
-    );
-  }
 
   Future<void> signOut() async {
     await _client.auth.signOut();
