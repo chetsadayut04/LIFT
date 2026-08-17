@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/providers/unit_provider.dart';
 import '../../core/providers/translation_provider.dart';
+import '../../core/providers/tab_provider.dart';
 import 'active_workout_provider.dart';
 import 'add_exercise_dialog.dart';
 import 'add_set_form.dart';
 import 'rest_timer_provider.dart';
 import 'rest_timer_widget.dart';
+import '../../core/widgets/plate_calculator_dialog.dart';
 
 class ActiveWorkoutScreen extends ConsumerWidget {
   final bool readOnly;
@@ -128,6 +130,18 @@ class ActiveWorkoutScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          tooltip: lang == AppLanguage.th ? 'ย้อนกลับ' : 'Back',
+          onPressed: () {
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              ref.read(activeTabProvider.notifier).state = 0;
+              Navigator.maybePop(context);
+            }
+          },
+        ),
         title: readOnly
             ? Text(displayTitle)
             : GestureDetector(
@@ -298,6 +312,17 @@ class _ExerciseCard extends ConsumerWidget {
                             ),
                           ),
                         ),
+                        if (sets.isNotEmpty)
+                          PlateVisual(
+                            weight: sets.first.weightKg,
+                            onTap: () async {
+                              await showPlateCalculator(
+                                context: context,
+                                initialWeight: sets.first.weightKg,
+                                isLbs: isLbs,
+                              );
+                            },
+                          ),
                         if (!readOnly)
                           GestureDetector(
                             onTap: () => _showRepRangeDialog(context, lang, textSec, textMuted),
@@ -574,6 +599,88 @@ class _ExerciseCard extends ConsumerWidget {
             child: Text(lang.tr('btn_save')),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class PlateVisual extends StatelessWidget {
+  final double weight;
+  final VoidCallback onTap;
+
+  const PlateVisual({
+    super.key,
+    required this.weight,
+    required this.onTap,
+  });
+
+  List<double> _calcPlates(double targetKg) {
+    const barWeight = 20.0;
+    final perSide = (targetKg - barWeight) / 2.0;
+    if (perSide <= 0) return [];
+
+    const sizes = [20.0, 15.0, 10.0, 5.0, 2.5, 1.25];
+    final plates = <double>[];
+    var remaining = perSide;
+    for (final size in sizes) {
+      while (remaining >= size - 0.001) {
+        plates.add(size);
+        remaining -= size;
+      }
+    }
+    return plates;
+  }
+
+  Color _getPlateColor(double size) {
+    if (size >= 20) return const Color(0xFFEF4444); // red
+    if (size >= 15) return const Color(0xFF3B82F6); // blue
+    if (size >= 10) return const Color(0xFF10B981); // green
+    if (size >= 5) return const Color(0xFFFBBF24);  // yellow
+    return const Color(0xFF9CA3AF);                 // grey
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final plates = weight > 20 ? _calcPlates(weight) : <double>[];
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        color: Colors.transparent,
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Bar center
+            Container(
+              width: 3,
+              height: 24,
+              decoration: BoxDecoration(
+                color: const Color(0xFF444444),
+                borderRadius: BorderRadius.circular(1),
+              ),
+            ),
+            const SizedBox(width: 1),
+            if (plates.isEmpty)
+              Text(
+                'BW',
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 9,
+                  color: const Color(0xFF555555),
+                  fontWeight: FontWeight.bold,
+                ),
+              )
+            else
+              ...plates.take(4).map((p) => Container(
+                    margin: const EdgeInsets.only(right: 1),
+                    width: 5,
+                    height: 10 + p * 0.7,
+                    decoration: BoxDecoration(
+                      color: _getPlateColor(p).withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  )),
+          ],
+        ),
       ),
     );
   }

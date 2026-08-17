@@ -8,12 +8,10 @@ import '../../core/models/profile.dart';
 import '../../core/models/weight_log.dart';
 import '../../core/database/profile_dao.dart';
 import '../../core/database/weight_log_dao.dart';
-import '../../core/providers/theme_provider.dart';
 import '../../core/providers/translation_provider.dart';
 import '../../core/providers/unit_provider.dart';
 import '../auth/auth_provider.dart';
-import '../stats/stats_screen.dart';
-import '../workout/routines_screen.dart';
+import '../stats/stats_provider.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -27,6 +25,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   List<WeightLog> _weightLogs = [];
   final _profileDao = ProfileDao();
   final _weightLogDao = WeightLogDao();
+  final _feedbackController = TextEditingController();
+  bool _feedbackSent = false;
+
+  @override
+  void dispose() {
+    _feedbackController.dispose();
+    super.dispose();
+  }
 
   static const _kHeight = 'profile_height';
   static const _kWeight = 'profile_weight';
@@ -291,44 +297,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
-  void _showFeedbackDialog() {
-    final feedbackController = TextEditingController();
-    final lang = ref.read(languageProvider);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(lang.tr('feedback_title')),
-        content: TextField(
-          controller: feedbackController,
-          maxLines: 4,
-          decoration: InputDecoration(
-            hintText: lang == AppLanguage.th
-                ? 'พิมพ์คำแนะนำหรือปัญหาที่คุณพบที่นี่...'
-                : 'Type your feedback or bugs here...',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              lang.tr('btn_cancel'),
-              style: const TextStyle(color: Color(0xFF7C8A7C)),
-            ),
-          ),
-          FilledButton(
-            onPressed: () {
-              final text = feedbackController.text.trim();
-              Navigator.pop(context);
-              if (text.isNotEmpty) {
-                _sendFeedback(text);
-              }
-            },
-            child: Text(lang == AppLanguage.th ? 'ส่งข้อมูล' : 'Send'),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   void _showDeleteAccountDialog() {
     final lang = ref.read(languageProvider);
@@ -375,15 +344,197 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
+  Future<void> _sendFeedbackFromProfile() async {
+    final text = _feedbackController.text.trim();
+    if (text.isEmpty) return;
+    setState(() => _feedbackSent = true);
+    await _sendFeedback(text);
+    _feedbackController.clear();
+    await Future<void>.delayed(const Duration(milliseconds: 2500));
+    if (mounted) {
+      setState(() => _feedbackSent = false);
+    }
+  }
+
+  Widget _buildStatItem(String thLabel, String value, AppLanguage lang) {
+    String label = thLabel;
+    if (lang == AppLanguage.en) {
+      if (thLabel == 'เซสชัน') label = 'Sessions';
+      if (thLabel == 'สัปดาห์นี้') label = 'This Week';
+      if (thLabel == 'วันต่อเนื่อง') label = 'Streak';
+    }
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 8.0),
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: GoogleFonts.jetBrainsMono(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: GoogleFonts.sarabun(
+                fontSize: 11,
+                color: const Color(0xFF94A3B8),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSelectorButton({
+    required bool isSelected,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(9),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: GoogleFonts.sarabun(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: isSelected ? const Color(0xFF000000) : const Color(0xFF94A3B8),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showLogoutConfirmDialog() {
+    final lang = ref.read(languageProvider);
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.88),
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF1B1F1B),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.08),
+                width: 1,
+              ),
+            ),
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('👋', style: TextStyle(fontSize: 40)),
+                const SizedBox(height: 16),
+                Text(
+                  lang == AppLanguage.th ? 'ออกจากระบบ?' : 'Log out?',
+                  style: GoogleFonts.barlowCondensed(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFFF2F5EF),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  lang == AppLanguage.th
+                      ? 'คุณต้องการออกจากระบบใช่หรือไม่'
+                      : 'Are you sure you want to log out?',
+                  style: GoogleFonts.sarabun(
+                    fontSize: 14,
+                    color: const Color(0xFF7C8A7C),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    // Cancel
+                    Expanded(
+                      child: SizedBox(
+                        height: 48,
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: const Color(0xFF1E211F),
+                            side: BorderSide(
+                              color: Colors.white.withValues(alpha: 0.1),
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: Text(
+                            lang == AppLanguage.th ? 'ยกเลิก' : 'Cancel',
+                            style: GoogleFonts.sarabun(
+                              fontSize: 14,
+                              color: const Color(0xFF8E9A8E),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    // Confirm logout
+                    Expanded(
+                      child: SizedBox(
+                        height: 48,
+                        child: OutlinedButton(
+                          onPressed: () async {
+                            Navigator.pop(ctx);
+                            await ref.read(authProvider.notifier).signOut();
+                          },
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: const Color(0xFFEF4444).withValues(alpha: 0.15),
+                            side: BorderSide(
+                              color: const Color(0xFFEF4444).withValues(alpha: 0.3),
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: Text(
+                            lang == AppLanguage.th ? 'ออกจากระบบ' : 'Log out',
+                            style: GoogleFonts.barlowCondensed(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFFF87171),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authProvider);
     final isLbs = ref.watch(isLbsProvider);
-    final themeMode = ref.watch(themeProvider);
     final lang = ref.watch(languageProvider);
 
     final bg = Theme.of(context).scaffoldBackgroundColor;
-    final border = Theme.of(context).colorScheme.outline;
     final accent = Theme.of(context).colorScheme.primary;
     final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFFF2F5EF);
     final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? const Color(0xFF7C8A7C);
@@ -394,122 +545,539 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         user?.email?.split('@').first ??
         (lang == AppLanguage.th ? 'ผู้ใช้งาน LIFT' : 'LIFT User');
 
-    String? memberSince;
-    if (user?.createdAt != null) {
+    String? memberSinceLabel;
+    final userCreatedAt = user?.createdAt;
+    if (userCreatedAt != null) {
       try {
-        final dt = DateTime.parse(user!.createdAt);
+        final dt = DateTime.parse(userCreatedAt);
         final monthsEn = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         final monthsTh = ['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
         final m = lang == AppLanguage.th ? monthsTh[dt.month] : monthsEn[dt.month];
         final year = lang == AppLanguage.th ? dt.year + 543 : dt.year;
-        memberSince = lang == AppLanguage.th 
-            ? 'สมาชิกตั้งแต่ $m $year' 
-            : 'Member since $m $year';
+        memberSinceLabel = '$m $year';
       } catch (_) {}
+    }
+
+    // Calculate stats
+    final stats = ref.watch(statsProvider);
+    final totalSessions = stats.workoutDates.length;
+
+    // Sessions this week
+    int sessionsThisWeek = 0;
+    final now = DateTime.now();
+    final thisMonday = DateTime(now.year, now.month, now.day).subtract(Duration(days: now.weekday - 1));
+    final thisSunday = thisMonday.add(const Duration(days: 6));
+    for (final dStr in stats.workoutDates) {
+      final date = DateTime.tryParse(dStr);
+      if (date != null && !date.isBefore(thisMonday) && !date.isAfter(thisSunday)) {
+        sessionsThisWeek++;
+      }
+    }
+
+    // Streak
+    int streak = 0;
+    final sortedDates = stats.workoutDates
+        .map((d) => DateTime.tryParse(d))
+        .where((d) => d != null)
+        .map((d) => DateTime(d!.year, d.month, d.day))
+        .toList()
+      ..sort((a, b) => b.compareTo(a));
+
+    if (sortedDates.isNotEmpty) {
+      final today = DateTime(now.year, now.month, now.day);
+      final yesterday = today.subtract(const Duration(days: 1));
+      if (sortedDates.first == today || sortedDates.first == yesterday) {
+        streak = 1;
+        var current = sortedDates.first;
+        for (int i = 1; i < sortedDates.length; i++) {
+          final prev = sortedDates[i];
+          final diff = current.difference(prev).inDays;
+          if (diff == 1) {
+            streak++;
+            current = prev;
+          } else if (diff > 1) {
+            break;
+          }
+        }
+      }
     }
 
     return Scaffold(
       backgroundColor: bg,
-      appBar: AppBar(
-        title: Text(
-          lang.tr('profile_title'),
-          style: GoogleFonts.spaceGrotesk(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.5,
-          ),
-        ),
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // User Info Card (Premium Glowing Header)
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: border, width: 0.5),
-                  gradient: LinearGradient(
-                    colors: [
-                      accent.withValues(alpha: 0.08),
-                      Theme.of(context).cardTheme.color ?? const Color(0xFF151815),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                padding: const EdgeInsets.all(20.0),
-                child: Row(
+              // ── Header / Profile ────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
+                child: Column(
                   children: [
+                    // Avatar with Gradient border matching Figma
                     Container(
-                      padding: const EdgeInsets.all(3),
+                      width: 80,
+                      height: 80,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: accent, width: 2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: accent.withValues(alpha: 0.25),
-                            blurRadius: 12,
-                            spreadRadius: 2,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF10B981), Color(0xFF059669)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        border: Border.all(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                          width: 3,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: avatarUrl != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(40),
+                              child: Image.network(
+                                avatarUrl,
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : Text(
+                              displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U',
+                              style: GoogleFonts.barlowCondensed(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF0A0C0A),
+                              ),
+                            ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      displayName,
+                      style: GoogleFonts.barlowCondensed(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      user?.email ?? 'somchai@email.com',
+                      style: GoogleFonts.sarabun(
+                        fontSize: 13,
+                        color: textMuted,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Google connect status badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E211F),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.06),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.network(
+                            'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
+                            width: 14,
+                            height: 14,
+                            errorBuilder: (_, __, ___) => const Icon(
+                              Icons.g_mobiledata,
+                              size: 14,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            lang == AppLanguage.th ? 'เชื่อมต่อผ่าน Google' : 'Connected with Google',
+                            style: GoogleFonts.sarabun(
+                              fontSize: 11,
+                              color: const Color(0xFF777777),
+                            ),
                           ),
                         ],
                       ),
-                      child: CircleAvatar(
-                        radius: 32,
-                        backgroundColor: accent.withValues(alpha: 0.1),
-                        backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                        child: avatarUrl == null ? Icon(Icons.person, color: accent, size: 32) : null,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Stats Row Card
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1B1F1B),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.06),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          _buildStatItem('เซสชัน', '$totalSessions', lang),
+                          Container(width: 1, height: 40, color: Colors.white.withValues(alpha: 0.04)),
+                          _buildStatItem('สัปดาห์นี้', '$sessionsThisWeek', lang),
+                          Container(width: 1, height: 40, color: Colors.white.withValues(alpha: 0.04)),
+                          _buildStatItem('วันต่อเนื่อง', '$streak', lang),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  ],
+                ),
+              ),
+
+              // ── Language ──────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      lang == AppLanguage.th ? 'ภาษา' : 'LANGUAGE',
+                      style: GoogleFonts.barlowCondensed(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF5A6A5A),
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1B1F1B),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.06),
+                          width: 1,
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(4),
+                      child: Row(
                         children: [
-                          Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  displayName,
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: textPrimary,
+                          Expanded(
+                            child: _buildSelectorButton(
+                              isSelected: lang == AppLanguage.th,
+                              label: '🇹🇭 ภาษาไทย',
+                              onTap: () => ref.read(languageProvider.notifier).setLanguage(AppLanguage.th),
+                            ),
+                          ),
+                          Expanded(
+                            child: _buildSelectorButton(
+                              isSelected: lang == AppLanguage.en,
+                              label: '🇬🇧 English',
+                              onTap: () => ref.read(languageProvider.notifier).setLanguage(AppLanguage.en),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // ── Weight unit ────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      lang == AppLanguage.th ? 'หน่วยน้ำหนัก' : 'WEIGHT UNIT',
+                      style: GoogleFonts.barlowCondensed(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF5A6A5A),
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1B1F1B),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.06),
+                          width: 1,
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(4),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _buildSelectorButton(
+                              isSelected: !isLbs,
+                              label: lang == AppLanguage.th ? 'กิโลกรัม (kg)' : 'Kilograms (kg)',
+                              onTap: isLbs ? () => ref.read(isLbsProvider.notifier).toggle() : () {},
+                            ),
+                          ),
+                          Expanded(
+                            child: _buildSelectorButton(
+                              isSelected: isLbs,
+                              label: lang == AppLanguage.th ? 'ปอนด์ (lbs)' : 'Pounds (lbs)',
+                              onTap: !isLbs ? () => ref.read(isLbsProvider.notifier).toggle() : () {},
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+
+              // ── Extra: Body Metrics grid ───────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.accessibility, color: textMuted, size: 16),
+                        const SizedBox(width: 8),
+                        Text(
+                          lang == AppLanguage.th ? 'ข้อมูลสรีระร่างกาย' : 'Body Metrics',
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: textMuted,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => _showEditHeightBottomSheet(_profile?.height),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF1B1F1B),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.06),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        lang == AppLanguage.th ? 'ส่วนสูง' : 'HEIGHT',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          color: textMuted,
+                                          letterSpacing: 0.8,
+                                        ),
+                                      ),
+                                      Icon(Icons.edit, size: 12, color: accent),
+                                    ],
                                   ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Container(
-                                width: 7,
-                                height: 7,
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Color(0xFFC6FF3D),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Color(0xFFC6FF3D),
-                                      blurRadius: 4,
-                                      spreadRadius: 1,
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    _profile?.height != null
+                                        ? '${_profile!.height!.toStringAsFixed(1)} cm'
+                                        : (lang == AppLanguage.th ? 'ไม่ได้ตั้งค่า' : 'Not set'),
+                                    style: GoogleFonts.spaceGrotesk(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w700,
+                                      color: textPrimary,
                                     ),
-                                  ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => _showEditWeightBottomSheet(
+                              _weightLogs.isNotEmpty ? _weightLogs.first.weightKg : null,
+                            ),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF1B1F1B),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.06),
+                                  width: 1,
                                 ),
                               ),
-                            ],
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        lang == AppLanguage.th ? 'น้ำหนักตัว' : 'WEIGHT',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          color: textMuted,
+                                          letterSpacing: 0.8,
+                                        ),
+                                      ),
+                                      Icon(Icons.scale, size: 12, color: accent),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    _weightLogs.isNotEmpty
+                                        ? '${(isLbs ? _weightLogs.first.weightKg * kgToLbs : _weightLogs.first.weightKg).toStringAsFixed(1)} ${isLbs ? 'lbs' : 'kg'}'
+                                        : (lang == AppLanguage.th ? 'ไม่ได้ตั้งค่า' : 'Not set'),
+                                    style: GoogleFonts.spaceGrotesk(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w700,
+                                      color: textPrimary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            user?.email ?? (lang == AppLanguage.th ? 'ไม่พบอีเมลผู้ใช้งาน' : 'User email not found'),
-                            style: TextStyle(fontSize: 13, color: textMuted),
-                            overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton.icon(
+                          onPressed: _showWeightHistoryBottomSheet,
+                          icon: const Icon(Icons.history, size: 16),
+                          label: Text(
+                            lang.tr('btn_view_history'),
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                           ),
-                          if (memberSince != null) ...[
-                            const SizedBox(height: 6),
-                            Text(
-                              memberSince,
-                              style: TextStyle(fontSize: 10, color: textMuted, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+
+
+
+              // ── Extra: Stats Section (Calendar & charts) ───────────
+
+
+              // ── Feedback ──────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      lang == AppLanguage.th ? 'ส่งความคิดเห็น' : 'FEEDBACK',
+                      style: GoogleFonts.barlowCondensed(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF5A6A5A),
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1B1F1B),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.06),
+                          width: 1,
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(4),
+                      child: Column(
+                        children: [
+                          TextField(
+                            controller: _feedbackController,
+                            maxLines: 4,
+                            style: GoogleFonts.sarabun(
+                              fontSize: 14,
+                              color: const Color(0xFFE0E0E0),
+                              height: 1.6,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: lang == AppLanguage.th
+                                  ? 'แจ้งปัญหา หรือแนะนำฟีเจอร์ใหม่...'
+                                  : 'Report bugs or suggest features...',
+                              hintStyle: const TextStyle(color: Color(0xFF555555)),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              border: InputBorder.none,
+                            ),
+                            onChanged: (text) => setState(() {}),
+                          ),
+                          if (_feedbackSent) ...[
+                            Container(
+                              margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: accent.withValues(alpha: 0.1),
+                                border: Border.all(
+                                  color: accent.withValues(alpha: 0.2),
+                                ),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                lang == AppLanguage.th
+                                    ? '✓ ขอบคุณสำหรับความคิดเห็นครับ!'
+                                    : '✓ Thank you for your feedback!',
+                                style: GoogleFonts.sarabun(
+                                  fontSize: 13,
+                                  color: accent,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ] else ...[
+                            GestureDetector(
+                              onTap: _feedbackController.text.trim().isEmpty ? null : _sendFeedbackFromProfile,
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(vertical: 11),
+                                decoration: BoxDecoration(
+                                  color: _feedbackController.text.trim().isNotEmpty
+                                      ? accent.withValues(alpha: 0.12)
+                                      : const Color(0xFF1E211F),
+                                  border: Border.all(
+                                    color: _feedbackController.text.trim().isNotEmpty
+                                        ? accent.withValues(alpha: 0.3)
+                                        : Colors.white.withValues(alpha: 0.06),
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  lang == AppLanguage.th ? 'ส่งความคิดเห็น' : 'Send Feedback',
+                                  style: GoogleFonts.sarabun(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: _feedbackController.text.trim().isNotEmpty
+                                        ? accent
+                                        : const Color(0xFF444444),
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
                         ],
@@ -518,538 +1086,113 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
-              // Body Metrics Header
-              Row(
-                children: [
-                  Icon(Icons.accessibility, color: textMuted, size: 16),
-                  const SizedBox(width: 8),
-                  Text(
-                    lang == AppLanguage.th ? 'ข้อมูลสรีระร่างกาย' : 'Body Metrics',
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: textMuted,
-                      letterSpacing: 0.5,
+              // ── App info ──────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1B1F1B),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      width: 1,
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Bio Metrics Grid Panels
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => _showEditHeightBottomSheet(_profile?.height),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).cardTheme.color,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: border, width: 0.5),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  lang == AppLanguage.th ? 'ส่วนสูง' : 'HEIGHT',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    color: textMuted,
-                                    letterSpacing: 0.8,
-                                  ),
-                                ),
-                                Icon(Icons.edit, size: 12, color: accent),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              _profile?.height != null
-                                  ? '${_profile!.height!.toStringAsFixed(1)} cm'
-                                  : (lang == AppLanguage.th ? 'ไม่ได้ตั้งค่า' : 'Not set'),
-                              style: GoogleFonts.spaceGrotesk(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                color: textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => _showEditWeightBottomSheet(
-                        _weightLogs.isNotEmpty ? _weightLogs.first.weightKg : null,
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).cardTheme.color,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: border, width: 0.5),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  lang == AppLanguage.th ? 'น้ำหนักตัว' : 'WEIGHT',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                    color: textMuted,
-                                    letterSpacing: 0.8,
-                                  ),
-                                ),
-                                Icon(Icons.scale, size: 12, color: accent),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              _weightLogs.isNotEmpty
-                                  ? '${(isLbs ? _weightLogs.first.weightKg * kgToLbs : _weightLogs.first.weightKg).toStringAsFixed(1)} ${isLbs ? 'lbs' : 'kg'}'
-                                  : (lang == AppLanguage.th ? 'ไม่ได้ตั้งค่า' : 'Not set'),
-                              style: GoogleFonts.spaceGrotesk(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                color: textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton.icon(
-                    onPressed: _showWeightHistoryBottomSheet,
-                    icon: const Icon(Icons.history, size: 16),
-                    label: Text(
-                      lang.tr('btn_view_history'),
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Stats Section
-              Row(
-                children: [
-                  Icon(Icons.bar_chart, color: textMuted, size: 16),
-                  const SizedBox(width: 8),
-                  Text(
-                    lang.tr('nav_stats'),
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: textMuted,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              const StatsSection(),
-              const SizedBox(height: 24),
-
-              // Routines Section
-              Row(
-                children: [
-                  Icon(Icons.fitness_center, color: textMuted, size: 16),
-                  const SizedBox(width: 8),
-                  Text(
-                    lang == AppLanguage.th ? 'ตารางฝึกส่วนตัว' : 'Workout Routines',
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: textMuted,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Card(
-                child: ListTile(
-                  leading: Icon(Icons.list_alt_outlined, color: accent),
-                  title: Text(
-                    lang == AppLanguage.th ? 'ตารางฝึกของฉัน' : 'My Routines',
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(
-                    lang == AppLanguage.th
-                        ? 'สร้าง จัดการ และแชร์ตารางออกกำลังกายล่วงหน้า'
-                        : 'Create, manage, and share workout templates',
-                    style: TextStyle(fontSize: 12, color: textMuted),
-                  ),
-                  trailing: const Icon(Icons.chevron_right, size: 20),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const RoutinesScreen()),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // General Settings Header
-              Row(
-                children: [
-                  Icon(Icons.settings, color: textMuted, size: 16),
-                  const SizedBox(width: 8),
-                  Text(
-                    lang.tr('settings_section'),
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: textMuted,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Settings Selection Card
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   child: Column(
                     children: [
-                      // Weight Unit Row
-                      ListTile(
-                        leading: Icon(Icons.scale_outlined, color: textMuted),
-                        title: Text(
-                          lang.tr('weight_unit_title'),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            lang == AppLanguage.th ? 'เวอร์ชัน' : 'Version',
+                            style: GoogleFonts.sarabun(
+                              fontSize: 13,
+                              color: const Color(0xFF7C8A7C),
+                            ),
                           ),
-                        ),
-                        subtitle: Text(
-                          isLbs ? lang.tr('weight_unit_lbs') : lang.tr('weight_unit_kg'),
-                          style: TextStyle(fontSize: 12, color: textMuted),
-                        ),
-                        trailing: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).scaffoldBackgroundColor,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: border, width: 0.5),
+                          Text(
+                            '1.0.0-beta',
+                            style: GoogleFonts.jetBrainsMono(
+                              fontSize: 13,
+                              color: const Color(0xFF5A6A5A),
+                            ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              GestureDetector(
-                                onTap: isLbs ? () => ref.read(isLbsProvider.notifier).toggle() : null,
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: !isLbs ? accent : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    'KG',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 11,
-                                      color: !isLbs ? Colors.black : textMuted,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: !isLbs ? () => ref.read(isLbsProvider.notifier).toggle() : null,
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: isLbs ? accent : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    'LBS',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 11,
-                                      color: isLbs ? Colors.black : textMuted,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        ],
                       ),
-                      const Divider(indent: 56, endIndent: 16),
-                      // Language Row
-                      ListTile(
-                        leading: Icon(Icons.language_outlined, color: textMuted),
-                        title: Text(
-                          lang.tr('language_title'),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            lang == AppLanguage.th ? 'สมาชิกตั้งแต่' : 'Member since',
+                            style: GoogleFonts.sarabun(
+                              fontSize: 13,
+                              color: const Color(0xFF7C8A7C),
+                            ),
                           ),
-                        ),
-                        subtitle: Text(
-                          lang == AppLanguage.th ? lang.tr('language_desc_th') : lang.tr('language_desc_en'),
-                          style: TextStyle(fontSize: 12, color: textMuted),
-                        ),
-                        trailing: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).scaffoldBackgroundColor,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: border, width: 0.5),
+                          Text(
+                            memberSinceLabel ?? 'ม.ค. 2025',
+                            style: GoogleFonts.sarabun(
+                              fontSize: 13,
+                              color: const Color(0xFF5A6A5A),
+                            ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              GestureDetector(
-                                onTap: lang != AppLanguage.th
-                                    ? () => ref.read(languageProvider.notifier).setLanguage(AppLanguage.th)
-                                    : null,
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: lang == AppLanguage.th ? accent : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    'TH',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 11,
-                                      color: lang == AppLanguage.th ? Colors.black : textMuted,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: lang != AppLanguage.en
-                                    ? () => ref.read(languageProvider.notifier).setLanguage(AppLanguage.en)
-                                    : null,
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: lang == AppLanguage.en ? accent : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    'EN',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 11,
-                                      color: lang == AppLanguage.en ? Colors.black : textMuted,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const Divider(indent: 56, endIndent: 16),
-                      // Theme Row
-                      ListTile(
-                        leading: Icon(
-                          themeMode == ThemeMode.dark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
-                          color: textMuted,
-                        ),
-                        title: Text(
-                          lang.tr('theme_title'),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        subtitle: Text(
-                          themeMode == ThemeMode.dark ? lang.tr('theme_desc_dark') : lang.tr('theme_desc_light'),
-                          style: TextStyle(fontSize: 12, color: textMuted),
-                        ),
-                        trailing: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).scaffoldBackgroundColor,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: border, width: 0.5),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              GestureDetector(
-                                onTap: themeMode != ThemeMode.light
-                                    ? () => ref.read(themeProvider.notifier).setThemeMode(ThemeMode.light)
-                                    : null,
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: themeMode == ThemeMode.light ? accent : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    lang == AppLanguage.th ? 'สว่าง' : 'Light',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 11,
-                                      color: themeMode == ThemeMode.light ? Colors.black : textMuted,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: themeMode != ThemeMode.dark
-                                    ? () => ref.read(themeProvider.notifier).setThemeMode(ThemeMode.dark)
-                                    : null,
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: themeMode == ThemeMode.dark ? accent : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    lang == AppLanguage.th ? 'มืด' : 'Dark',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 11,
-                                      color: themeMode == ThemeMode.dark ? Colors.black : textMuted,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
-              // About & Support Card
-              Row(
-                children: [
-                  Icon(Icons.info_outline, color: textMuted, size: 16),
-                  const SizedBox(width: 8),
-                  Text(
-                    lang.tr('general_info_section'),
-                    style: GoogleFonts.spaceGrotesk(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: textMuted,
-                      letterSpacing: 0.5,
+              // ── Logout Button ──────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: OutlinedButton(
+                    onPressed: _showLogoutConfirmDialog,
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEF4444).withValues(alpha: 0.08),
+                      side: BorderSide(
+                        color: const Color(0xFFEF4444).withValues(alpha: 0.2),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: Text(
+                      lang == AppLanguage.th ? 'ออกจากระบบ' : 'Log out',
+                      style: GoogleFonts.barlowCondensed(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFFF87171),
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
-                ],
+                ),
               ),
               const SizedBox(height: 12),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                  child: Column(
-                    children: [
-                      ListTile(
-                        leading: Icon(Icons.chat_bubble_outline, color: textMuted),
-                        title: Text(
-                          lang.tr('feedback_title'),
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                        trailing: Icon(Icons.chevron_right, color: textMuted, size: 18),
-                        onTap: _showFeedbackDialog,
-                      ),
-                      const Divider(),
-                      ListTile(
-                        leading: Icon(Icons.perm_device_info_outlined, color: textMuted),
-                        title: Text(
-                          lang.tr('app_version'),
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                        trailing: const Text(
-                          'v1.0.0',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
 
-              // Danger Zone Card
-              Card(
-                color: themeMode == ThemeMode.dark ? const Color(0xFF1E1111) : const Color(0xFFFFF5F5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  side: BorderSide(
-                    color: themeMode == ThemeMode.dark ? const Color(0xFF3E1F1F) : const Color(0xFFFFD3D3),
+              // ── Danger Zone (Delete Account Link) ──────────────────
+              Center(
+                child: TextButton(
+                  onPressed: _showDeleteAccountDialog,
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFFFF5A3C),
                   ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Column(
-                    children: [
-                      ListTile(
-                        leading: const Icon(Icons.delete_forever_outlined, color: Colors.redAccent),
-                        title: Text(
-                          lang.tr('delete_account'),
-                          style: const TextStyle(
-                            color: Colors.redAccent,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        onTap: _showDeleteAccountDialog,
-                      ),
-                      Divider(
-                        color: themeMode == ThemeMode.dark ? const Color(0xFF3E1F1F) : const Color(0xFFFFD3D3),
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.logout, color: Colors.redAccent),
-                        title: Text(
-                          lang.tr('sign_out'),
-                          style: const TextStyle(
-                            color: Colors.redAccent,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        onTap: () async {
-                          await ref.read(authProvider.notifier).signOut();
-                        },
-                      ),
-                    ],
+                  child: Text(
+                    lang == AppLanguage.th ? 'ลบบัญชีผู้ใช้งานถาวร' : 'Delete Account Permanently',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
+              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -1333,7 +1476,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             title: lang == AppLanguage.th ? 'เปลี่ยนแปลง' : 'Net Change',
                             value: "${diffDisplay >= 0 ? '+' : ''}${diffDisplay.toStringAsFixed(1)} $unit",
                             color: diffDisplay < 0 
-                                ? const Color(0xFFC6FF3D) 
+                                ? accent 
                                 : (diffDisplay > 0 ? Colors.cyan : textMuted),
                           ),
                         ],

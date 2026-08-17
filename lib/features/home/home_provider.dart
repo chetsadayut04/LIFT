@@ -23,6 +23,8 @@ class HomeState {
   final int? sessionStartedAt;
   final int? sessionFinishedAt;
   final double lastSessionVolume;
+  final Set<String> finishedDates;
+  final Map<String, double> weeklyVolumePerDay;
   const HomeState({
     this.hasSessionToday = false,
     this.isFinishedToday = false,
@@ -36,6 +38,8 @@ class HomeState {
     this.sessionStartedAt,
     this.sessionFinishedAt,
     this.lastSessionVolume = 0,
+    this.finishedDates = const {},
+    this.weeklyVolumePerDay = const {},
   });
 
   double? get percentChange {
@@ -75,6 +79,7 @@ class HomeNotifier extends StateNotifier<HomeState> {
         _setDao.getExerciseSummaryByDate(today),
         _sessionDao.getFinishedDates(),
         _setDao.getLastSessionVolumeBeforeDate(today),
+        _setDao.getVolumePerDay(_fmt(thisMonday), _fmt(thisSunday)),
       ]);
 
       final exercises = results[3] as List<ExerciseSummary>;
@@ -94,6 +99,8 @@ class HomeNotifier extends StateNotifier<HomeState> {
         sessionStartedAt: session?.createdAt,
         sessionFinishedAt: session?.finishedAt,
         lastSessionVolume: results[5] as double,
+        finishedDates: finishedDates,
+        weeklyVolumePerDay: results[6] as Map<String, double>,
       );
     } catch (_) {
       state = const HomeState(isLoading: false);

@@ -48,7 +48,6 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     final lang = ref.watch(languageProvider);
     
     final bg = Theme.of(context).scaffoldBackgroundColor;
-    final border = Theme.of(context).colorScheme.outline;
     final accent = Theme.of(context).colorScheme.primary;
     final surface = Theme.of(context).cardTheme.color ?? const Color(0xFF151815);
     
@@ -57,37 +56,102 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
 
     final chips = lang == AppLanguage.th
         ? [
-            "วิเคราะห์ประวัติน้ำหนักของฉัน",
-            "แนะนำโปรแกรมฝึกอกและหลังแขน",
-            "อธิบายวิธีการทำท่า Squat ที่ถูกวิธี",
-            "คำนวณ BMI และระดับความแข็งแรงปัจจุบัน",
+            "แนะนำโปรแกรม 4 วัน",
+            "เทคนิค Bench Press",
+            "อาหารสร้างกล้าม",
           ]
         : [
-            "Analyze my weight history",
-            "Suggest a chest and triceps program",
-            "Explain how to squat correctly",
-            "Calculate my BMI and strength level",
+            "Suggest 4-day program",
+            "Bench Press technique",
+            "Muscle building diet",
           ];
 
     return Scaffold(
       backgroundColor: bg,
-      appBar: AppBar(
-        title: Text(
-          lang.tr('nav_ai'),
-          style: GoogleFonts.spaceGrotesk(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.5,
-          ),
-        ),
-      ),
       body: SafeArea(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Custom Header matching Figma exactly
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.06),
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                          Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Text(
+                      '🤖',
+                      style: TextStyle(fontSize: 22),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          lang == AppLanguage.th ? 'LIFT AI Coach' : 'LIFT AI Coach',
+                          style: GoogleFonts.barlowCondensed(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFFF2F5EF),
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primary,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              lang == AppLanguage.th ? 'ออนไลน์' : 'Online',
+                              style: GoogleFonts.sarabun(
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Messages area
             Expanded(
               child: ListView.builder(
                 controller: _scrollController,
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 itemCount: state.messages.length + (state.isLoading ? 1 : 0),
                 itemBuilder: (context, index) {
                   if (index == state.messages.length) {
@@ -100,41 +164,56 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
               ),
             ),
             
+            // Suggestion chips matching Figma
             if (state.messages.length <= 1)
-              SizedBox(
+              Container(
                 height: 42,
+                margin: const EdgeInsets.only(bottom: 8),
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   itemCount: chips.length,
                   separatorBuilder: (_, __) => const SizedBox(width: 8),
                   itemBuilder: (context, index) {
                     final text = chips[index];
-                    return ActionChip(
-                      label: Text(
-                        text,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: textPrimary,
-                          fontWeight: FontWeight.w600,
+                    return GestureDetector(
+                      onTap: () => _sendMessage(text),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF121A15),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          text,
+                          style: GoogleFonts.sarabun(
+                            fontSize: 13,
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                      backgroundColor: surface,
-                      side: BorderSide(color: border),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      onPressed: () => _sendMessage(text),
                     );
                   },
                 ),
               ),
-
-            const SizedBox(height: 8),
-            const Divider(),
             
-            Padding(
-              padding: const EdgeInsets.all(12.0),
+            // Input bar
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF080808).withValues(alpha: 0.98),
+                border: Border(
+                  top: BorderSide(
+                    color: Colors.white.withValues(alpha: 0.06),
+                    width: 1,
+                  ),
+                ),
+              ),
               child: Row(
                 children: [
                   Expanded(
@@ -142,32 +221,58 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                       controller: _inputController,
                       textInputAction: TextInputAction.send,
                       onSubmitted: _sendMessage,
+                      style: GoogleFonts.sarabun(
+                        color: const Color(0xFFFFFFFF),
+                        fontSize: 14,
+                      ),
+                      onChanged: (val) => setState(() {}),
                       decoration: InputDecoration(
                         hintText: lang == AppLanguage.th
-                            ? "พิมพ์ข้อความสอบถามที่นี่..."
-                            : "Ask anything about fitness...",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
+                            ? 'ถามเรื่องการฝึกซ้อม...'
+                            : 'Ask anything about fitness...',
+                        hintStyle: const TextStyle(color: Color(0xFF94A3B8)),
+                        filled: true,
+                        fillColor: const Color(0xFF16221B),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide(color: border),
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF223326),
+                            width: 1,
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide(color: accent, width: 1.5),
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1,
+                          ),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  CircleAvatar(
-                    backgroundColor: accent,
-                    radius: 20,
-                    child: IconButton(
-                      icon: const Icon(Icons.send, color: Colors.black, size: 18),
-                      onPressed: () => _sendMessage(_inputController.text),
+                  const SizedBox(width: 10),
+                  // Send button
+                  GestureDetector(
+                    onTap: () => _sendMessage(_inputController.text),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: _inputController.text.trim().isNotEmpty
+                            ? Theme.of(context).colorScheme.primary
+                            : const Color(0xFF1A241E),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        state.isLoading ? Icons.hourglass_empty : Icons.arrow_upward,
+                        color: _inputController.text.trim().isNotEmpty
+                            ? const Color(0xFF000000)
+                            : const Color(0xFF94A3B8),
+                        size: 20,
+                      ),
                     ),
                   ),
                 ],
@@ -187,69 +292,86 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     Color textPrimary,
     Color textMuted,
   ) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final alignment = msg.isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start;
-    
-    final bubbleColor = msg.isUser
-        ? (isDark ? const Color(0xFF1E281F) : const Color(0xFFE4F0DE))
-        : surface;
 
-    final borderSide = msg.isUser
-        ? BorderSide(color: accent.withValues(alpha: 0.3))
-        : BorderSide(color: Theme.of(context).colorScheme.outline);
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: alignment,
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: msg.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: msg.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (!msg.isUser) ...[
-                CircleAvatar(
-                  backgroundColor: accent.withValues(alpha: 0.16),
-                  radius: 14,
-                  child: Icon(Icons.smart_toy, color: accent, size: 16),
+          if (!msg.isUser) ...[
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
                 ),
-                const SizedBox(width: 8),
-              ],
-              Flexible(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: bubbleColor,
-                    borderRadius: BorderRadius.only(
-                      topLeft: const Radius.circular(16),
-                      topRight: const Radius.circular(16),
-                      bottomLeft: msg.isUser ? const Radius.circular(16) : Radius.zero,
-                      bottomRight: msg.isUser ? Radius.zero : const Radius.circular(16),
-                    ),
-                    border: Border.fromBorderSide(borderSide),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              alignment: Alignment.center,
+              child: const Text(
+                '🤖',
+                style: TextStyle(fontSize: 14),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: msg.isUser
+                    ? Theme.of(context).colorScheme.primary
+                    : const Color(0xFF121A15),
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(18),
+                  topRight: const Radius.circular(18),
+                  bottomLeft: msg.isUser ? const Radius.circular(18) : const Radius.circular(4),
+                  bottomRight: msg.isUser ? const Radius.circular(4) : const Radius.circular(18),
+                ),
+                border: msg.isUser
+                    ? null
+                    : Border.all(
+                        color: const Color(0xFF223326),
+                        width: 1,
+                      ),
+              ),
+              child: MarkdownBody(
+                data: msg.text,
+                styleSheet: MarkdownStyleSheet(
+                  p: GoogleFonts.sarabun(
+                    color: msg.isUser ? const Color(0xFF000000) : const Color(0xFFFFFFFF),
+                    fontSize: 14,
+                    height: 1.6,
                   ),
-                  child: MarkdownBody(
-                    data: msg.text,
-                    styleSheet: MarkdownStyleSheet(
-                      p: TextStyle(color: textPrimary, fontSize: 14, height: 1.4, fontFamily: GoogleFonts.inter().fontFamily),
-                      h1: GoogleFonts.spaceGrotesk(color: textPrimary, fontSize: 18, fontWeight: FontWeight.bold, height: 1.5),
-                      h2: GoogleFonts.spaceGrotesk(color: textPrimary, fontSize: 16, fontWeight: FontWeight.bold, height: 1.5),
-                      h3: GoogleFonts.spaceGrotesk(color: textPrimary, fontSize: 14, fontWeight: FontWeight.bold, height: 1.5),
-                      listBullet: TextStyle(color: textPrimary, fontSize: 14),
-                      strong: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
+                  h1: GoogleFonts.barlowCondensed(
+                    color: msg.isUser ? const Color(0xFF000000) : Theme.of(context).colorScheme.primary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  h2: GoogleFonts.barlowCondensed(
+                    color: msg.isUser ? const Color(0xFF000000) : Theme.of(context).colorScheme.primary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  h3: GoogleFonts.barlowCondensed(
+                    color: msg.isUser ? const Color(0xFF000000) : Theme.of(context).colorScheme.primary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  listBullet: TextStyle(
+                    color: msg.isUser ? const Color(0xFF000000) : const Color(0xFFFFFFFF),
+                  ),
+                  strong: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: msg.isUser ? const Color(0xFF000000) : Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ),
-              if (msg.isUser) ...[
-                const SizedBox(width: 8),
-                const CircleAvatar(
-                  backgroundColor: Colors.grey,
-                  radius: 14,
-                  child: Icon(Icons.person, color: Colors.white, size: 16),
-                ),
-              ],
-            ],
+            ),
           ),
         ],
       ),
@@ -262,42 +384,62 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            backgroundColor: accent.withValues(alpha: 0.16),
-            radius: 14,
-            child: Icon(Icons.smart_toy, color: accent, size: 16),
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            alignment: Alignment.center,
+            child: const Text(
+              '🤖',
+              style: TextStyle(fontSize: 14),
+            ),
           ),
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: surface,
+              color: const Color(0xFF121A15),
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
-                bottomRight: Radius.circular(16),
+                topLeft: Radius.circular(18),
+                topRight: Radius.circular(18),
+                bottomLeft: Radius.circular(4),
+                bottomRight: Radius.circular(18),
               ),
-              border: Border.all(color: Theme.of(context).colorScheme.outline),
+              border: Border.all(
+                color: const Color(0xFF223326),
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: accent),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  ref.read(languageProvider) == AppLanguage.th
-                      ? "กำลังคิด..."
-                      : "Thinking...",
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
+                _buildDot(0),
+                const SizedBox(width: 4),
+                _buildDot(1),
+                const SizedBox(width: 4),
+                _buildDot(2),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDot(int index) {
+    return SizedBox(
+      width: 7,
+      height: 7,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primary,
+          shape: BoxShape.circle,
+        ),
       ),
     );
   }

@@ -30,6 +30,13 @@ class AuthNotifier extends StateNotifier<User?> {
     await _client.auth.signUp(email: email.trim(), password: password);
   }
 
+  Future<void> sendPasswordResetEmail(String email) async {
+    await _client.auth.resetPasswordForEmail(
+      email.trim(),
+      redirectTo: kIsWeb ? 'https://lift-9ecb1.web.app' : null,
+    );
+  }
+
   Future<void> signInWithGoogle() async {
     if (kIsWeb) {
       await _client.auth.signInWithOAuth(

@@ -4,11 +4,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
 import '../../core/database/session_dao.dart';
-import '../../core/database/set_dao.dart';
 import '../../core/providers/unit_provider.dart';
 import '../../core/providers/translation_provider.dart';
-import '../../core/widgets/plate_stack.dart';
+import '../history/history_screen.dart';
 import 'stats_provider.dart';
+
+class StatsScreen extends StatelessWidget {
+  const StatsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(20, 20, 20, 24),
+          child: StatsSection(),
+        ),
+      ),
+    );
+  }
+}
 
 class StatsSection extends ConsumerStatefulWidget {
   const StatsSection({super.key});
@@ -19,6 +34,35 @@ class StatsSection extends ConsumerStatefulWidget {
 
 class _StatsSectionState extends ConsumerState<StatsSection> {
   DateTime _focusedMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  String _selectedPeriod = '3M';
+  String? _currentExercise;
+
+  static const _defaultExercises = [
+    'Bench Press',
+    'Back Squat',
+    'Deadlift',
+    'Overhead Press',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initExerciseSelection();
+    });
+  }
+
+  void _initExerciseSelection() {
+    final state = ref.read(statsProvider);
+    final available = state.exerciseNames.isNotEmpty
+        ? state.exerciseNames
+        : _defaultExercises;
+    if (_currentExercise == null && available.isNotEmpty) {
+      final initial = available.first;
+      setState(() => _currentExercise = initial);
+      ref.read(statsProvider.notifier).selectExercise(initial);
+    }
+  }
 
   void _showDaySheet(BuildContext context, String dateStr, bool isWorked) {
     showModalBottomSheet(
@@ -33,27 +77,354 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
     );
   }
 
+  List<({String dateStr, double maxWeight})> _getFilteredHistory(
+    List<({String dateStr, double maxWeight})> raw,
+  ) {
+    if (raw.isEmpty) return [];
+    if (_selectedPeriod == 'ALL') return raw;
+
+    final now = DateTime.now();
+    late DateTime cutoff;
+    if (_selectedPeriod == '1M') {
+      cutoff = DateTime(now.year, now.month - 1, now.day);
+    } else if (_selectedPeriod == '3M') {
+      cutoff = DateTime(now.year, now.month - 3, now.day);
+    } else if (_selectedPeriod == '6M') {
+      cutoff = DateTime(now.year, now.month - 6, now.day);
+    } else {
+      return raw;
+    }
+
+    return raw.where((e) {
+      final parsed = DateTime.tryParse(e.dateStr);
+      if (parsed != null) {
+        return parsed.isAfter(cutoff) || parsed.isAtSameMomentAs(cutoff);
+      }
+      return true;
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(statsProvider);
     final lang = ref.watch(languageProvider);
+    final isLbs = ref.watch(isLbsProvider);
+    final unit = isLbs ? 'lbs' : 'kg';
 
-    if (state.isLoading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24),
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
+    final hasExercises = state.exerciseNames.isNotEmpty;
+    final exercises = hasExercises ? state.exerciseNames : <String>[];
+    final selectedEx = hasExercises ? (_currentExercise ?? exercises.first) : '';
+    final history = hasExercises ? _getFilteredHistory(state.maxWeightHistory) : <({String dateStr, double maxWeight})>[];
+
+    final maxVal = history.isNotEmpty
+        ? history.fold<double>(
+            0.0,
+            (max, e) => e.maxWeight > max ? e.maxWeight : max,
+          )
+        : 0.0;
+    final displayMaxVal = isLbs ? maxVal * kgToLbs : maxVal;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _WeeklyCard(
-          workoutDates: state.workoutDates,
-          thisWeekSets: state.thisWeekSets,
-          lang: lang,
+        // ── Header Title & Period Filter ────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    lang == AppLanguage.th ? 'สถิติ & วิเคราะห์' : 'Stats & Analytics',
+                    style: GoogleFonts.barlowCondensed(
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFFFFFFFF),
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const HistoryScreen()),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.history_rounded, size: 16, color: Color(0xFF10B981)),
+                          const SizedBox(width: 6),
+                          Text(
+                            lang == AppLanguage.th ? 'ประวัติ' : 'History',
+                            style: GoogleFonts.sarabun(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF10B981),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              // Period Filter Tabs (1M, 3M, 6M, ALL)
+              Row(
+                children: ['1M', '3M', '6M', 'ALL'].map((p) {
+                  final isSelected = _selectedPeriod == p;
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      child: GestureDetector(
+                        onTap: () => setState(() => _selectedPeriod = p),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? const Color(0xFF10B981)
+                                : const Color(0xFF1A241E),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isSelected
+                                  ? Colors.transparent
+                                  : Colors.white.withValues(alpha: 0.08),
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            p,
+                            style: GoogleFonts.jetBrainsMono(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: isSelected
+                                  ? const Color(0xFF000000)
+                                  : const Color(0xFF94A3B8),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 12),
+
+        // ── Exercises & PR Section ──────────────────────────────────────────
+        if (!hasExercises)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+            margin: const EdgeInsets.only(bottom: 24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF121A15),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color(0xFF223326),
+              ),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.fitness_center_outlined,
+                  size: 44,
+                  color: const Color(0xFF94A3B8).withValues(alpha: 0.5),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  lang == AppLanguage.th
+                      ? 'ยังไม่มีข้อมูลท่าออกกำลังกาย'
+                      : 'No Exercises Recorded Yet',
+                  style: GoogleFonts.barlowCondensed(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFFFFFFFF),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  lang == AppLanguage.th
+                      ? 'เมื่อเริ่มเพิ่มท่าและบันทึกเซสชันการฝึกซ้อม กราฟแนวโน้ม PR และสถิติส่วนตัวจะปรากฏขึ้นที่นี่'
+                      : 'Add exercises and record workout sessions to see PR trend charts and personal records here.',
+                  style: GoogleFonts.sarabun(
+                    fontSize: 13,
+                    color: const Color(0xFF94A3B8),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          )
+        else ...[
+          // ── Exercise Chips Horizontal Selector ──────────────────────────────
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  lang == AppLanguage.th ? 'ท่าออกกำลังกาย' : 'EXERCISES',
+                  style: GoogleFonts.barlowCondensed(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF94A3B8),
+                    letterSpacing: 1.0,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: exercises.map((ex) {
+                      final isSelected = ex == selectedEx;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() => _currentExercise = ex);
+                            ref.read(statsProvider.notifier).selectExercise(ex);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 7,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? const Color(0xFF10B981).withValues(alpha: 0.15)
+                                  : const Color(0xFF1A241E),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: isSelected
+                                    ? const Color(0xFF10B981).withValues(alpha: 0.5)
+                                    : Colors.white.withValues(alpha: 0.06),
+                              ),
+                            ),
+                            child: Text(
+                              ex,
+                              style: GoogleFonts.sarabun(
+                                fontSize: 13,
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                color: isSelected
+                                    ? const Color(0xFF10B981)
+                                    : const Color(0xFF94A3B8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // ── PR Trend Line Chart Card ─────────────────────────────────────────
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF121A15),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color(0xFF223326),
+              ),
+            ),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            margin: const EdgeInsets.only(bottom: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'PR TREND',
+                          style: GoogleFonts.barlowCondensed(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF94A3B8),
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                        Text(
+                          selectedEx,
+                          style: GoogleFonts.sarabun(
+                            fontSize: 13,
+                            color: const Color(0xFF94A3B8),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          fmtNum(displayMaxVal),
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF10B981),
+                          ),
+                        ),
+                        Text(
+                          lang == AppLanguage.th
+                              ? 'สูงสุด ($unit)'
+                              : 'MAX ($unit)',
+                          style: GoogleFonts.sarabun(
+                            fontSize: 11,
+                            color: const Color(0xFF94A3B8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Line Chart
+                SizedBox(
+                  height: 160,
+                  child: _buildPrLineChart(history, isLbs, lang, selectedEx),
+                ),
+              ],
+            ),
+          ),
+
+          // ── Personal PR Records Section ("สถิติส่วนตัว (PR)") ─────────────
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              lang == AppLanguage.th ? 'สถิติส่วนตัว (PR)' : 'PERSONAL RECORDS',
+              style: GoogleFonts.barlowCondensed(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF94A3B8),
+                letterSpacing: 0.8,
+              ),
+            ),
+          ),
+
+          _buildPersonalPrList(state.exercisePrs, selectedEx, lang, isLbs),
+        ],
+
+        const SizedBox(height: 24),
+
+        // ── Expandable Calendar Card ───────────────────────────────────────
         _CalendarCard(
           workoutDates: state.workoutDates,
           focusedMonth: _focusedMonth,
@@ -62,9 +433,335 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
               _showDaySheet(context, dateStr, isWorked),
           lang: lang,
         ),
-        const SizedBox(height: 12),
-        const _ExercisePrTable(),
       ],
+    );
+  }
+
+  Widget _buildPrLineChart(
+    List<({String dateStr, double maxWeight})> history,
+    bool isLbs,
+    AppLanguage lang,
+    String exerciseName,
+  ) {
+    if (history.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.insert_chart_outlined_rounded,
+                size: 32,
+                color: const Color(0xFF94A3B8).withValues(alpha: 0.4),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                lang == AppLanguage.th
+                    ? 'ยังไม่มีบันทึกเซตสำหรับท่า "$exerciseName"'
+                    : 'No workout sets recorded for "$exerciseName" yet',
+                style: GoogleFonts.sarabun(
+                  color: const Color(0xFFFFFFFF),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                lang == AppLanguage.th
+                    ? 'เริ่มเล่นและบันทึกเซต (น้ำหนัก / จำนวนครั้ง) ในหน้า Workout เพื่อดูพัฒนาการ'
+                    : 'Log weight and reps in the Workout tab to see progress chart',
+                style: GoogleFonts.sarabun(
+                  color: const Color(0xFF94A3B8),
+                  fontSize: 11,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final spots = history.asMap().entries.map((e) {
+      final w = isLbs ? e.value.maxWeight * kgToLbs : e.value.maxWeight;
+      return FlSpot(e.key.toDouble(), w);
+    }).toList();
+
+    final minY = history
+        .map((e) => isLbs ? e.maxWeight * kgToLbs : e.maxWeight)
+        .reduce((a, b) => a < b ? a : b);
+    final maxY = history
+        .map((e) => isLbs ? e.maxWeight * kgToLbs : e.maxWeight)
+        .reduce((a, b) => a > b ? a : b);
+
+    final chartMin = (minY * 0.95).floorToDouble();
+    final chartMax = (maxY * 1.05).ceilToDouble();
+
+    return LineChart(
+      LineChartData(
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: ((chartMax - chartMin) / 3).clamp(1.0, 1000.0),
+          getDrawingHorizontalLine: (_) => const FlLine(
+            color: Color(0x1AFFFFFF),
+            strokeWidth: 1,
+            dashArray: [3, 3],
+          ),
+        ),
+        titlesData: FlTitlesData(
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 32,
+              getTitlesWidget: (val, _) => Text(
+                '${val.toInt()}',
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 10,
+                  color: const Color(0xFF94A3B8),
+                ),
+              ),
+            ),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (val, _) {
+                final idx = val.toInt();
+                if (idx >= 0 && idx < history.length) {
+                  final date = history[idx].dateStr;
+                  final parts = date.split('-');
+                  final label = parts.length == 3
+                      ? '${int.parse(parts[2])}/${int.parse(parts[1])}'
+                      : date;
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      label,
+                      style: GoogleFonts.sarabun(
+                        fontSize: 10,
+                        color: const Color(0xFF94A3B8),
+                      ),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        ),
+        borderData: FlBorderData(show: false),
+        minX: 0,
+        maxX: (history.length - 1).toDouble().clamp(0, double.infinity),
+        minY: chartMin,
+        maxY: chartMax == chartMin ? chartMin + 10 : chartMax,
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true,
+            color: const Color(0xFF10B981),
+            barWidth: 2.5,
+            isStrokeCapRound: true,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, percent, barData, index) =>
+                  FlDotCirclePainter(
+                radius: 3.5,
+                color: const Color(0xFF10B981),
+                strokeWidth: 0,
+              ),
+            ),
+            belowBarData: BarAreaData(
+              show: true,
+              color: const Color(0xFF10B981).withValues(alpha: 0.08),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPersonalPrList(
+    List<({String name, double prKg, int prReps, int totalSets})> prs,
+    String selectedEx,
+    AppLanguage lang,
+    bool isLbs,
+  ) {
+    final unit = isLbs ? 'lbs' : 'kg';
+    if (prs.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF121A15),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFF223326)),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          lang == AppLanguage.th
+              ? 'ยังไม่มีสถิติส่วนตัว (PR)'
+              : 'No Personal Records Yet',
+          style: GoogleFonts.sarabun(
+            fontSize: 13,
+            color: const Color(0xFF94A3B8),
+          ),
+        ),
+      );
+    }
+
+    final displayPrs = List<({String name, double prKg, int prReps, int totalSets})>.from(prs);
+    displayPrs.sort((a, b) {
+      if (a.name == selectedEx) return -1;
+      if (b.name == selectedEx) return 1;
+      return b.prKg.compareTo(a.prKg);
+    });
+
+    final maxPr = displayPrs.map((e) => e.prKg).reduce(math.max);
+
+    return Column(
+      children: displayPrs.asMap().entries.map((entry) {
+        final i = entry.key;
+        final pr = entry.value;
+        final isSelected = pr.name == selectedEx;
+        final displayW = isLbs ? pr.prKg * kgToLbs : pr.prKg;
+        final pct = maxPr > 0 ? (pr.prKg / maxPr) * 100 : 100.0;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? const Color(0xFF10B981).withValues(alpha: 0.08)
+                : const Color(0xFF121A15),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isSelected
+                  ? const Color(0xFF10B981).withValues(alpha: 0.6)
+                  : const Color(0xFF223326),
+              width: isSelected ? 1.5 : 1.0,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            '#${i + 1} ',
+                            style: GoogleFonts.jetBrainsMono(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF94A3B8),
+                            ),
+                          ),
+                          Text(
+                            pr.name,
+                            style: GoogleFonts.barlowCondensed(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFFFFFFFF),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        lang == AppLanguage.th
+                            ? '${pr.totalSets} เซ็ตทั้งหมด'
+                            : '${pr.totalSets} total sets',
+                        style: GoogleFonts.sarabun(
+                          fontSize: 11,
+                          color: const Color(0xFF94A3B8),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: fmtNum(displayW),
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF10B981),
+                              ),
+                            ),
+                            TextSpan(
+                              text: ' $unit',
+                              style: GoogleFonts.sarabun(
+                                fontSize: 11,
+                                color: const Color(0xFF94A3B8),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        '× ${pr.prReps} reps',
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 11,
+                          color: const Color(0xFF94A3B8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              // Gradient progress bar
+              Stack(
+                children: [
+                  Container(
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  FractionallySizedBox(
+                    widthFactor: (pct / 100).clamp(0.0, 1.0),
+                    child: Container(
+                      height: 4,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF059669), Color(0xFF10B981)],
+                        ),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  '${pct.toStringAsFixed(0)}%',
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 10,
+                    color: const Color(0xFF94A3B8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 }
@@ -104,7 +801,7 @@ class _CalendarCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const accent = Color(0xFFC6FF3D);
+    final accent = Theme.of(context).colorScheme.primary;
     final today = DateTime.now();
     final todayStr = _fmt(today);
 
@@ -350,6 +1047,30 @@ class _CalendarCard extends StatelessWidget {
   }
 }
 
+// ─── Legend Dot ──────────────────────────────────────────────────────────────
+
+class _LegendDot extends StatelessWidget {
+  final Color color;
+  final String label;
+
+  const _LegendDot({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(label, style: TextStyle(color: color, fontSize: 12)),
+      ],
+    );
+  }
+}
+
 class _NavBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
@@ -408,7 +1129,7 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
-    const accent = Color(0xFFC6FF3D);
+    final accent = Theme.of(context).colorScheme.primary;
     final displayYear = widget.lang == AppLanguage.th ? _year + 543 : _year;
     final list = widget.lang == AppLanguage.th ? _thaiMonths : _enMonths;
     return AlertDialog(
@@ -493,620 +1214,6 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
   }
 }
 
-// ─── Weekly Summary Card ──────────────────────────────────────────────────────
-
-class _WeeklyCard extends StatelessWidget {
-  final Set<String> workoutDates;
-  final int thisWeekSets;
-  final AppLanguage lang;
-
-  const _WeeklyCard({
-    required this.workoutDates,
-    required this.thisWeekSets,
-    required this.lang,
-  });
-
-  int _countSessions(DateTime monday) {
-    int count = 0;
-    for (var i = 0; i < 7; i++) {
-      final d = monday.add(Duration(days: i));
-      final s =
-          '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-      if (workoutDates.contains(s)) count++;
-    }
-    return count;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
-    final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
-
-    final now = DateTime.now();
-    final thisMonday = now.subtract(Duration(days: now.weekday - 1));
-
-    final thisSessions = _countSessions(thisMonday);
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              lang.tr('stats_this_week'),
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 1,
-                color: textMuted,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                // Sessions
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '$thisSessions',
-                        style: GoogleFonts.spaceGrotesk(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w700,
-                          height: 1,
-                          color: textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        lang == AppLanguage.th ? 'ครั้ง' : 'sessions',
-                        style: TextStyle(fontSize: 12, color: textMuted),
-                      ),
-                    ],
-                  ),
-                ),
-                // Divider
-                Container(width: 1, height: 56, color: Theme.of(context).colorScheme.outline),
-                const SizedBox(width: 16),
-                // Sets
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '$thisWeekSets',
-                        style: GoogleFonts.spaceGrotesk(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w700,
-                          height: 1,
-                          color: textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'sets',
-                        style: TextStyle(fontSize: 12, color: textMuted),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Exercise PR Table ────────────────────────────────────────────────────────
-
-class _ExercisePrTable extends ConsumerStatefulWidget {
-  const _ExercisePrTable();
-
-  @override
-  ConsumerState<_ExercisePrTable> createState() => _ExercisePrTableState();
-}
-
-class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
-  List<String> _programs = [];
-  String? _selectedProgram; // null = ทั้งหมด
-  List<({String name, double prKg, int prReps, int totalSets})> _prs = [];
-  bool _loading = true;
-  final _setDao = SetDao();
-  final _sessionDao = SessionDao();
-
-  @override
-  void initState() {
-    super.initState();
-    _init();
-  }
-
-  Future<void> _init() async {
-    final sessions = await _sessionDao.getRecentNamedSessions(limit: 20);
-    final seen = <String>{};
-    final programs = <String>[];
-    for (final s in sessions) {
-      if (seen.add(s.name!)) programs.add(s.name!);
-    }
-    if (mounted) setState(() => _programs = programs);
-    await _load();
-  }
-
-  Future<void> _load() async {
-    setState(() => _loading = true);
-    final result = _selectedProgram == null
-        ? await _setDao.getAllExercisePrs()
-        : await _setDao.getExerciseStatsBySessionName(_selectedProgram!);
-    if (mounted) {
-      setState(() {
-        _prs = result;
-        _loading = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
-    final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
-    final accent = Theme.of(context).colorScheme.primary;
-
-    final isLbs = ref.watch(isLbsProvider);
-    final lang = ref.watch(languageProvider);
-    final allLabel = lang == AppLanguage.th ? 'ทั้งหมด' : 'All';
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  lang.tr('nav_stats'),
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1,
-                    color: textMuted,
-                  ),
-                ),
-                const Spacer(),
-                if (_programs.isNotEmpty)
-                  PopupMenuButton<String?>(
-                    onSelected: (val) {
-                      setState(() => _selectedProgram = val);
-                      _load();
-                    },
-                    itemBuilder: (_) => [
-                      PopupMenuItem<String?>(
-                        value: null,
-                        child: Text(allLabel),
-                      ),
-                      ..._programs.map(
-                        (name) => PopupMenuItem<String?>(
-                          value: name,
-                          child: Text(name),
-                        ),
-                      ),
-                    ],
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _selectedProgram ?? allLabel,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: accent,
-                          ),
-                        ),
-                        const Icon(
-                          Icons.arrow_drop_down,
-                          size: 18,
-                          color: Color(0xFF7C8A7C),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            if (_loading)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 20),
-                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-              )
-            else if (_prs.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Text(
-                  lang == AppLanguage.th ? 'ยังไม่มีข้อมูล' : 'No data available',
-                  style: const TextStyle(color: Color(0xFF7C8A7C), fontSize: 13),
-                ),
-              )
-            else ...[
-              Row(
-                children: [
-                  Expanded(
-                    flex: 5,
-                    child: Text(
-                      lang == AppLanguage.th ? 'ท่า' : 'Exercise',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: textMuted,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 4,
-                    child: Text(
-                      'Best set',
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: textMuted,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      'sets',
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: textMuted,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              const Divider(height: 1),
-              ...() {
-                final maxWeight = _prs.map((p) => p.prKg).reduce(math.max);
-                return _prs.map((p) {
-                  final bestW = isLbs ? p.prKg * kgToLbs : p.prKg;
-                  final ratio = maxWeight > 0 ? p.prKg / maxWeight : 0.0;
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              flex: 5,
-                              child: Text(
-                                p.name,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: textPrimary,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            Expanded(
-                              flex: 4,
-                              child: Text(
-                                '${fmtNum(bestW)}×${p.prReps}',
-                                textAlign: TextAlign.right,
-                                style: GoogleFonts.jetBrainsMono(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: accent,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 3,
-                              child: Text(
-                                '${p.totalSets}',
-                                textAlign: TextAlign.right,
-                                style: GoogleFonts.jetBrainsMono(
-                                  fontSize: 13,
-                                  color: textMuted,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 5),
-                        PlateStack(ratio: ratio),
-                      ],
-                    ),
-                  );
-                }).toList();
-              }(),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Legend Dot ──────────────────────────────────────────────────────────────
-
-class _LegendDot extends StatelessWidget {
-  final Color color;
-  final String label;
-
-  const _LegendDot({required this.color, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 6),
-        Text(label, style: TextStyle(color: color, fontSize: 12)),
-      ],
-    );
-  }
-}
-
-// ─── Exercise Chart ───────────────────────────────────────────────────────────
-
-/// Returns a "nice" interval for the Y-axis so that there are roughly
-/// [targetTicks] evenly-spaced labels between 0 and [maxVal].
-/// Rounds to clean steps like 1, 2, 5, 10, 25, 50, 100, 250, 500, 1000 …
-double _niceInterval(double maxVal, {int targetTicks = 5}) {
-  if (maxVal <= 0) return 20;
-  final rawStep = maxVal / targetTicks;
-  // Find the magnitude (power of 10) just below rawStep
-  double mag = 1;
-  while (mag * 10 <= rawStep) {
-    mag *= 10;
-  }
-  // Choose the nicest multiple of that magnitude
-  const candidates = [1.0, 2.0, 2.5, 5.0, 10.0];
-  double step = mag * 10;
-  for (final c in candidates) {
-    final s = c * mag;
-    if (s >= rawStep) {
-      step = s;
-      break;
-    }
-  }
-  return step == 0 ? 1 : step;
-}
-
-class _ExerciseChart extends ConsumerStatefulWidget {
-  final String exerciseName;
-  final List<({String dateStr, double volume})> history;
-  final List<({String dateStr, double maxWeight})> maxWeightHistory;
-
-  const _ExerciseChart({
-    required this.exerciseName,
-    required this.history,
-    required this.maxWeightHistory,
-  });
-
-  @override
-  ConsumerState<_ExerciseChart> createState() => _ExerciseChartState();
-}
-
-class _ExerciseChartState extends ConsumerState<_ExerciseChart> {
-  bool _showMaxWeight = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final isLbs = ref.watch(isLbsProvider);
-    final unit = isLbs ? 'lbs' : 'kg';
-    const accent = Color(0xFFC6FF3D);
-    final lang = ref.watch(languageProvider);
-
-    final displayData = _showMaxWeight
-        ? widget.maxWeightHistory
-              .map(
-                (e) => (
-                  dateStr: e.dateStr,
-                  value: isLbs ? e.maxWeight * kgToLbs : e.maxWeight,
-                ),
-              )
-              .toList()
-        : widget.history
-              .map(
-                (e) => (
-                  dateStr: e.dateStr,
-                  value: isLbs ? e.volume * kgToLbs : e.volume,
-                ),
-              )
-              .toList();
-
-    final maxY = displayData.fold(0.0, (m, e) => e.value > m ? e.value : m);
-    final chartMaxY = maxY == 0 ? 100.0 : maxY * 1.2;
-    final interval = _niceInterval(chartMaxY);
-
-    final barGroups = displayData.asMap().entries.map((entry) {
-      return BarChartGroupData(
-        x: entry.key,
-        barRods: [
-          BarChartRodData(
-            toY: entry.value.value,
-            color: accent,
-            width: 18,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-          ),
-        ],
-      );
-    }).toList();
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.exerciseName.toUpperCase(),
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1,
-                color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _showMaxWeight
-                        ? (lang == AppLanguage.th ? 'น้ำหนักสูงสุด ย้อนหลัง ($unit)' : 'Max Weight History ($unit)')
-                        : (lang == AppLanguage.th ? 'Volume รายวัน ย้อนหลัง ($unit)' : 'Daily Volume History ($unit)'),
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Theme.of(context).textTheme.bodyLarge?.color,
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => setState(() => _showMaxWeight = !_showMaxWeight),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).inputDecorationTheme.fillColor ?? Theme.of(context).colorScheme.surface,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Theme.of(context).colorScheme.outline),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Vol',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: _showMaxWeight
-                                ? Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey
-                                : Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 5),
-                          child: Text(
-                            '|',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          'Max',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: _showMaxWeight
-                                ? Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white
-                                : Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 180,
-              child: BarChart(
-                BarChartData(
-                  maxY: chartMaxY,
-                  barGroups: barGroups,
-                  gridData: FlGridData(
-                    show: true,
-                    horizontalInterval: interval,
-                    getDrawingHorizontalLine: (_) =>
-                        const FlLine(color: Color(0xFF262A24), strokeWidth: 1),
-                    drawVerticalLine: false,
-                  ),
-                  borderData: FlBorderData(show: false),
-                  titlesData: FlTitlesData(
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 44,
-                        interval: interval,
-                        getTitlesWidget: (val, _) {
-                          if (val % interval != 0 && val != 0) {
-                            return const SizedBox.shrink();
-                          }
-                          final display = val >= 1000
-                              ? '${fmtNum(val / 1000)}k'
-                              : fmtNum(val);
-                          return Text(
-                            display,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: Color(0xFF7C8A7C),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (val, _) {
-                          final idx = val.toInt();
-                          if (idx < 0 || idx >= displayData.length) {
-                            return const SizedBox.shrink();
-                          }
-                          final parts = displayData[idx].dateStr.split('-');
-                          final label = parts.length == 3
-                              ? '${int.parse(parts[2])}/${int.parse(parts[1])}'
-                              : displayData[idx].dateStr;
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 6),
-                            child: Text(
-                              label,
-                              style: const TextStyle(
-                                fontSize: 9,
-                                color: Color(0xFF7C8A7C),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // ─── Day Detail Bottom Sheet ──────────────────────────────────────────────────
 
 class _DayDetailSheet extends ConsumerStatefulWidget {
@@ -1151,6 +1258,63 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
       return '${parts[2]} ${thaiMonths[month]} ${int.parse(parts[0]) + 543}';
     } else {
       return '${parts[2]} ${enMonths[month]} ${parts[0]}';
+    }
+  }
+
+  Future<void> _deleteSession(BuildContext context, AppLanguage lang) async {
+    final session = await SessionDao().getByDate(widget.dateStr);
+    if (session == null || session.id == null) return;
+
+    if (!context.mounted) return;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF16221B),
+        title: Text(
+          lang == AppLanguage.th ? 'ลบประวัติการออกกำลังกาย' : 'Delete Workout Session',
+          style: GoogleFonts.barlowCondensed(
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFFFFFFFF),
+          ),
+        ),
+        content: Text(
+          lang == AppLanguage.th
+              ? 'คุณต้องการลบประวัติการฝึกซ้อมของวันที่ ${_formatDate(widget.dateStr, lang)} ใช่หรือไม่?'
+              : 'Are you sure you want to delete the workout history for ${_formatDate(widget.dateStr, lang)}?',
+          style: GoogleFonts.sarabun(
+            color: const Color(0xFF94A3B8),
+            fontSize: 13,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              lang == AppLanguage.th ? 'ยกเลิก' : 'Cancel',
+              style: GoogleFonts.sarabun(color: const Color(0xFF94A3B8)),
+            ),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+            ),
+            child: Text(
+              lang == AppLanguage.th ? 'ลบประวัติ' : 'Delete',
+              style: GoogleFonts.sarabun(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await SessionDao().delete(session.id!);
+      ref.read(statsProvider.notifier).load();
+      if (context.mounted) Navigator.pop(context);
     }
   }
 
@@ -1210,6 +1374,14 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
                     color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white,
                   ),
                 ),
+                const Spacer(),
+                if (widget.isWorked && _data != null && _data!.isNotEmpty)
+                  IconButton(
+                    onPressed: () => _deleteSession(context, lang),
+                    icon: const Icon(Icons.delete_outline_rounded),
+                    color: const Color(0xFFEF4444),
+                    tooltip: lang == AppLanguage.th ? 'ลบประวัติวันนี้' : 'Delete Day Session',
+                  ),
               ],
             ),
           ),

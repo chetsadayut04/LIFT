@@ -1,0 +1,10 @@
+{
+  "description": "This fitness app helps users track workouts, manage routines, and analyze performance, providing personalized coaching and progress insights for effective training.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

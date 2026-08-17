@@ -19,7 +19,9 @@ class PlateStack extends StatelessWidget {
           height: on ? 16 : 8,
           margin: const EdgeInsets.only(right: 2),
           decoration: BoxDecoration(
-            color: on ? const Color(0xFFC6FF3D) : const Color(0xFF7C8A7C),
+            color: on
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).textTheme.bodySmall?.color ?? const Color(0xFF718E7E),
             borderRadius: BorderRadius.circular(1),
           ),
         );

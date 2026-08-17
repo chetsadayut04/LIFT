@@ -1,16 +1,20 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/providers/translation_provider.dart';
 import 'core/providers/cache_provider.dart';
+import 'core/providers/tab_provider.dart';
 import 'features/auth/auth_provider.dart';
 import 'features/auth/login_screen.dart';
 import 'features/profile/profile_screen.dart';
-import 'features/history/history_provider.dart';
-import 'features/history/history_screen.dart';
 import 'features/home/home_provider.dart';
 import 'features/home/home_screen.dart';
+import 'features/workout/routine_provider.dart';
+import 'features/workout/routines_screen.dart';
+import 'features/stats/stats_screen.dart';
 import 'features/stats/stats_provider.dart';
 import 'features/ai_coach/ai_chat_screen.dart';
 import 'features/ai_coach/ai_chat_provider.dart';
@@ -23,23 +27,183 @@ class App extends ConsumerStatefulWidget {
 }
 
 class _AppState extends ConsumerState<App> {
-  int _currentIndex = 0;
+  StreamSubscription<AuthState>? _authSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (data.event == AuthChangeEvent.passwordRecovery) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _showChangePasswordDialog();
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
+  }
 
   void _onTabChanged(int i) {
-    setState(() => _currentIndex = i);
+    ref.read(activeTabProvider.notifier).state = i;
     // Reload data when switching tabs
     if (i == 0) ref.read(homeProvider.notifier).load();
-    if (i == 1) ref.read(historyProvider.notifier).load();
-    if (i == 2) ref.read(aiChatProvider.notifier).refreshContext();
-    if (i == 3) ref.read(statsProvider.notifier).load();
+    if (i == 1) ref.read(routineProvider.notifier).load();
+    if (i == 2) ref.read(statsProvider.notifier).load();
+    if (i == 3) ref.read(aiChatProvider.notifier).refreshContext();
   }
 
   static const _screens = [
     HomeScreen(),
-    HistoryScreen(),
+    RoutinesScreen(),
+    StatsScreen(),
     AiChatScreen(),
     ProfileScreen(),
   ];
+
+  void _showChangePasswordDialog() {
+    final passwordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool isSaving = false;
+    bool obscureText = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Force user to update password
+      builder: (ctx) {
+        final lang = ref.watch(languageProvider);
+        const accent = Color(0xFFC6FF3D);
+        const textPrimary = Color(0xFFF2F5EF);
+        const textMuted = Color(0xFF7C8A7C);
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF1B1F1B),
+              title: Text(
+                lang == AppLanguage.th ? 'ตั้งรหัสผ่านใหม่' : 'Reset Password',
+                style: const TextStyle(color: textPrimary, fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              content: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      lang == AppLanguage.th
+                          ? 'กรุณากรอกรหัสผ่านใหม่ที่คุณต้องการใช้งาน'
+                          : 'Please enter your new password to secure your account.',
+                      style: const TextStyle(color: textMuted, fontSize: 13),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: passwordController,
+                      obscureText: obscureText,
+                      style: const TextStyle(color: textPrimary),
+                      decoration: InputDecoration(
+                        labelText: lang == AppLanguage.th ? 'รหัสผ่านใหม่' : 'New Password',
+                        labelStyle: const TextStyle(color: textMuted),
+                        prefixIcon: const Icon(Icons.lock_outlined, color: textMuted),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                            color: textMuted,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              obscureText = !obscureText;
+                            });
+                          },
+                        ),
+                        enabledBorder: const UnderlineInputBorder(
+                          borderSide: BorderSide(color: Color(0xFF262A24)),
+                        ),
+                        focusedBorder: const UnderlineInputBorder(
+                          borderSide: BorderSide(color: accent),
+                        ),
+                      ),
+                      validator: (val) {
+                        if (val == null || val.isEmpty) {
+                          return lang == AppLanguage.th ? 'กรุณากรอกรหัสผ่าน' : 'Please enter password';
+                        }
+                        if (val.length < 6) {
+                          return lang == AppLanguage.th
+                              ? 'รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร'
+                              : 'Password must be at least 6 characters';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: isSaving
+                      ? null
+                      : () async {
+                          if (!formKey.currentState!.validate()) return;
+                          setState(() {
+                            isSaving = true;
+                          });
+                          try {
+                            await Supabase.instance.client.auth.updateUser(
+                              UserAttributes(password: passwordController.text),
+                            );
+                            if (ctx.mounted) {
+                              Navigator.pop(ctx);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    lang == AppLanguage.th
+                                        ? 'เปลี่ยนรหัสผ่านใหม่สำเร็จแล้ว!'
+                                        : 'Password updated successfully!',
+                                  ),
+                                  backgroundColor: const Color(0xFF1B1F1B),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (ctx.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    lang == AppLanguage.th
+                                        ? 'เกิดข้อผิดพลาด: $e'
+                                        : 'Error: $e',
+                                  ),
+                                  backgroundColor: Colors.redAccent,
+                                ),
+                              );
+                            }
+                          } finally {
+                            setState(() {
+                              isSaving = false;
+                            });
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: accent,
+                    foregroundColor: Colors.black,
+                  ),
+                  child: isSaving
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                        )
+                      : Text(lang == AppLanguage.th ? 'เปลี่ยนรหัสผ่าน' : 'Update Password'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,9 +211,10 @@ class _AppState extends ConsumerState<App> {
     final themeMode = ref.watch(themeProvider);
     final lang = ref.watch(languageProvider);
     final cacheInit = user != null ? ref.watch(cacheInitProvider) : null;
+    final currentIndex = ref.watch(activeTabProvider);
 
     final mainScaffold = Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _screens),
+      body: IndexedStack(index: currentIndex, children: _screens),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           border: Border(
@@ -60,7 +225,7 @@ class _AppState extends ConsumerState<App> {
           ),
         ),
         child: NavigationBar(
-          selectedIndex: _currentIndex,
+          selectedIndex: currentIndex,
           onDestinationSelected: _onTabChanged,
           destinations: [
             NavigationDestination(
@@ -69,9 +234,14 @@ class _AppState extends ConsumerState<App> {
               label: lang.tr('nav_home'),
             ),
             NavigationDestination(
-              icon: const Icon(Icons.history_outlined),
-              selectedIcon: const Icon(Icons.history),
-              label: lang.tr('nav_history'),
+              icon: const Icon(Icons.tune_outlined),
+              selectedIcon: const Icon(Icons.tune),
+              label: lang == AppLanguage.th ? 'ตาราง' : 'Routines',
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.trending_up_outlined),
+              selectedIcon: const Icon(Icons.trending_up),
+              label: lang.tr('nav_stats'),
             ),
             NavigationDestination(
               icon: const Icon(Icons.smart_toy_outlined),
@@ -81,7 +251,7 @@ class _AppState extends ConsumerState<App> {
             NavigationDestination(
               icon: const Icon(Icons.person_outline),
               selectedIcon: const Icon(Icons.person),
-              label: lang.tr('nav_profile'),
+              label: lang == AppLanguage.th ? 'ฉัน' : 'Profile',
             ),
           ],
         ),
@@ -91,7 +261,9 @@ class _AppState extends ConsumerState<App> {
     return MaterialApp(
       title: 'LIFT',
       debugShowCheckedModeBanner: false,
-      theme: _theme(themeMode),
+      themeMode: ThemeMode.dark,
+      theme: _theme(ThemeMode.dark),
+      darkTheme: _theme(ThemeMode.dark),
       home: user == null
           ? const LoginScreen()
           : cacheInit?.when(
@@ -152,18 +324,16 @@ class _AppState extends ConsumerState<App> {
   }
 
   ThemeData _theme(ThemeMode mode) {
-    final isDark = mode == ThemeMode.dark;
+    const bg = Color(0xFF0A0E0B);
+    const surfaceSolid = Color(0xFF121A15);
+    const border = Color(0xFF223326);
+    const accent = Color(0xFF10B981);
+    const onAccent = Color(0xFF000000);
+    const textPrimary = Color(0xFFFFFFFF);
+    const textMuted = Color(0xFF94A3B8);
+    const textSecondary = Color(0xFFE2E8F0);
 
-    final bg = isDark ? const Color(0xFF090B09) : const Color(0xFFF4F6F3);
-    final surfaceSolid = isDark ? const Color(0xFF141914) : const Color(0xFFFFFFFF);
-    final border = isDark ? const Color(0xFF262F26) : const Color(0xFFDCE2DC);
-    final accent = isDark ? const Color(0xFFC6FF3D) : const Color(0xFF4D8300);
-    final onAccent = isDark ? const Color(0xFF000000) : const Color(0xFFFFFFFF);
-    final textPrimary = isDark ? const Color(0xFFFFFFFF) : const Color(0xFF101410);
-    final textMuted = isDark ? const Color(0xFFA8B5A8) : const Color(0xFF4E594E);
-    final textSecondary = isDark ? const Color(0xFFE2EBE2) : const Color(0xFF323B32);
-
-    final brightness = isDark ? Brightness.dark : Brightness.light;
+    const brightness = Brightness.dark;
 
     final cs = ColorScheme.fromSeed(
       seedColor: accent,
@@ -208,8 +378,8 @@ class _AppState extends ConsumerState<App> {
           fontWeight: FontWeight.w700,
           letterSpacing: -0.3,
         ),
-        iconTheme: IconThemeData(color: textMuted),
-        actionsIconTheme: IconThemeData(color: textMuted),
+        iconTheme: const IconThemeData(color: textMuted),
+        actionsIconTheme: const IconThemeData(color: textMuted),
       ),
       cardTheme: CardThemeData(
         color: surfaceSolid,
@@ -217,12 +387,12 @@ class _AppState extends ConsumerState<App> {
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: border, width: 0.5),
+          side: const BorderSide(color: border, width: 0.5),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: isDark ? const Color(0xFF121512) : const Color(0xFFEDF1EC),
+        fillColor: const Color(0xFF16221B),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
