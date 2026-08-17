@@ -48,6 +48,8 @@ dependencies:
   flutter_markdown: ^0.7.7+1
   flutter_local_notifications: ^18.0.1
   live_activities: ^2.0.2
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^6.0.0
 
 dev_dependencies:
   flutter_test:

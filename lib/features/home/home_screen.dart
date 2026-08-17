@@ -9,6 +9,7 @@ import '../../core/providers/translation_provider.dart';
 import '../../core/widgets/plate_stack.dart';
 import '../workout/active_workout_provider.dart';
 import '../workout/active_workout_screen.dart';
+import '../workout/routine_provider.dart';
 import 'home_provider.dart';
 const _thaiDays = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัส', 'ศุกร์', 'เสาร์', 'อาทิตย์'];
 const _thaiMonths = ['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
@@ -222,13 +223,31 @@ class _HomeBody extends ConsumerWidget {
         ],
       );
     }
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: FilledButton(
-        onPressed: () => _start(context, ref, lang),
-        child: Text(lang.tr('home_start')),
-      ),
+    return Row(
+      children: [
+        Expanded(
+          flex: 3,
+          child: SizedBox(
+            height: 52,
+            child: FilledButton(
+              onPressed: () => _start(context, ref, lang),
+              child: Text(lang.tr('home_start')),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 2,
+          child: SizedBox(
+            height: 52,
+            child: OutlinedButton.icon(
+              onPressed: () => _selectRoutineBottomSheet(context, ref, lang, accent),
+              icon: const Icon(Icons.bookmark_outline, size: 18),
+              label: Text(lang == AppLanguage.th ? 'เลือกตาราง' : 'Routine'),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -252,6 +271,192 @@ class _HomeBody extends ConsumerWidget {
       );
       ref.read(homeProvider.notifier).load();
     }
+  }
+
+  Future<void> _selectRoutineBottomSheet(
+    BuildContext context,
+    WidgetRef ref,
+    AppLanguage lang,
+    Color accent,
+  ) async {
+    // Refresh routines list from database
+    ref.read(routineProvider.notifier).load();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+
+        return Consumer(
+          builder: (context, ref, _) {
+            final routineState = ref.watch(routineProvider);
+
+            return Container(
+              margin: EdgeInsets.only(top: 60, bottom: MediaQuery.of(context).viewInsets.bottom),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+                border: Border(
+                  top: BorderSide(color: theme.colorScheme.outline, width: 0.5),
+                ),
+              ),
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 38,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.outline.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    lang == AppLanguage.th ? 'เลือกตารางฝึกซ้อม' : 'Select Workout Routine',
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+
+                  if (routineState.isLoading)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 40),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  else if (routineState.routines.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 16),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.fitness_center_outlined,
+                            size: 48,
+                            color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            lang == AppLanguage.th
+                                ? 'ยังไม่มีตารางฝึกส่วนตัว'
+                                : 'No routines created yet',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            lang == AppLanguage.th
+                                ? 'คุณสามารถสร้างตารางฝึกได้ที่แท็บ "โปรไฟล์"'
+                                : 'You can create your custom routines in the "Profile" tab.',
+                            style: TextStyle(color: theme.textTheme.bodySmall?.color, fontSize: 12),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Flexible(
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: routineState.routines.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (ctx, index) {
+                          final item = routineState.routines[index];
+                          final routine = item.routine;
+                          final exercises = item.exercises;
+                          final textMuted = theme.textTheme.bodySmall?.color ?? Colors.grey;
+
+                          return InkWell(
+                            onTap: () async {
+                              Navigator.pop(ctx);
+
+                              final exNames = exercises.map((e) => e.exercise.name).toList();
+                              await ref.read(activeWorkoutProvider.notifier).startSessionFromTemplate(
+                                    routine.name,
+                                    exNames,
+                                  );
+
+                              if (context.mounted) {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const ActiveWorkoutScreen()),
+                                );
+                                ref.read(homeProvider.notifier).load();
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(16),
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF1E211F) : const Color(0xFFF1F5F0),
+                                border: Border.all(color: theme.colorScheme.outline, width: 0.5),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          routine.name,
+                                          style: GoogleFonts.spaceGrotesk(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      const Icon(Icons.play_circle_fill_outlined, size: 20),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    lang == AppLanguage.th
+                                        ? '${exercises.length} ท่าออกกำลังกาย | ${exercises.fold(0, (sum, ex) => sum + ex.sets.length)} เซ็ตรวม'
+                                        : '${exercises.length} exercises | ${exercises.fold(0, (sum, ex) => sum + ex.sets.length)} total sets',
+                                    style: TextStyle(color: textMuted, fontSize: 11),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    exercises.map((e) => e.exercise.name).join(', '),
+                                    style: TextStyle(color: textMuted, fontSize: 11, fontStyle: FontStyle.italic),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                  OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(lang == AppLanguage.th ? 'ยกเลิก' : 'Cancel'),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _continue(BuildContext context, WidgetRef ref) async {
@@ -623,7 +828,6 @@ class _VolumeSummaryRow extends ConsumerWidget {
 
     final vol = _fmtVol(state.todayVolume, isLbs);
     final last = state.lastSessionVolume;
-    final unit = isLbs ? 'lbs' : 'kg';
 
     String? changeStr;
     Color changeColor = textMuted;
@@ -656,13 +860,6 @@ class _VolumeSummaryRow extends ConsumerWidget {
             ],
           ],
         ),
-        if (state.bestE1RMToday > 0 && state.bestE1RMExercise != null) ...[
-          const SizedBox(height: 3),
-          Text(
-            'Best e1RM: ${fmtNum(isLbs ? state.bestE1RMToday * kgToLbs : state.bestE1RMToday)} $unit  (${state.bestE1RMExercise})',
-            style: TextStyle(fontSize: 11, color: textMuted),
-          ),
-        ],
       ],
     );
   }
@@ -695,7 +892,9 @@ class _ExerciseList extends ConsumerWidget {
     if (exercises.isEmpty) {
       return Center(
         child: Text(
-          lang.tr('home_warming_up'),
+          state.isFinishedToday
+              ? (lang == AppLanguage.th ? 'เสร็จสิ้น' : 'Finished')
+              : lang.tr('home_warming_up'),
           style: TextStyle(fontSize: 13, color: textMuted),
         ),
       );

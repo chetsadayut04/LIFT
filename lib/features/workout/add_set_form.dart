@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers/unit_provider.dart';
+import '../../core/widgets/plate_calculator_dialog.dart';
 
 // ลบสีค่าคงที่ฮาร์ดโค้ดออกเพื่อให้ใช้สีระบบตาม Theme ได้อย่างสมบูรณ์แบบ
 
@@ -188,7 +189,7 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
           const SizedBox(height: 6),
         ],
 
-        // ── Warmup toggle ──────────────────────────────────────
+        // ── Warmup toggle & Plate Calc ─────────────────────────
         Row(
           children: [
             GestureDetector(
@@ -213,6 +214,32 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
                     letterSpacing: 0.5,
                   ),
                 ),
+              ),
+            ),
+            const Spacer(),
+            TextButton.icon(
+              onPressed: () async {
+                final currentWeight = double.tryParse(_weightCtrl.text) ?? 0.0;
+                final result = await showPlateCalculator(
+                  context: context,
+                  initialWeight: currentWeight,
+                  isLbs: isLbs,
+                );
+                if (result != null && mounted) {
+                  setState(() {
+                    _weightCtrl.text = fmtNum(result);
+                  });
+                }
+              },
+              icon: Icon(Icons.fitness_center, size: 14, color: accent),
+              label: Text(
+                'คำนวณแผ่นเหล็ก',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: accent),
+              ),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ),
           ],
@@ -327,26 +354,48 @@ class _ProgressionHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final accent = theme.colorScheme.primary;
+    final unit = isLbs ? 'lbs' : 'kg';
+
+    // Celebration: Check if any set in this session achieved or exceeded repMax
+    final achievedGoal = previousSets.isNotEmpty &&
+        previousSets.any((s) => s.reps >= repMax);
+
+    if (achievedGoal) {
+      return Row(
+        children: [
+          const Icon(Icons.star, size: 12, color: Color(0xFFFF9F1C)),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              'พิชิตเป้าหมายแล้ว! แนะนำให้ปรับเพิ่มน้ำหนักในรอบหน้า',
+              style: TextStyle(fontSize: 10, color: const Color(0xFFFF9F1C), fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      );
+    }
+
     final nextIdx = previousSets.length;
     if (nextIdx >= lastSessionSets.length) return const SizedBox.shrink();
 
     final lastSet = lastSessionSets[nextIdx];
     final s = progressionSuggestion(lastSet.weight, lastSet.reps, repMin: repMin, repMax: repMax);
     final display = isLbs ? s.weightKg * kgToLbs : s.weightKg;
-    final unit = isLbs ? 'lbs' : 'kg';
     final hint = s.addedWeight
         ? 'เพิ่มน้ำหนัก: ${fmtNum(display)} $unit × ${s.reps} reps'
         : 'เพิ่ม reps: ${fmtNum(display)} $unit × ${s.reps} reps';
-
-    final accent = Theme.of(context).colorScheme.primary;
 
     return Row(
       children: [
         Icon(Icons.trending_up, size: 11, color: accent),
         const SizedBox(width: 3),
-        Text(
-          hint,
-          style: TextStyle(fontSize: 10, color: accent, fontWeight: FontWeight.w600),
+        Expanded(
+          child: Text(
+            hint,
+            style: TextStyle(fontSize: 10, color: accent, fontWeight: FontWeight.w600),
+          ),
         ),
       ],
     );

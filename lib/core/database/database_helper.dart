@@ -52,7 +52,7 @@ class DatabaseHelper {
   static Future<Database> _open() async {
     return openDatabase(
       await _dbPath(),
-      version: 8,
+      version: 9,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -124,6 +124,39 @@ class DatabaseHelper {
             logged_at INTEGER NOT NULL
           )
         ''');
+        await db.execute('''
+          CREATE TABLE routines (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            uuid TEXT UNIQUE,
+            name TEXT NOT NULL,
+            created_at INTEGER NOT NULL,
+            is_synced INTEGER DEFAULT 0
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE routine_exercises (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            uuid TEXT UNIQUE,
+            routine_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            order_index INTEGER NOT NULL,
+            is_synced INTEGER DEFAULT 0,
+            FOREIGN KEY (routine_id) REFERENCES routines(id) ON DELETE CASCADE
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE routine_sets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            uuid TEXT UNIQUE,
+            routine_exercise_id INTEGER NOT NULL,
+            set_number INTEGER NOT NULL,
+            weight_kg REAL NOT NULL DEFAULT 0.0,
+            reps INTEGER NOT NULL DEFAULT 10,
+            is_warmup INTEGER NOT NULL DEFAULT 0,
+            is_synced INTEGER DEFAULT 0,
+            FOREIGN KEY (routine_exercise_id) REFERENCES routine_exercises(id) ON DELETE CASCADE
+          )
+        ''');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -183,6 +216,41 @@ class DatabaseHelper {
               uuid TEXT UNIQUE,
               weight_kg REAL NOT NULL,
               logged_at INTEGER NOT NULL
+            )
+          ''');
+        }
+        if (oldVersion < 9) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS routines (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              uuid TEXT UNIQUE,
+              name TEXT NOT NULL,
+              created_at INTEGER NOT NULL,
+              is_synced INTEGER DEFAULT 0
+            )
+          ''');
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS routine_exercises (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              uuid TEXT UNIQUE,
+              routine_id INTEGER NOT NULL,
+              name TEXT NOT NULL,
+              order_index INTEGER NOT NULL,
+              is_synced INTEGER DEFAULT 0,
+              FOREIGN KEY (routine_id) REFERENCES routines(id) ON DELETE CASCADE
+            )
+          ''');
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS routine_sets (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              uuid TEXT UNIQUE,
+              routine_exercise_id INTEGER NOT NULL,
+              set_number INTEGER NOT NULL,
+              weight_kg REAL NOT NULL DEFAULT 0.0,
+              reps INTEGER NOT NULL DEFAULT 10,
+              is_warmup INTEGER NOT NULL DEFAULT 0,
+              is_synced INTEGER DEFAULT 0,
+              FOREIGN KEY (routine_exercise_id) REFERENCES routine_exercises(id) ON DELETE CASCADE
             )
           ''');
         }

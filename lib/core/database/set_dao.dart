@@ -71,7 +71,7 @@ class SetDao {
   }
 
   /// Returns a per-exercise summary for a single date.
-  Future<List<({String name, int setCount, double avgWeight, double totalVolume, double bestE1rm, bool hasPrToday})>>
+  Future<List<({String name, int setCount, double avgWeight, double totalVolume, bool hasPrToday})>>
       getExerciseSummaryByDate(String date) async {
     final db = await DatabaseHelper.database;
     final rows = await db.rawQuery('''
@@ -79,7 +79,6 @@ class SetDao {
              COUNT(s.id)                                              AS set_count,
              AVG(s.weight_kg)                                         AS avg_weight,
              SUM(s.weight_kg * s.reps)                                AS total_volume,
-             MAX(s.weight_kg * (1.0 + CAST(s.reps AS REAL) / 30.0))  AS best_e1rm,
              MAX(s.weight_kg)                                          AS max_weight_today,
              (SELECT MAX(s2.weight_kg) FROM sets s2
               JOIN exercises e2 ON s2.exercise_id = e2.id
@@ -100,7 +99,6 @@ class SetDao {
         setCount: (r['set_count'] as int?) ?? 0,
         avgWeight: (r['avg_weight'] as num?)?.toDouble() ?? 0.0,
         totalVolume: (r['total_volume'] as num?)?.toDouble() ?? 0.0,
-        bestE1rm: (r['best_e1rm'] as num?)?.toDouble() ?? 0.0,
         hasPrToday: prevPr == null ? true : maxToday > prevPr,
       );
     }).toList();
@@ -229,8 +227,7 @@ class SetDao {
         SELECT e.name,
                s.weight_kg,
                s.reps,
-               s.weight_kg * (1.0 + CAST(s.reps AS REAL) / 30.0) AS e1rm,
-               ROW_NUMBER() OVER (PARTITION BY e.name ORDER BY s.weight_kg * (1.0 + CAST(s.reps AS REAL) / 30.0) DESC) as rn,
+               ROW_NUMBER() OVER (PARTITION BY e.name ORDER BY s.weight_kg DESC, s.reps DESC) as rn,
                COUNT(s.id) OVER (PARTITION BY e.name) as total_sets
         FROM sets s
         JOIN exercises e ON s.exercise_id = e.id
@@ -239,11 +236,10 @@ class SetDao {
       SELECT name,
              weight_kg AS pr_kg,
              reps      AS pr_reps,
-             total_sets,
-             e1rm
+             total_sets
       FROM ranked_sets
       WHERE rn = 1
-      ORDER BY e1rm DESC
+      ORDER BY pr_kg DESC
     ''');
     return rows
         .where((r) => r['pr_kg'] != null)
@@ -264,8 +260,7 @@ class SetDao {
         SELECT e.name,
                s.weight_kg,
                s.reps,
-               s.weight_kg * (1.0 + CAST(s.reps AS REAL) / 30.0) AS e1rm,
-               ROW_NUMBER() OVER (PARTITION BY e.name ORDER BY s.weight_kg * (1.0 + CAST(s.reps AS REAL) / 30.0) DESC) as rn,
+               ROW_NUMBER() OVER (PARTITION BY e.name ORDER BY s.weight_kg DESC, s.reps DESC) as rn,
                COUNT(s.id) OVER (PARTITION BY e.name) as total_sets
         FROM sets s
         JOIN exercises e ON s.exercise_id = e.id
@@ -276,11 +271,10 @@ class SetDao {
       SELECT name,
              weight_kg AS pr_kg,
              reps      AS pr_reps,
-             total_sets,
-             e1rm
+             total_sets
       FROM ranked_sets
       WHERE rn = 1
-      ORDER BY e1rm DESC
+      ORDER BY pr_kg DESC
     ''', [sessionName]);
     return rows
         .where((r) => r['pr_kg'] != null)
@@ -301,8 +295,7 @@ class SetDao {
         SELECT e.name,
                s.weight_kg,
                s.reps,
-               s.weight_kg * (1.0 + CAST(s.reps AS REAL) / 30.0) AS e1rm,
-               ROW_NUMBER() OVER (PARTITION BY e.name ORDER BY s.weight_kg * (1.0 + CAST(s.reps AS REAL) / 30.0) DESC) as rn,
+               ROW_NUMBER() OVER (PARTITION BY e.name ORDER BY s.weight_kg DESC, s.reps DESC) as rn,
                COUNT(s.id) OVER (PARTITION BY e.name) as total_sets
         FROM sets s
         JOIN exercises e ON s.exercise_id = e.id
@@ -313,11 +306,10 @@ class SetDao {
       SELECT name,
              weight_kg AS pr_kg,
              reps      AS pr_reps,
-             total_sets,
-             e1rm
+             total_sets
       FROM ranked_sets
       WHERE rn = 1
-      ORDER BY e1rm DESC
+      ORDER BY pr_kg DESC
     ''', [from, to]);
     return rows
         .where((r) => r['pr_kg'] != null)

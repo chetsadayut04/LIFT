@@ -655,7 +655,6 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
     final accent = Theme.of(context).colorScheme.primary;
 
     final isLbs = ref.watch(isLbsProvider);
-    final unit = isLbs ? 'lbs' : 'kg';
     final lang = ref.watch(languageProvider);
     final allLabel = lang == AppLanguage.th ? 'ทั้งหมด' : 'All';
 
@@ -745,32 +744,7 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
                     ),
                   ),
                   Expanded(
-                    flex: 3,
-                    child: Tooltip(
-                      message: lang == AppLanguage.th 
-                          ? 'น้ำหนักสูงสุดที่ประเมินว่ายกได้ 1 ครั้ง\nสูตร Epley: น้ำหนัก × (1 + reps/30)'
-                          : 'Estimated One Rep Max\nEpley Formula: weight × (1 + reps/30)',
-                      triggerMode: TooltipTriggerMode.tap,
-                      showDuration: const Duration(seconds: 4),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: const [
-                          Text(
-                            'e1RM',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF7C8A7C),
-                            ),
-                          ),
-                          SizedBox(width: 2),
-                          Icon(Icons.info_outline, size: 10, color: Color(0xFF7C8A7C)),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 3,
+                    flex: 4,
                     child: Text(
                       'Best set',
                       textAlign: TextAlign.right,
@@ -782,7 +756,7 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
                     ),
                   ),
                   Expanded(
-                    flex: 2,
+                    flex: 3,
                     child: Text(
                       'sets',
                       textAlign: TextAlign.right,
@@ -798,12 +772,10 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
               const SizedBox(height: 6),
               const Divider(height: 1),
               ...() {
-                final maxE1RM = _prs.map((p) => calc1RM(p.prKg, p.prReps)).reduce(math.max);
+                final maxWeight = _prs.map((p) => p.prKg).reduce(math.max);
                 return _prs.map((p) {
-                  final e1rm = calc1RM(p.prKg, p.prReps);
-                  final e1rmDisplay = isLbs ? e1rm * kgToLbs : e1rm;
                   final bestW = isLbs ? p.prKg * kgToLbs : p.prKg;
-                  final ratio = maxE1RM > 0 ? e1rm / maxE1RM : 0.0;
+                  final ratio = maxWeight > 0 ? p.prKg / maxWeight : 0.0;
                   return Padding(
                     padding: const EdgeInsets.only(top: 10),
                     child: Column(
@@ -824,9 +796,9 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
                               ),
                             ),
                             Expanded(
-                              flex: 3,
+                              flex: 4,
                               child: Text(
-                                '${fmtNum(e1rmDisplay)} $unit',
+                                '${fmtNum(bestW)}×${p.prReps}',
                                 textAlign: TextAlign.right,
                                 style: GoogleFonts.jetBrainsMono(
                                   fontSize: 13,
@@ -837,17 +809,6 @@ class _ExercisePrTableState extends ConsumerState<_ExercisePrTable> {
                             ),
                             Expanded(
                               flex: 3,
-                              child: Text(
-                                '${fmtNum(bestW)}×${p.prReps}',
-                                textAlign: TextAlign.right,
-                                style: GoogleFonts.jetBrainsMono(
-                                  fontSize: 11,
-                                  color: textMuted,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 2,
                               child: Text(
                                 '${p.totalSets}',
                                 textAlign: TextAlign.right,

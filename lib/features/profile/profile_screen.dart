@@ -13,6 +13,7 @@ import '../../core/providers/translation_provider.dart';
 import '../../core/providers/unit_provider.dart';
 import '../auth/auth_provider.dart';
 import '../stats/stats_screen.dart';
+import '../workout/routines_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -666,6 +667,47 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               const SizedBox(height: 12),
               const StatsSection(),
+              const SizedBox(height: 24),
+
+              // Routines Section
+              Row(
+                children: [
+                  Icon(Icons.fitness_center, color: textMuted, size: 16),
+                  const SizedBox(width: 8),
+                  Text(
+                    lang == AppLanguage.th ? 'ตารางฝึกส่วนตัว' : 'Workout Routines',
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: textMuted,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Card(
+                child: ListTile(
+                  leading: Icon(Icons.list_alt_outlined, color: accent),
+                  title: Text(
+                    lang == AppLanguage.th ? 'ตารางฝึกของฉัน' : 'My Routines',
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(
+                    lang == AppLanguage.th
+                        ? 'สร้าง จัดการ และแชร์ตารางออกกำลังกายล่วงหน้า'
+                        : 'Create, manage, and share workout templates',
+                    style: TextStyle(fontSize: 12, color: textMuted),
+                  ),
+                  trailing: const Icon(Icons.chevron_right, size: 20),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const RoutinesScreen()),
+                    );
+                  },
+                ),
+              ),
               const SizedBox(height: 24),
 
               // General Settings Header

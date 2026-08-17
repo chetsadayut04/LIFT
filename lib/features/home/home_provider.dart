@@ -7,7 +7,6 @@ typedef ExerciseSummary = ({
   int setCount,
   double avgWeight,
   double totalVolume,
-  double bestE1rm,
   bool hasPrToday,
 });
 
@@ -24,9 +23,6 @@ class HomeState {
   final int? sessionStartedAt;
   final int? sessionFinishedAt;
   final double lastSessionVolume;
-  final double bestE1RMToday;
-  final String? bestE1RMExercise;
-
   const HomeState({
     this.hasSessionToday = false,
     this.isFinishedToday = false,
@@ -40,8 +36,6 @@ class HomeState {
     this.sessionStartedAt,
     this.sessionFinishedAt,
     this.lastSessionVolume = 0,
-    this.bestE1RMToday = 0,
-    this.bestE1RMExercise,
   });
 
   double? get percentChange {
@@ -87,15 +81,6 @@ class HomeNotifier extends StateNotifier<HomeState> {
       final finishedDates = results[4] as Set<String>;
       final streak = _calcStreak(finishedDates, now);
 
-      double bestE1RM = 0;
-      String? bestE1RMExercise;
-      for (final ex in exercises) {
-        if (ex.bestE1rm > bestE1RM) {
-          bestE1RM = ex.bestE1rm;
-          bestE1RMExercise = ex.name;
-        }
-      }
-
       state = HomeState(
         hasSessionToday: session != null,
         isFinishedToday: session?.isFinished ?? false,
@@ -109,8 +94,6 @@ class HomeNotifier extends StateNotifier<HomeState> {
         sessionStartedAt: session?.createdAt,
         sessionFinishedAt: session?.finishedAt,
         lastSessionVolume: results[5] as double,
-        bestE1RMToday: bestE1RM,
-        bestE1RMExercise: bestE1RMExercise,
       );
     } catch (_) {
       state = const HomeState(isLoading: false);

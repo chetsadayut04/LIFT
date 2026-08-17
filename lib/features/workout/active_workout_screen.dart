@@ -370,25 +370,6 @@ class _ExerciseCard extends ConsumerWidget {
                                 textAlign: TextAlign.center,
                                 style: TextStyle(fontSize: 11, color: textSec, fontWeight: FontWeight.w600)),
                           ),
-                          Expanded(
-                            child: Tooltip(
-                              message: lang == AppLanguage.th 
-                                  ? 'น้ำหนักสูงสุดที่ประเมินว่ายกได้ 1 ครั้ง\nสูตร Epley: น้ำหนัก × (1 + reps/30)'
-                                  : 'Estimated One Rep Max\nEpley Formula: weight × (1 + reps/30)',
-                              triggerMode: TooltipTriggerMode.tap,
-                              showDuration: const Duration(seconds: 4),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text('e1RM',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontSize: 11, color: textSec, fontWeight: FontWeight.w600)),
-                                  const SizedBox(width: 2),
-                                  Icon(Icons.info_outline, size: 10, color: textMuted),
-                                ],
-                              ),
-                            ),
-                          ),
                           const SizedBox(width: 28),
                         ],
                       ),
@@ -451,15 +432,6 @@ class _ExerciseCard extends ConsumerWidget {
                                         fontWeight: FontWeight.w600,
                                         color: s.isWarmup ? textSec : textPrimary),
                                   ),
-                                ),
-                                Expanded(
-                                  child: s.isWarmup
-                                      ? const SizedBox.shrink()
-                                      : Text(
-                                          fmtNum(calc1RM(s.weightKg, s.reps) * (isLbs ? kgToLbs : 1)),
-                                          textAlign: TextAlign.center,
-                                          style: GoogleFonts.jetBrainsMono(fontSize: 12, color: textMuted),
-                                        ),
                                 ),
                                 SizedBox(
                                   width: 28,
