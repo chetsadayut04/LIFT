@@ -9,6 +9,7 @@ import 'active_workout_provider.dart';
 import 'active_workout_screen.dart';
 import 'add_exercise_dialog.dart';
 import 'routine_provider.dart';
+import '../../core/utils/routine_image_helper.dart';
 
 class RoutinesScreen extends ConsumerWidget {
   const RoutinesScreen({super.key});
@@ -182,11 +183,38 @@ class RoutinesScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Gradient strip matching Figma
-              Container(
-                height: 6,
-                decoration: BoxDecoration(
-                  gradient: gradient,
+              // Routine Header Image Banner
+              SizedBox(
+                height: 75,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: Image.network(
+                        RoutineImageHelper.getImageUrl(
+                          routine.name,
+                          exercises.map((e) => e.exercise.name).toList(),
+                        ),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          decoration: BoxDecoration(gradient: gradient),
+                        ),
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.black.withValues(alpha: 0.15),
+                              const Color(0xFF1B1F1B),
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Padding(
@@ -223,10 +251,32 @@ class RoutinesScreen extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        // Actions buttons Column
+                        // Actions buttons Row
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                            // Edit button
+                            GestureDetector(
+                              onTap: () => _editRoutine(context, item),
+                              child: Container(
+                                width: 34,
+                                height: 34,
+                                decoration: BoxDecoration(
+                                  color: accent.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: accent.withValues(alpha: 0.25),
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  Icons.edit_outlined,
+                                  size: 17,
+                                  color: accent,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
                             // QR share button
                             GestureDetector(
                               onTap: () => _shareRoutineAsQr(context, item, lang),
@@ -241,13 +291,10 @@ class RoutinesScreen extends ConsumerWidget {
                                   ),
                                 ),
                                 alignment: Alignment.center,
-                                child: const Text(
-                                  '▦',
-                                  style: TextStyle(
-                                    color: Color(0xFF8E9A8E),
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                child: const Icon(
+                                  Icons.qr_code_2_outlined,
+                                  size: 17,
+                                  color: Color(0xFF8E9A8E),
                                 ),
                               ),
                             ),
@@ -266,12 +313,10 @@ class RoutinesScreen extends ConsumerWidget {
                                   ),
                                 ),
                                 alignment: Alignment.center,
-                                child: const Text(
-                                  '🗑',
-                                  style: TextStyle(
-                                    color: Color(0xFFF87171),
-                                    fontSize: 14,
-                                  ),
+                                child: const Icon(
+                                  Icons.delete_outline_rounded,
+                                  size: 17,
+                                  color: Color(0xFFF87171),
                                 ),
                               ),
                             ),
@@ -602,6 +647,15 @@ class RoutinesScreen extends ConsumerWidget {
     );
   }
 
+  void _editRoutine(BuildContext context, RoutineWithDetails routineWithDetails) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => _CreateRoutineScreen(routineToEdit: routineWithDetails),
+      ),
+    );
+  }
+
   void _createNewRoutine(BuildContext context, WidgetRef ref) {
     final lang = ref.read(languageProvider);
     final textController = TextEditingController();
@@ -759,15 +813,34 @@ class RoutinesScreen extends ConsumerWidget {
 
 class _CreateRoutineScreen extends ConsumerStatefulWidget {
   final String? initialName;
-  const _CreateRoutineScreen({this.initialName});
+  final RoutineWithDetails? routineToEdit;
+
+  const _CreateRoutineScreen({this.initialName, this.routineToEdit});
 
   @override
   ConsumerState<_CreateRoutineScreen> createState() => _CreateRoutineScreenState();
 }
 
 class _CreateRoutineScreenState extends ConsumerState<_CreateRoutineScreen> {
-  late final _nameCtrl = TextEditingController(text: widget.initialName ?? '');
+  late final TextEditingController _nameCtrl;
   final List<Map<String, dynamic>> _exercises = [];
+
+  @override
+  void initState() {
+    super.initState();
+    final editItem = widget.routineToEdit;
+    if (editItem != null) {
+      _nameCtrl = TextEditingController(text: editItem.routine.name);
+      for (final ex in editItem.exercises) {
+        _exercises.add({
+          'name': ex.exercise.name,
+          'sets': <Map<String, dynamic>>[],
+        });
+      }
+    } else {
+      _nameCtrl = TextEditingController(text: widget.initialName ?? '');
+    }
+  }
 
   @override
   void dispose() {
@@ -781,11 +854,7 @@ class _CreateRoutineScreenState extends ConsumerState<_CreateRoutineScreen> {
       setState(() {
         _exercises.add({
           'name': name.trim(),
-          'sets': [
-            {'weight_kg': 0.0, 'reps': 10, 'is_warmup': false},
-            {'weight_kg': 0.0, 'reps': 10, 'is_warmup': false},
-            {'weight_kg': 0.0, 'reps': 10, 'is_warmup': false},
-          ],
+          'sets': <Map<String, dynamic>>[],
         });
       });
     }
@@ -794,22 +863,6 @@ class _CreateRoutineScreenState extends ConsumerState<_CreateRoutineScreen> {
   void _removeExercise(int index) {
     setState(() {
       _exercises.removeAt(index);
-    });
-  }
-
-  void _addSetToExercise(int exIndex) {
-    setState(() {
-      final sets = _exercises[exIndex]['sets'] as List<Map<String, dynamic>>;
-      sets.add({'weight_kg': 0.0, 'reps': 10, 'is_warmup': false});
-    });
-  }
-
-  void _removeSetFromExercise(int exIndex, int setIndex) {
-    setState(() {
-      final sets = _exercises[exIndex]['sets'] as List<Map<String, dynamic>>;
-      if (sets.length > 1) {
-        sets.removeAt(setIndex);
-      }
     });
   }
 
@@ -835,7 +888,16 @@ class _CreateRoutineScreenState extends ConsumerState<_CreateRoutineScreen> {
       return;
     }
 
-    await ref.read(routineProvider.notifier).addRoutine(name, _exercises);
+    if (widget.routineToEdit != null) {
+      await ref.read(routineProvider.notifier).updateRoutine(
+        widget.routineToEdit!.routine.id!,
+        name,
+        _exercises,
+      );
+    } else {
+      await ref.read(routineProvider.notifier).addRoutine(name, _exercises);
+    }
+
     if (mounted) {
       Navigator.pop(context);
     }
@@ -850,7 +912,9 @@ class _CreateRoutineScreenState extends ConsumerState<_CreateRoutineScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          lang == AppLanguage.th ? 'สร้างตารางฝึกใหม่' : 'Create Routine',
+          widget.routineToEdit != null
+              ? (lang == AppLanguage.th ? 'แก้ไขตารางฝึก' : 'Edit Routine')
+              : (lang == AppLanguage.th ? 'สร้างตารางฝึกใหม่' : 'Create Routine'),
           style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         actions: [
@@ -907,101 +971,49 @@ class _CreateRoutineScreenState extends ConsumerState<_CreateRoutineScreen> {
               ..._exercises.asMap().entries.map((e) {
                 final exIdx = e.key;
                 final ex = e.value;
-                final sets = ex['sets'] as List<Map<String, dynamic>>;
 
                 return Card(
-                  margin: const EdgeInsets.only(bottom: 16),
+                  margin: const EdgeInsets.only(bottom: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+                  ),
+                  color: const Color(0xFF1E211F),
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    child: Row(
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                '${exIdx + 1}. ${ex['name']}',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline, size: 18, color: Colors.redAccent),
-                              onPressed: () => _removeExercise(exIdx),
-                            ),
-                          ],
-                        ),
-                        const Divider(),
-                        ...sets.asMap().entries.map((se) {
-                          final setIdx = se.key;
-                          final s = se.value;
-
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Row(
-                              children: [
-                                SizedBox(
-                                  width: 48,
-                                  child: Text(
-                                    'Set ${setIdx + 1}',
-                                    style: TextStyle(color: textMuted, fontSize: 13),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: TextField(
-                                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                                    textAlign: TextAlign.center,
-                                    decoration: InputDecoration(
-                                      hintText: lang == AppLanguage.th ? 'น้ำหนัก' : 'Weight',
-                                      suffixText: lang == AppLanguage.th ? ' กก.' : ' kg',
-                                      contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                                      fillColor: Colors.transparent,
-                                    ),
-                                    onChanged: (val) {
-                                      s['weight_kg'] = double.tryParse(val) ?? 0.0;
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: TextField(
-                                    keyboardType: TextInputType.number,
-                                    textAlign: TextAlign.center,
-                                    decoration: InputDecoration(
-                                      hintText: lang == AppLanguage.th ? 'ครั้ง' : 'Reps',
-                                      suffixText: lang == AppLanguage.th ? ' ครั้ง' : ' reps',
-                                      contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                                      fillColor: Colors.transparent,
-                                    ),
-                                    onChanged: (val) {
-                                      s['reps'] = int.tryParse(val) ?? 10;
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                if (sets.length > 1)
-                                  IconButton(
-                                    icon: const Icon(Icons.remove_circle_outline, size: 16, color: Colors.grey),
-                                    onPressed: () => _removeSetFromExercise(exIdx, setIdx),
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
-                                  ),
-                              ],
-                            ),
-                          );
-                        }),
-                        const SizedBox(height: 8),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton.icon(
-                            onPressed: () => _addSetToExercise(exIdx),
-                            icon: const Icon(Icons.add_circle_outline, size: 14),
-                            label: Text(
-                              lang == AppLanguage.th ? 'เพิ่มเซ็ต' : 'Add Set',
-                              style: const TextStyle(fontSize: 11),
+                        Container(
+                          width: 26,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            '${exIdx + 1}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            ex['name'] as String,
+                            style: GoogleFonts.sarabun(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline_rounded, size: 20, color: Color(0xFFF87171)),
+                          onPressed: () => _removeExercise(exIdx),
                         ),
                       ],
                     ),

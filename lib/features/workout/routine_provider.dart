@@ -66,6 +66,11 @@ class RoutineNotifier extends StateNotifier<RoutineState> {
     await load();
   }
 
+  Future<void> updateRoutine(int routineId, String name, List<Map<String, dynamic>> exercises) async {
+    await _dao.updateFullRoutine(routineId: routineId, name: name, exercises: exercises);
+    await load();
+  }
+
   Future<void> deleteRoutine(int id) async {
     await _dao.deleteRoutine(id);
     await load();

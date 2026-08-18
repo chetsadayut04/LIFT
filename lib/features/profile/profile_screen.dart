@@ -983,26 +983,39 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      lang == AppLanguage.th ? 'ส่งความคิดเห็น' : 'FEEDBACK',
-                      style: GoogleFonts.barlowCondensed(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF5A6A5A),
-                        letterSpacing: 1.0,
-                      ),
+                    Row(
+                      children: [
+                        Icon(Icons.chat_bubble_outline_rounded, size: 14, color: accent),
+                        const SizedBox(width: 6),
+                        Text(
+                          lang == AppLanguage.th ? 'ส่งความคิดเห็น' : 'FEEDBACK',
+                          style: GoogleFonts.barlowCondensed(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF8E9A8E),
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 10),
                     Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1B1F1B),
-                        borderRadius: BorderRadius.circular(14),
+                        color: const Color(0xFF1A1E1A),
+                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.06),
+                          color: Colors.white.withValues(alpha: 0.12),
                           width: 1,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          )
+                        ],
                       ),
-                      padding: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(6),
                       child: Column(
                         children: [
                           TextField(
@@ -1010,14 +1023,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             maxLines: 4,
                             style: GoogleFonts.sarabun(
                               fontSize: 14,
-                              color: const Color(0xFFE0E0E0),
-                              height: 1.6,
+                              color: const Color(0xFFF2F5EF),
+                              height: 1.5,
                             ),
                             decoration: InputDecoration(
                               hintText: lang == AppLanguage.th
                                   ? 'แจ้งปัญหา หรือแนะนำฟีเจอร์ใหม่...'
                                   : 'Report bugs or suggest features...',
-                              hintStyle: const TextStyle(color: Color(0xFF555555)),
+                              hintStyle: const TextStyle(color: Color(0xFF7E8D7E)),
                               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                               border: InputBorder.none,
                             ),
@@ -1029,11 +1042,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                               width: double.infinity,
                               decoration: BoxDecoration(
-                                color: accent.withValues(alpha: 0.1),
+                                color: accent.withValues(alpha: 0.15),
                                 border: Border.all(
-                                  color: accent.withValues(alpha: 0.2),
+                                  color: accent.withValues(alpha: 0.3),
                                 ),
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(12),
                               ),
                               alignment: Alignment.center,
                               child: Text(
@@ -1054,28 +1067,41 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 duration: const Duration(milliseconds: 200),
                                 margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
                                 width: double.infinity,
-                                padding: const EdgeInsets.symmetric(vertical: 11),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
                                 decoration: BoxDecoration(
                                   color: _feedbackController.text.trim().isNotEmpty
-                                      ? accent.withValues(alpha: 0.12)
-                                      : const Color(0xFF1E211F),
+                                      ? accent
+                                      : const Color(0xFF262B26),
                                   border: Border.all(
                                     color: _feedbackController.text.trim().isNotEmpty
-                                        ? accent.withValues(alpha: 0.3)
-                                        : Colors.white.withValues(alpha: 0.06),
+                                        ? accent
+                                        : Colors.white.withValues(alpha: 0.1),
                                   ),
-                                  borderRadius: BorderRadius.circular(10),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                                 alignment: Alignment.center,
-                                child: Text(
-                                  lang == AppLanguage.th ? 'ส่งความคิดเห็น' : 'Send Feedback',
-                                  style: GoogleFonts.sarabun(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: _feedbackController.text.trim().isNotEmpty
-                                        ? accent
-                                        : const Color(0xFF444444),
-                                  ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.send_rounded,
+                                      size: 15,
+                                      color: _feedbackController.text.trim().isNotEmpty
+                                          ? const Color(0xFF000000)
+                                          : const Color(0xFF8E9A8E),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      lang == AppLanguage.th ? 'ส่งความคิดเห็น' : 'Send Feedback',
+                                      style: GoogleFonts.sarabun(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: _feedbackController.text.trim().isNotEmpty
+                                            ? const Color(0xFF000000)
+                                            : const Color(0xFF8E9A8E),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),

@@ -12,6 +12,8 @@ import '../workout/active_workout_provider.dart';
 import '../workout/active_workout_screen.dart';
 import '../workout/routine_provider.dart';
 import 'home_provider.dart';
+import '../../core/utils/routine_image_helper.dart';
+
 const _thaiDays = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัส', 'ศุกร์', 'เสาร์', 'อาทิตย์'];
 const _thaiMonths = ['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
 
@@ -1456,74 +1458,110 @@ class _RoutinesCarousel extends ConsumerWidget {
           final routine = item.routine;
           final exercises = item.exercises;
           final gradient = gradientList[i % gradientList.length];
+          final exNames = exercises.map((e) => e.exercise.name).toList();
+          final imageUrl = RoutineImageHelper.getImageUrl(routine.name, exNames);
 
           return Container(
             width: 220,
             decoration: BoxDecoration(
-              gradient: gradient,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: gradient.colors.last.withValues(alpha: 0.25),
+                  color: Colors.black.withValues(alpha: 0.3),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 )
               ],
             ),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Stack(
+                children: [
+                  // Background Image with Fallback Gradient
+                  Positioned.fill(
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        decoration: BoxDecoration(gradient: gradient),
+                      ),
+                    ),
+                  ),
+                  // Dark Gradient Overlay for text contrast & aesthetics
+                  Positioned.fill(
+                    child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white24,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        lang == AppLanguage.th ? '${exercises.length} ท่า' : '${exercises.length} Exs',
-                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.black.withValues(alpha: 0.30),
+                            Colors.black.withValues(alpha: 0.85),
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.play_circle_fill, color: Colors.white, size: 28),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      onPressed: () async {
-                        final exNames = exercises.map((e) => e.exercise.name).toList();
-                        await ref.read(activeWorkoutProvider.notifier).startSessionFromTemplate(
-                              routine.name,
-                              exNames,
-                            );
-                        if (context.mounted) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const ActiveWorkoutScreen()),
-                          );
-                          ref.read(homeProvider.notifier).load();
-                        }
-                      },
+                  ),
+                  // Card Content
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.4),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.white24, width: 0.5),
+                              ),
+                              child: Text(
+                                lang == AppLanguage.th ? '${exercises.length} ท่า' : '${exercises.length} Exs',
+                                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.play_circle_fill, color: Colors.white, size: 30),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              onPressed: () async {
+                                await ref.read(activeWorkoutProvider.notifier).startSessionFromTemplate(
+                                      routine.name,
+                                      exNames,
+                                    );
+                                if (context.mounted) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const ActiveWorkoutScreen()),
+                                  );
+                                  ref.read(homeProvider.notifier).load();
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        Text(
+                          routine.name,
+                          style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white, height: 1.1),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          exercises.map((e) => e.exercise.name).join(', '),
+                          style: const TextStyle(fontSize: 10, color: Colors.white70, fontStyle: FontStyle.italic),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                const Spacer(),
-                Text(
-                  routine.name,
-                  style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white, height: 1.1),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  exercises.map((e) => e.exercise.name).join(', '),
-                  style: const TextStyle(fontSize: 10, color: Colors.white70, fontStyle: FontStyle.italic),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           );
         },

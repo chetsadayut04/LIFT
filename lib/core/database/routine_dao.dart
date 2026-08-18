@@ -129,4 +129,54 @@ class RoutineDao {
       }
     });
   }
+
+  Future<void> updateFullRoutine({
+    required int routineId,
+    required String name,
+    required List<Map<String, dynamic>> exercises,
+  }) async {
+    final db = await DatabaseHelper.database;
+    await db.transaction((txn) async {
+      await txn.update(
+        'routines',
+        {'name': name, 'is_synced': 0},
+        where: 'id = ?',
+        whereArgs: [routineId],
+      );
+
+      final oldExs = await txn.query('routine_exercises', where: 'routine_id = ?', whereArgs: [routineId]);
+      for (final ex in oldExs) {
+        await txn.delete('routine_sets', where: 'routine_exercise_id = ?', whereArgs: [ex['id']]);
+      }
+      await txn.delete('routine_exercises', where: 'routine_id = ?', whereArgs: [routineId]);
+
+      for (int i = 0; i < exercises.length; i++) {
+        final exMap = exercises[i];
+        final exName = exMap['name'] as String;
+        final exUuid = generateUUID();
+        final exId = await txn.insert('routine_exercises', {
+          'uuid': exUuid,
+          'routine_id': routineId,
+          'name': exName,
+          'order_index': i,
+          'is_synced': 0,
+        });
+
+        final sets = exMap['sets'] as List<dynamic>;
+        for (int j = 0; j < sets.length; j++) {
+          final setMap = sets[j] as Map<String, dynamic>;
+          final setUuid = generateUUID();
+          await txn.insert('routine_sets', {
+            'uuid': setUuid,
+            'routine_exercise_id': exId,
+            'set_number': j + 1,
+            'weight_kg': (setMap['weight_kg'] as num?)?.toDouble() ?? 0.0,
+            'reps': setMap['reps'] as int? ?? 10,
+            'is_warmup': (setMap['is_warmup'] as bool? ?? false) ? 1 : 0,
+            'is_synced': 0,
+          });
+        }
+      }
+    });
+  }
 }
