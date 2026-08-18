@@ -460,6 +460,7 @@ class RoutinesScreen extends ConsumerWidget {
       }).toList(),
     };
     final jsonStr = jsonEncode(data);
+    final totalSets = details.exercises.fold<int>(0, (sum, ex) => sum + ex.sets.length);
 
     showDialog(
       context: context,
@@ -467,75 +468,165 @@ class RoutinesScreen extends ConsumerWidget {
       builder: (ctx) {
         return Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20),
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF171B17).withValues(alpha: 0.92),
-              borderRadius: BorderRadius.circular(20),
+              color: const Color(0xFF141814),
+              borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                 width: 1,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  blurRadius: 30,
+                  spreadRadius: 5,
+                ),
+              ],
             ),
-            padding: const EdgeInsets.all(28),
+            padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  lang == AppLanguage.th ? 'แชร์ตาราง' : 'Share Routine',
-                  style: GoogleFonts.barlowCondensed(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFFF2F5EF),
-                  ),
+                // Header Row
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        Icons.qr_code_2_rounded,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            lang == AppLanguage.th ? 'แชร์ตารางฝึก' : 'Share Routine',
+                            style: GoogleFonts.barlowCondensed(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFFF2F5EF),
+                            ),
+                          ),
+                          Text(
+                            '${details.routine.name} · ${details.exercises.length} ${lang == AppLanguage.th ? 'ท่า' : 'exercises'} ($totalSets ${lang == AppLanguage.th ? 'เซ็ต' : 'sets'})',
+                            style: GoogleFonts.sarabun(
+                              fontSize: 13,
+                              color: const Color(0xFF8B9B8B),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      icon: const Icon(Icons.close_rounded, color: Color(0xFF8B9B8B), size: 20),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '${details.routine.name} · ${details.exercises.length} ${lang == AppLanguage.th ? 'ท่า' : 'exercises'}',
-                  style: GoogleFonts.sarabun(
-                    fontSize: 13,
-                    color: const Color(0xFF7C8A7C),
+                const SizedBox(height: 20),
+                // QR View Container - Centered nicely
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                          blurRadius: 20,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: QrImageView(
+                      data: jsonStr,
+                      version: QrVersions.auto,
+                      size: 200.0,
+                      eyeStyle: const QrEyeStyle(
+                        eyeShape: QrEyeShape.square,
+                        color: Color(0xFF101410),
+                      ),
+                      dataModuleStyle: const QrDataModuleStyle(
+                        dataModuleShape: QrDataModuleShape.square,
+                        color: Color(0xFF101410),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
-                // QR View Container
+                // Exercise List Preview Chips
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: QrImageView(
-                    data: jsonStr,
-                    version: QrVersions.auto,
-                    size: 220.0,
-                    eyeStyle: const QrEyeStyle(
-                      eyeShape: QrEyeShape.square,
-                      color: Colors.black,
-                    ),
-                    dataModuleStyle: const QrDataModuleStyle(
-                      dataModuleShape: QrDataModuleShape.square,
-                      color: Colors.black,
+                    color: const Color(0xFF0C0F0C),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: const Color(0xFF222B22),
+                      width: 1,
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                // JSON text box representation
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0A0C0A),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    jsonStr.length > 80 ? '${jsonStr.substring(0, 80)}...' : jsonStr,
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 10,
-                      color: const Color(0xFF5A6A5A),
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.fitness_center_rounded,
+                            size: 14,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            lang == AppLanguage.th ? 'รายการท่าในตาราง' : 'Included Exercises',
+                            style: GoogleFonts.sarabun(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF8B9B8B),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: details.exercises.map((ex) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1A211A),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: const Color(0xFF2A362A),
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              '${ex.exercise.name} (${ex.sets.length}${lang == AppLanguage.th ? 'เซ็ต' : 's'})',
+                              style: GoogleFonts.sarabun(
+                                fontSize: 12,
+                                color: const Color(0xFFE0E8DC),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -549,7 +640,7 @@ class RoutinesScreen extends ConsumerWidget {
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: const Color(0xFF000000),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     child: Text(

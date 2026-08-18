@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 /// Helper utility to detect muscle groups from routine name and exercise names,
 /// and provide high-quality thematic images & fallback gradients.
 class RoutineImageHelper {
