@@ -34,16 +34,33 @@
 </head>
 <body>
   <script>
+    window.flutterConfiguration = {
+      serviceWorkerSettings: {
+        serviceWorkerVersion: null
+      }
+    };
+
+    var flutterLoaded = false;
     function loadFlutter() {
+      if (flutterLoaded) return;
+      flutterLoaded = true;
       var s = document.createElement('script');
       s.src = 'flutter_bootstrap.js';
       document.body.appendChild(s);
     }
+
+    // Fallback: If service worker hangs, force load Flutter after 1 second
+    setTimeout(loadFlutter, 1000);
+
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sqflite_sw.js')
-        .then(function() { return navigator.serviceWorker.ready; })
-        .then(loadFlutter)
-        .catch(loadFlutter);
+        .then(function() {
+          loadFlutter();
+        })
+        .catch(function(err) {
+          console.warn('Service worker registration failed:', err);
+          loadFlutter();
+        });
     } else {
       loadFlutter();
     }

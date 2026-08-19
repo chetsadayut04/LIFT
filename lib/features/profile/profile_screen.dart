@@ -10,6 +10,7 @@ import '../../core/database/profile_dao.dart';
 import '../../core/database/weight_log_dao.dart';
 import '../../core/providers/translation_provider.dart';
 import '../../core/providers/unit_provider.dart';
+import '../../core/utils/web_image_utils.dart';
 import '../auth/auth_provider.dart';
 import '../stats/stats_provider.dart';
 
@@ -635,10 +636,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(40),
                               child: Image.network(
-                                avatarUrl,
+                                WebImageUtils.getCorsSafeUrl(avatarUrl),
                                 width: 80,
                                 height: 80,
                                 fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => Text(
+                                  displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U',
+                                  style: GoogleFonts.barlowCondensed(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF0A0C0A),
+                                  ),
+                                ),
                               ),
                             )
                           : Text(
