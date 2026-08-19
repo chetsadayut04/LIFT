@@ -52,7 +52,7 @@ class DatabaseHelper {
   static Future<Database> _open() async {
     return openDatabase(
       await _dbPath(),
-      version: 9,
+      version: 10,
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -157,6 +157,24 @@ class DatabaseHelper {
             FOREIGN KEY (routine_exercise_id) REFERENCES routine_exercises(id) ON DELETE CASCADE
           )
         ''');
+        await db.execute('''
+          CREATE TABLE ai_chat_messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            uuid TEXT UNIQUE,
+            is_user INTEGER NOT NULL,
+            text TEXT NOT NULL,
+            timestamp INTEGER NOT NULL
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE custom_exercises (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            uuid TEXT UNIQUE,
+            name TEXT UNIQUE NOT NULL,
+            category TEXT,
+            created_at INTEGER NOT NULL
+          )
+        ''');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -251,6 +269,26 @@ class DatabaseHelper {
               is_warmup INTEGER NOT NULL DEFAULT 0,
               is_synced INTEGER DEFAULT 0,
               FOREIGN KEY (routine_exercise_id) REFERENCES routine_exercises(id) ON DELETE CASCADE
+            )
+          ''');
+        }
+        if (oldVersion < 10) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS ai_chat_messages (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              uuid TEXT UNIQUE,
+              is_user INTEGER NOT NULL,
+              text TEXT NOT NULL,
+              timestamp INTEGER NOT NULL
+            )
+          ''');
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS custom_exercises (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              uuid TEXT UNIQUE,
+              name TEXT UNIQUE NOT NULL,
+              category TEXT,
+              created_at INTEGER NOT NULL
             )
           ''');
         }
@@ -354,6 +392,52 @@ class DatabaseHelper {
           'weight_kg': (wl['weight_kg'] as num).toDouble(),
           'logged_at': wl['logged_at'] as int,
         });
+      }
+
+      try {
+        final remoteRoutines = await supabase.from('routines').select().eq('user_id', user.id);
+        final remoteRoutineExercises = await supabase.from('routine_exercises').select().eq('user_id', user.id);
+        final remoteRoutineSets = await supabase.from('routine_sets').select().eq('user_id', user.id);
+
+        if (remoteRoutines.isNotEmpty) {
+          await txn.delete('routine_sets');
+          await txn.delete('routine_exercises');
+          await txn.delete('routines');
+
+          for (final r in remoteRoutines) {
+            await txn.insert('routines', {
+              'id': r['id'] as int,
+              'uuid': r['uuid'] as String?,
+              'name': r['name'] as String,
+              'created_at': r['created_at'] as int,
+              'is_synced': 1,
+            });
+          }
+          for (final re in remoteRoutineExercises) {
+            await txn.insert('routine_exercises', {
+              'id': re['id'] as int,
+              'uuid': re['uuid'] as String?,
+              'routine_id': re['routine_id'] as int,
+              'name': re['name'] as String,
+              'order_index': re['order_index'] as int,
+              'is_synced': 1,
+            });
+          }
+          for (final rs in remoteRoutineSets) {
+            await txn.insert('routine_sets', {
+              'id': rs['id'] as int,
+              'uuid': rs['uuid'] as String?,
+              'routine_exercise_id': rs['routine_exercise_id'] as int,
+              'set_number': rs['set_number'] as int,
+              'weight_kg': (rs['weight_kg'] as num).toDouble(),
+              'reps': rs['reps'] as int,
+              'is_warmup': (rs['is_warmup'] as bool? ?? false) ? 1 : 0,
+              'is_synced': 1,
+            });
+          }
+        }
+      } catch (_) {
+        // Routines table on Supabase might not exist yet; fallback silently
       }
     });
   }

@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/database/ai_chat_message_dao.dart';
+import '../../core/database/database_helper.dart';
 import '../../core/database/profile_dao.dart';
 import '../../core/database/weight_log_dao.dart';
 import '../../core/database/set_dao.dart';
@@ -39,27 +41,62 @@ class AiChatState {
 class AiChatNotifier extends StateNotifier<AiChatState> {
   final Ref _ref;
   final _supabase = Supabase.instance.client;
+  final _dao = AiChatMessageDao();
 
   AiChatNotifier(this._ref) : super(const AiChatState()) {
     _init();
   }
 
-  void _init() {
+  Future<void> _init() async {
+    final stored = await _dao.getMessages();
     final user = _ref.read(authProvider);
-    final greeting = user != null
-        ? "สวัสดีครับ! ผมคือ LIFT AI โค้ชส่วนตัวของคุณ ยินดีที่ได้คุยด้วยครับ มีอะไรที่ผมสามารถช่วยแนะนำเกี่ยวกับการออกกำลังกาย โภชนาการ หรือวิเคราะห์สถิติวันนี้ไหมครับ?"
-        : "Hello! I am LIFT AI, your personal coach. How can I help you today with your fitness journey?";
-    
-    state = AiChatState(
-      messages: [
-        ChatMessage(text: greeting, isUser: false, timestamp: DateTime.now()),
-      ],
-    );
+
+    if (stored.isNotEmpty) {
+      state = AiChatState(
+        messages: stored
+            .map((item) => ChatMessage(
+                  text: item.text,
+                  isUser: item.isUser,
+                  timestamp: item.timestamp,
+                ))
+            .toList(),
+      );
+    } else {
+      final greeting = user != null
+          ? "สวัสดีครับ! ผมคือ LIFT AI โค้ชส่วนตัวของคุณ ยินดีที่ได้คุยด้วยครับ มีอะไรที่ผมสามารถช่วยแนะนำเกี่ยวกับการออกกำลังกาย โภชนาการ หรือวิเคราะห์สถิติวันนี้ไหมครับ?"
+          : "Hello! I am LIFT AI, your personal coach. How can I help you today with your fitness journey?";
+
+      final initialMsg = ChatMessage(text: greeting, isUser: false, timestamp: DateTime.now());
+      state = AiChatState(messages: [initialMsg]);
+      await _dao.insertMessage(
+        uuid: generateUUID(),
+        isUser: false,
+        text: greeting,
+        timestamp: initialMsg.timestamp,
+      );
+    }
   }
 
   void refreshContext() {
     // Context is gathered dynamically on every sendMessage call, 
     // so no explicit refresh needed here.
+  }
+
+  Future<void> clearHistory() async {
+    await _dao.clearAll();
+    final user = _ref.read(authProvider);
+    final greeting = user != null
+        ? "สวัสดีครับ! ผมคือ LIFT AI โค้ชส่วนตัวของคุณ มีอะไรเพิ่มเติมที่อยากสอบถามไหมครับ?"
+        : "Hello! History cleared. How can I help you today?";
+
+    final initialMsg = ChatMessage(text: greeting, isUser: false, timestamp: DateTime.now());
+    state = AiChatState(messages: [initialMsg]);
+    await _dao.insertMessage(
+      uuid: generateUUID(),
+      isUser: false,
+      text: greeting,
+      timestamp: initialMsg.timestamp,
+    );
   }
 
   Future<void> sendMessage(String text) async {
@@ -69,11 +106,20 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
     final user = _ref.read(authProvider);
     if (user == null) return;
 
+    final now = DateTime.now();
     final userMessage = ChatMessage(
       text: cleanText,
       isUser: true,
-      timestamp: DateTime.now(),
+      timestamp: now,
     );
+
+    await _dao.insertMessage(
+      uuid: generateUUID(),
+      isUser: true,
+      text: cleanText,
+      timestamp: now,
+    );
+
     state = state.copyWith(
       isLoading: true,
       messages: [...state.messages, userMessage],
@@ -119,21 +165,39 @@ $prsStr
       final data = response.data as Map<String, dynamic>;
       final responseText = data['reply'] as String? ?? "ขออภัยด้วยครับ ผมเกิดข้อผิดพลาดในการประมวลผลคำตอบ";
 
+      final aiTime = DateTime.now();
       final aiMessage = ChatMessage(
         text: responseText,
         isUser: false,
-        timestamp: DateTime.now(),
+        timestamp: aiTime,
       );
+
+      await _dao.insertMessage(
+        uuid: generateUUID(),
+        isUser: false,
+        text: responseText,
+        timestamp: aiTime,
+      );
+
       state = state.copyWith(
         isLoading: false,
         messages: [...state.messages, aiMessage],
       );
     } catch (e) {
+      final errTime = DateTime.now();
       final errorMessage = ChatMessage(
         text: "เกิดข้อผิดพลาดในการเชื่อมต่อโค้ช AI: $e\nกรุณาตรวจสอบว่าเซิร์ฟเวอร์ Edge Function ทำงานปกติและตั้งค่า GEMINI_API_KEY เรียบร้อยแล้ว",
         isUser: false,
-        timestamp: DateTime.now(),
+        timestamp: errTime,
       );
+
+      await _dao.insertMessage(
+        uuid: generateUUID(),
+        isUser: false,
+        text: errorMessage.text,
+        timestamp: errTime,
+      );
+
       state = state.copyWith(
         isLoading: false,
         messages: [...state.messages, errorMessage],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/preset_exercises.dart';
+import '../../core/database/custom_exercise_dao.dart';
 import '../../core/database/exercise_dao.dart';
 import '../../core/utils/exercise_search_helper.dart';
 
@@ -24,22 +25,32 @@ class _AddExerciseSheet extends StatefulWidget {
 class _AddExerciseSheetState extends State<_AddExerciseSheet> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
+  final _customDao = CustomExerciseDao();
   List<String> _all = [];
   List<String> _recent = [];
+  List<String> _customNames = [];
   String _query = '';
 
   @override
   void initState() {
     super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
     final dao = ExerciseDao();
-    Future.wait([dao.getAllNames(), dao.getRecentNames()]).then((results) {
-      if (mounted) {
-        setState(() {
-          _all = results[0];
-          _recent = results[1];
-        });
-      }
-    });
+    final results = await Future.wait([
+      dao.getAllNames(),
+      dao.getRecentNames(),
+      _customDao.getAllNames(),
+    ]);
+    if (mounted) {
+      setState(() {
+        _all = results[0];
+        _recent = results[1];
+        _customNames = results[2];
+      });
+    }
   }
 
   @override
@@ -49,7 +60,13 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
     super.dispose();
   }
 
-  void _select(String name) => Navigator.of(context).pop(name.trim());
+  void _select(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isNotEmpty) {
+      _customDao.insert(trimmed);
+    }
+    Navigator.of(context).pop(trimmed);
+  }
 
   Future<void> _deleteExercise(String name) async {
     final confirmed = await showDialog<bool>(
@@ -76,13 +93,8 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
     if (confirmed != true || !mounted) return;
     final dao = ExerciseDao();
     await dao.deleteByName(name);
-    final results = await Future.wait([dao.getAllNames(), dao.getRecentNames()]);
-    if (mounted) {
-      setState(() {
-        _all = results[0];
-        _recent = results[1];
-      });
-    }
+    await _customDao.deleteByName(name);
+    await _loadData();
   }
 
   List<String> get _combinedCandidates {
@@ -100,6 +112,7 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
     }
 
     addList(_recent);
+    addList(_customNames);
     addList(_all);
     addList(kPresetExercises);
     return result;

@@ -144,6 +144,40 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                       ],
                     ),
                   ),
+                  IconButton(
+                    icon: Icon(Icons.delete_outline, color: textMuted),
+                    tooltip: lang == AppLanguage.th ? 'ลบประวัติแชท' : 'Clear Chat History',
+                    onPressed: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: Text(lang == AppLanguage.th ? 'ลบประวัติแชท?' : 'Clear Chat History?'),
+                          content: Text(
+                            lang == AppLanguage.th
+                                ? 'ต้องการลบประวัติการสนทนาทั้งหมดใน AI Coach หรือไม่?'
+                                : 'Are you sure you want to clear all conversation history?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              child: Text(lang == AppLanguage.th ? 'ยกเลิก' : 'Cancel'),
+                            ),
+                            FilledButton(
+                              onPressed: () => Navigator.pop(ctx, true),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: const Color(0xFFFF5A3C),
+                              ),
+                              child: Text(lang == AppLanguage.th ? 'ลบ' : 'Clear'),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirm == true && mounted) {
+                        await ref.read(aiChatProvider.notifier).clearHistory();
+                      }
+                    },
+                  ),
                 ],
               ),
             ),
