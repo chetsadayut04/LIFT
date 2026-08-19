@@ -114,15 +114,6 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
     );
   }
 
-  List<String> get _suggestions {
-    if (_query.trim().isEmpty) return [];
-    return ExerciseSearchHelper.getTopSuggestions(
-      query: _query,
-      candidates: _combinedCandidates,
-      limit: 5,
-    );
-  }
-
   bool get _hasExactMatch =>
       _combinedCandidates.any((s) => s.toLowerCase() == _query.toLowerCase().trim());
 
@@ -130,7 +121,6 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     final filtered = _filtered;
-    final suggestions = _suggestions;
     final theme = Theme.of(context);
     final textMuted = theme.textTheme.bodySmall?.color ?? Colors.grey;
     final accent = theme.colorScheme.primary;
@@ -192,39 +182,6 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
               },
             ),
           ),
-
-          // Quick Suggestion Chips (only when searching)
-          if (_query.isNotEmpty && suggestions.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 34,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: suggestions.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, idx) {
-                  final suggestionName = suggestions[idx];
-                  return ActionChip(
-                    avatar: Icon(Icons.bolt, size: 14, color: accent),
-                    label: Text(
-                      suggestionName,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: theme.textTheme.bodyMedium?.color,
-                      ),
-                    ),
-                    onPressed: () => _select(suggestionName),
-                    backgroundColor: accent.withValues(alpha: 0.12),
-                    side: BorderSide(color: accent.withValues(alpha: 0.3)),
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(horizontal: 2),
-                  );
-                },
-              ),
-            ),
-          ],
 
           const SizedBox(height: 8),
 
