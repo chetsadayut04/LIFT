@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/preset_exercises.dart';
 import '../../core/database/exercise_dao.dart';
+import '../../core/utils/exercise_search_helper.dart';
 
 // ลบค่าสีคงที่เพื่อให้ดึงจาก Theme.of(context) ไดนามิก
 
@@ -83,19 +85,52 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
     }
   }
 
+  List<String> get _combinedCandidates {
+    final Set<String> seenLower = {};
+    final List<String> result = [];
+
+    void addList(List<String> list) {
+      for (final item in list) {
+        final trimmed = item.trim();
+        if (trimmed.isEmpty) continue;
+        if (seenLower.add(trimmed.toLowerCase())) {
+          result.add(trimmed);
+        }
+      }
+    }
+
+    addList(_recent);
+    addList(_all);
+    addList(kPresetExercises);
+    return result;
+  }
+
   List<String> get _filtered {
-    if (_query.isEmpty) return _all;
-    final q = _query.toLowerCase();
-    return _all.where((s) => s.toLowerCase().contains(q)).toList();
+    final candidates = _combinedCandidates;
+    if (_query.isEmpty) return candidates;
+    return ExerciseSearchHelper.searchAndRank(
+      query: _query,
+      candidates: candidates,
+    );
+  }
+
+  List<String> get _suggestions {
+    if (_query.trim().isEmpty) return [];
+    return ExerciseSearchHelper.getTopSuggestions(
+      query: _query,
+      candidates: _combinedCandidates,
+      limit: 5,
+    );
   }
 
   bool get _hasExactMatch =>
-      _all.any((s) => s.toLowerCase() == _query.toLowerCase().trim());
+      _combinedCandidates.any((s) => s.toLowerCase() == _query.toLowerCase().trim());
 
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     final filtered = _filtered;
+    final suggestions = _suggestions;
     final theme = Theme.of(context);
     final textMuted = theme.textTheme.bodySmall?.color ?? Colors.grey;
     final accent = theme.colorScheme.primary;
@@ -132,7 +167,7 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
               autofocus: true,
               textCapitalization: TextCapitalization.words,
               decoration: InputDecoration(
-                hintText: 'ค้นหาท่า...',
+                hintText: 'ค้นหาหรือพิมพ์ชื่อท่า...',
                 prefixIcon: Icon(Icons.search, size: 20, color: textMuted),
                 suffixIcon: _query.isNotEmpty
                     ? IconButton(
@@ -157,6 +192,40 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
               },
             ),
           ),
+
+          // Quick Suggestion Chips (only when searching)
+          if (_query.isNotEmpty && suggestions.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 34,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: suggestions.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, idx) {
+                  final suggestionName = suggestions[idx];
+                  return ActionChip(
+                    avatar: Icon(Icons.bolt, size: 14, color: accent),
+                    label: Text(
+                      suggestionName,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: theme.textTheme.bodyMedium?.color,
+                      ),
+                    ),
+                    onPressed: () => _select(suggestionName),
+                    backgroundColor: accent.withValues(alpha: 0.12),
+                    side: BorderSide(color: accent.withValues(alpha: 0.3)),
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                  );
+                },
+              ),
+            ),
+          ],
+
           const SizedBox(height: 8),
 
           // List
@@ -177,11 +246,13 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
                         onLongPress: () => _deleteExercise(n),
                       )),
                   const SizedBox(height: 8),
-                  const _SectionLabel('ทั้งหมด'),
+                  const _SectionLabel('ทั้งหมด / แนะนำ'),
+                ] else if (_query.isNotEmpty) ...[
+                  const _SectionLabel('ผลการค้นหาใกล้เคียง'),
                 ],
 
                 // Filtered / all list
-                if (_all.isEmpty && _query.isEmpty)
+                if (filtered.isEmpty && _query.isEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 24),
                     child: Column(
@@ -200,7 +271,7 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     child: Text(
-                      'ไม่พบ "$_query"',
+                      'ไม่พบท่าที่ชื่อว่า "$_query"',
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 13, color: textMuted),
                     ),
@@ -208,8 +279,9 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
                 else
                   ...filtered.map((n) => _ExerciseItem(
                         name: n,
+                        isPreset: kPresetExercises.contains(n) && !_all.contains(n) && !_recent.contains(n),
                         onTap: () => _select(n),
-                        onLongPress: () => _deleteExercise(n),
+                        onLongPress: _all.contains(n) ? () => _deleteExercise(n) : null,
                       )),
 
                 // Create new option
@@ -263,6 +335,7 @@ class _ExerciseItem extends StatelessWidget {
   final IconData icon;
   final Color? iconColor;
   final Color? nameColor;
+  final bool isPreset;
 
   const _ExerciseItem({
     required this.name,
@@ -271,6 +344,7 @@ class _ExerciseItem extends StatelessWidget {
     this.icon = Icons.fitness_center,
     this.iconColor,
     this.nameColor,
+    this.isPreset = false,
   });
 
   @override
@@ -299,9 +373,26 @@ class _ExerciseItem extends StatelessWidget {
                 ),
               ),
             ),
+            if (isPreset)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  'แนะนำ',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
     );
   }
 }
+
