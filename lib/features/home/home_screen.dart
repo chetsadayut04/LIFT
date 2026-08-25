@@ -1437,8 +1437,8 @@ class _RoutinesCarousel extends ConsumerWidget {
             const SizedBox(height: 6),
             Text(
               lang == AppLanguage.th 
-                  ? 'สร้างตารางฝึกได้ง่ายๆ ที่เมนู โปรไฟล์ > ตารางฝึกของฉัน'
-                  : 'Go to Profile > My Routines to build your workout plans.',
+                  ? 'สร้างตารางฝึกได้ง่ายๆ ที่แท็บ "ตาราง"'
+                  : 'Go to the "Routines" tab to build your workout plans.',
               style: TextStyle(fontSize: 11, color: textMuted),
               textAlign: TextAlign.center,
             ),

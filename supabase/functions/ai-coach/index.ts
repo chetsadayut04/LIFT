@@ -1,7 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent";
+const PREFERRED_MODEL = Deno.env.get("GEMINI_MODEL") || "gemini-2.0-flash";
+
+const CANDIDATE_MODELS = [
+  PREFERRED_MODEL,
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-lite",
+  "gemini-1.5-flash",
+  "gemini-1.5-flash-8b",
+  "gemini-1.5-pro",
+].filter((m, i, self) => Boolean(m) && self.indexOf(m) === i);
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -27,37 +36,72 @@ Your tone should be highly professional, encouraging, motivational, and concise.
 ${context || ""}
 
 Instructions:
-1. Always analyze and relate your answers to the user's statistics, weight trends, and PRs when they ask about their progress, workouts, or goals.
+1. Always analyze and relate your answers to the user's statistics, weight trends, PRs, and saved workout routines (ตารางการฝึก) when they ask about their progress, workouts, training split, or goals.
 2. If they ask general health, nutrition, or exercise form questions, provide clear, structured, and informative answers using markdown lists and headings.
 3. Keep answers compact and readable in a mobile chat interface. Avoid overly long paragraphs.
 4. Encourage progressive overload and smart training.`;
 
-    // Call Gemini API
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: message }]
-          }
-        ],
-        systemInstruction: {
-          parts: [{ text: systemPrompt }]
-        }
-      }),
-    });
+    let replyText = "";
+    let lastError = "";
 
-    const data = await response.json();
-    if (!response.ok || data.error) {
-      const errorMsg = data.error?.message || "Gemini API error";
-      throw new Error(errorMsg);
+    // Try models with fallback & retry if any experience high demand
+    for (const model of CANDIDATE_MODELS) {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              contents: [
+                {
+                  role: "user",
+                  parts: [{ text: message }],
+                },
+              ],
+              systemInstruction: {
+                parts: [{ text: systemPrompt }],
+              },
+            }),
+          });
+
+          const data = await response.json();
+          if (!response.ok || data.error) {
+            const errMsg = typeof data.error === "string"
+              ? data.error
+              : data.error?.message || JSON.stringify(data.error || response.statusText);
+            
+            lastError = `Model ${model}: ${errMsg}`;
+            console.warn(`Attempt ${attempt + 1} for ${model} failed: ${lastError}`);
+
+            // If high demand, wait briefly before retrying or switching model
+            if (attempt === 0 && (errMsg.includes("high demand") || response.status === 429 || response.status === 503)) {
+              await new Promise((resolve) => setTimeout(resolve, 600));
+              continue;
+            }
+            break; // Try next candidate model
+          }
+
+          replyText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+          if (replyText) {
+            break; // Success!
+          }
+        } catch (err: any) {
+          lastError = err.message || String(err);
+          console.warn(`Fetch error for model ${model}: ${lastError}`);
+        }
+      }
+
+      if (replyText) {
+        break; // Successfully got response
+      }
     }
 
-    const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I could not process your answer.";
+    if (!replyText) {
+      throw new Error(lastError || "Could not generate AI response from any available model.");
+    }
 
     return new Response(JSON.stringify({ reply: replyText }), {
       headers: {
@@ -65,7 +109,7 @@ Instructions:
         "Access-Control-Allow-Origin": "*",
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,
       headers: {
@@ -75,3 +119,5 @@ Instructions:
     });
   }
 });
+
+

@@ -3,8 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/database/ai_chat_message_dao.dart';
 import '../../core/database/database_helper.dart';
 import '../../core/database/profile_dao.dart';
-import '../../core/database/weight_log_dao.dart';
+import '../../core/database/routine_dao.dart';
 import '../../core/database/set_dao.dart';
+import '../../core/database/weight_log_dao.dart';
 import '../../features/auth/auth_provider.dart';
 
 class ChatMessage {
@@ -131,6 +132,26 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
       final weightLogs = await WeightLogDao().getAll();
       final exercisePrs = await SetDao().getAllExercisePrs();
 
+      final routineDao = RoutineDao();
+      final routines = await routineDao.getRoutines();
+      final List<String> routineSummaries = [];
+      for (final r in routines) {
+        if (r.id != null) {
+          final exercises = await routineDao.getExercisesForRoutine(r.id!);
+          final List<String> exDetails = [];
+          for (final ex in exercises) {
+            if (ex.id != null) {
+              final sets = await routineDao.getSetsForExercise(ex.id!);
+              final setSummary = sets.map((s) => "${s.weightKg}kg x ${s.reps}").join(', ');
+              exDetails.add("  - ${ex.name}: [$setSummary]");
+            } else {
+              exDetails.add("  - ${ex.name}");
+            }
+          }
+          routineSummaries.add("Routine '${r.name}':\n${exDetails.join('\n')}");
+        }
+      }
+
       final heightVal = profile?.height?.toStringAsFixed(1) ?? 'Not set';
       
       final weightHistoryStr = weightLogs.isNotEmpty
@@ -145,12 +166,19 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
                 .join('\n')
           : 'No PR records yet';
 
+      final routinesStr = routineSummaries.isNotEmpty
+          ? routineSummaries.join('\n\n')
+          : 'No saved routines created yet';
+
       final contextStr = """
 The user profile and stats context:
 - Height: $heightVal cm
 - Weight History Logs (newest first): $weightHistoryStr
 - Personal Records (PRs) in workouts:
 $prsStr
+
+- User's Saved Workout Routines (ตารางการฝึก):
+$routinesStr
 """;
 
       // 2. Invoke the Supabase Edge Function
@@ -185,8 +213,26 @@ $prsStr
       );
     } catch (e) {
       final errTime = DateTime.now();
+      final errStr = e.toString().toLowerCase();
+      String userFriendlyMessage;
+
+      if (errStr.contains("high demand") ||
+          errStr.contains("429") ||
+          errStr.contains("503") ||
+          errStr.contains("overloaded") ||
+          errStr.contains("temporarily unavailable")) {
+        userFriendlyMessage =
+            "ขณะนี้โมเดล AI กำลังมีผู้ใช้งานเป็นจำนวนมาก กรุณารอประมาณ 5-10 วินาที แล้วลองกดส่งใหม่อีกครั้งครับ";
+      } else if (errStr.contains("gemini_api_key")) {
+        userFriendlyMessage =
+            "ยังไม่ได้ตั้งค่า GEMINI_API_KEY บนเซิร์ฟเวอร์ Edge Function กรุณาตรวจสอบ Environment Variable ใน Supabase";
+      } else {
+        userFriendlyMessage =
+            "เกิดข้อผิดพลาดในการเชื่อมต่อโค้ช AI: $e\nกรุณาตรวจสอบว่าเซิร์ฟเวอร์ Edge Function ทำงานปกติและตั้งค่า GEMINI_API_KEY เรียบร้อยแล้ว";
+      }
+
       final errorMessage = ChatMessage(
-        text: "เกิดข้อผิดพลาดในการเชื่อมต่อโค้ช AI: $e\nกรุณาตรวจสอบว่าเซิร์ฟเวอร์ Edge Function ทำงานปกติและตั้งค่า GEMINI_API_KEY เรียบร้อยแล้ว",
+        text: userFriendlyMessage,
         isUser: false,
         timestamp: errTime,
       );
