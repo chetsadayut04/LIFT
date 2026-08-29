@@ -33,7 +33,8 @@ class DatabaseHelper {
       return 'weightlifting.db';
     }
     if (Platform.isWindows) {
-      final appData = Platform.environment['APPDATA'] ??
+      final appData =
+          Platform.environment['APPDATA'] ??
           Platform.environment['USERPROFILE'] ??
           '.';
       final dir = Directory(join(appData, 'weightlifting_tracker'));
@@ -42,7 +43,9 @@ class DatabaseHelper {
     }
     if (Platform.isLinux) {
       final home = Platform.environment['HOME'] ?? '.';
-      final dir = Directory(join(home, '.local', 'share', 'weightlifting_tracker'));
+      final dir = Directory(
+        join(home, '.local', 'share', 'weightlifting_tracker'),
+      );
       await dir.create(recursive: true);
       return join(dir.path, 'weightlifting.db');
     }
@@ -112,7 +115,6 @@ class DatabaseHelper {
           CREATE TABLE profiles (
             id TEXT PRIMARY KEY,
             height REAL,
-            fitness_goal TEXT,
             updated_at INTEGER NOT NULL
           )
         ''');
@@ -181,10 +183,14 @@ class DatabaseHelper {
           await db.execute('ALTER TABLE sessions ADD COLUMN name TEXT');
         }
         if (oldVersion < 3) {
-          await db.execute('ALTER TABLE sets ADD COLUMN is_warmup INTEGER NOT NULL DEFAULT 0');
+          await db.execute(
+            'ALTER TABLE sets ADD COLUMN is_warmup INTEGER NOT NULL DEFAULT 0',
+          );
         }
         if (oldVersion < 4) {
-          await db.execute('ALTER TABLE sessions ADD COLUMN finished_at INTEGER');
+          await db.execute(
+            'ALTER TABLE sessions ADD COLUMN finished_at INTEGER',
+          );
         }
         if (oldVersion < 5) {
           await db.execute('''
@@ -197,19 +203,29 @@ class DatabaseHelper {
         }
         if (oldVersion < 6) {
           try {
-            await db.execute('ALTER TABLE sessions ADD COLUMN finished_at INTEGER');
+            await db.execute(
+              'ALTER TABLE sessions ADD COLUMN finished_at INTEGER',
+            );
           } catch (_) {
             // Ignore if column already exists
           }
         }
         if (oldVersion < 7) {
           await db.execute('ALTER TABLE sessions ADD COLUMN uuid TEXT');
-          await db.execute('ALTER TABLE sessions ADD COLUMN is_synced INTEGER DEFAULT 0');
+          await db.execute(
+            'ALTER TABLE sessions ADD COLUMN is_synced INTEGER DEFAULT 0',
+          );
           await db.execute('ALTER TABLE exercises ADD COLUMN uuid TEXT');
-          await db.execute('ALTER TABLE exercises ADD COLUMN is_synced INTEGER DEFAULT 0');
+          await db.execute(
+            'ALTER TABLE exercises ADD COLUMN is_synced INTEGER DEFAULT 0',
+          );
           await db.execute('ALTER TABLE sets ADD COLUMN uuid TEXT');
-          await db.execute('ALTER TABLE sets ADD COLUMN is_synced INTEGER DEFAULT 0');
-          await db.execute('ALTER TABLE exercise_configs ADD COLUMN is_synced INTEGER DEFAULT 0');
+          await db.execute(
+            'ALTER TABLE sets ADD COLUMN is_synced INTEGER DEFAULT 0',
+          );
+          await db.execute(
+            'ALTER TABLE exercise_configs ADD COLUMN is_synced INTEGER DEFAULT 0',
+          );
           await db.execute('''
             CREATE TABLE IF NOT EXISTS tombstones (
               uuid TEXT PRIMARY KEY,
@@ -224,7 +240,6 @@ class DatabaseHelper {
             CREATE TABLE IF NOT EXISTS profiles (
               id TEXT PRIMARY KEY,
               height REAL,
-              fitness_goal TEXT,
               updated_at INTEGER NOT NULL
             )
           ''');
@@ -297,20 +312,43 @@ class DatabaseHelper {
   }
 
   static Future<void> _backfillUUIDs(Database db) async {
-    final sessions = await db.query('sessions', columns: ['id'], where: 'uuid IS NULL');
+    final sessions = await db.query(
+      'sessions',
+      columns: ['id'],
+      where: 'uuid IS NULL',
+    );
     for (final row in sessions) {
       final id = row['id'] as int;
-      await db.update('sessions', {'uuid': generateUUID()}, where: 'id = ?', whereArgs: [id]);
+      await db.update(
+        'sessions',
+        {'uuid': generateUUID()},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
     }
-    final exercises = await db.query('exercises', columns: ['id'], where: 'uuid IS NULL');
+    final exercises = await db.query(
+      'exercises',
+      columns: ['id'],
+      where: 'uuid IS NULL',
+    );
     for (final row in exercises) {
       final id = row['id'] as int;
-      await db.update('exercises', {'uuid': generateUUID()}, where: 'id = ?', whereArgs: [id]);
+      await db.update(
+        'exercises',
+        {'uuid': generateUUID()},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
     }
     final sets = await db.query('sets', columns: ['id'], where: 'uuid IS NULL');
     for (final row in sets) {
       final id = row['id'] as int;
-      await db.update('sets', {'uuid': generateUUID()}, where: 'id = ?', whereArgs: [id]);
+      await db.update(
+        'sets',
+        {'uuid': generateUUID()},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
     }
   }
 
@@ -330,12 +368,31 @@ class DatabaseHelper {
       await txn.delete('weight_logs');
 
       // Fetch all from Supabase
-      final remoteSessions = await supabase.from('sessions').select().eq('user_id', user.id);
-      final remoteExercises = await supabase.from('exercises').select().eq('user_id', user.id);
-      final remoteSets = await supabase.from('sets').select().eq('user_id', user.id);
-      final remoteConfigs = await supabase.from('exercise_configs').select().eq('user_id', user.id);
-      final remoteProfile = await supabase.from('profiles').select().eq('id', user.id).maybeSingle();
-      final remoteWeightLogs = await supabase.from('weight_logs').select().eq('user_id', user.id);
+      final remoteSessions = await supabase
+          .from('sessions')
+          .select()
+          .eq('user_id', user.id);
+      final remoteExercises = await supabase
+          .from('exercises')
+          .select()
+          .eq('user_id', user.id);
+      final remoteSets = await supabase
+          .from('sets')
+          .select()
+          .eq('user_id', user.id);
+      final remoteConfigs = await supabase
+          .from('exercise_configs')
+          .select()
+          .eq('user_id', user.id);
+      final remoteProfile = await supabase
+          .from('profiles')
+          .select()
+          .eq('id', user.id)
+          .maybeSingle();
+      final remoteWeightLogs = await supabase
+          .from('weight_logs')
+          .select()
+          .eq('user_id', user.id);
 
       // Insert into local SQLite
       for (final s in remoteSessions) {
@@ -395,9 +452,18 @@ class DatabaseHelper {
       }
 
       try {
-        final remoteRoutines = await supabase.from('routines').select().eq('user_id', user.id);
-        final remoteRoutineExercises = await supabase.from('routine_exercises').select().eq('user_id', user.id);
-        final remoteRoutineSets = await supabase.from('routine_sets').select().eq('user_id', user.id);
+        final remoteRoutines = await supabase
+            .from('routines')
+            .select()
+            .eq('user_id', user.id);
+        final remoteRoutineExercises = await supabase
+            .from('routine_exercises')
+            .select()
+            .eq('user_id', user.id);
+        final remoteRoutineSets = await supabase
+            .from('routine_sets')
+            .select()
+            .eq('user_id', user.id);
 
         if (remoteRoutines.isNotEmpty) {
           await txn.delete('routine_sets');
