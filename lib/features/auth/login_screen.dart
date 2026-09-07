@@ -229,9 +229,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   validator: (val) {
-                    if (val == null || val.trim().isEmpty)
+                    if (val == null || val.trim().isEmpty) {
                       return 'กรุณากรอกอีเมล';
-                    if (!val.contains('@')) return 'รูปแบบอีเมลไม่ถูกต้อง';
+                    }
+                    if (!val.contains('@')) {
+                      return 'รูปแบบอีเมลไม่ถูกต้อง';
+                    }
                     return null;
                   },
                 ),
@@ -611,10 +614,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                         validator: (val) {
-                          if (val == null || val.trim().isEmpty)
+                          if (val == null || val.trim().isEmpty) {
                             return 'กรุณากรอกอีเมล';
-                          if (!val.contains('@'))
+                          }
+                          if (!val.contains('@')) {
                             return 'รูปแบบอีเมลไม่ถูกต้อง';
+                          }
                           return null;
                         },
                       ),
@@ -672,10 +677,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                         validator: (val) {
-                          if (val == null || val.isEmpty)
+                          if (val == null || val.isEmpty) {
                             return 'กรุณากรอกรหัสผ่าน';
-                          if (val.length < 6)
+                          }
+                          if (val.length < 6) {
                             return 'รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร';
+                          }
                           return null;
                         },
                       ),

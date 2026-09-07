@@ -45,3 +45,42 @@ class AuthNotifier extends StateNotifier<User?> {
 final authProvider = StateNotifierProvider<AuthNotifier, User?>((ref) {
   return AuthNotifier();
 });
+
+class PasswordRecoveryNotifier extends StateNotifier<bool> {
+  late final StreamSubscription<AuthState> _sub;
+
+  PasswordRecoveryNotifier() : super(_checkInitialRecovery()) {
+    _sub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (data.event == AuthChangeEvent.passwordRecovery) {
+        state = true;
+      } else if (data.event == AuthChangeEvent.signedOut) {
+        state = false;
+      }
+    });
+  }
+
+  static bool _checkInitialRecovery() {
+    if (kIsWeb) {
+      final uri = Uri.base;
+      return uri.fragment.contains('type=recovery') ||
+          uri.queryParameters['type'] == 'recovery' ||
+          uri.toString().contains('type=recovery');
+    }
+    return false;
+  }
+
+  void completeRecovery() {
+    state = false;
+  }
+
+  @override
+  void dispose() {
+    _sub.cancel();
+    super.dispose();
+  }
+}
+
+final passwordRecoveryProvider =
+    StateNotifierProvider<PasswordRecoveryNotifier, bool>((ref) {
+      return PasswordRecoveryNotifier();
+    });
