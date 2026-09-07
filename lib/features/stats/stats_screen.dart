@@ -6,6 +6,7 @@ import 'dart:math' as math;
 import '../../core/database/session_dao.dart';
 import '../../core/providers/unit_provider.dart';
 import '../../core/providers/translation_provider.dart';
+import '../../core/theme/app_colors.dart';
 import '../history/history_screen.dart';
 import 'stats_provider.dart';
 
@@ -113,8 +114,12 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
 
     final hasExercises = state.exerciseNames.isNotEmpty;
     final exercises = hasExercises ? state.exerciseNames : <String>[];
-    final selectedEx = hasExercises ? (_currentExercise ?? exercises.first) : '';
-    final history = hasExercises ? _getFilteredHistory(state.maxWeightHistory) : <({String dateStr, double maxWeight})>[];
+    final selectedEx = hasExercises
+        ? (_currentExercise ?? exercises.first)
+        : '';
+    final history = hasExercises
+        ? _getFilteredHistory(state.maxWeightHistory)
+        : <({String dateStr, double maxWeight})>[];
 
     final maxVal = history.isNotEmpty
         ? history.fold<double>(
@@ -137,7 +142,9 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    lang == AppLanguage.th ? 'สถิติ & วิเคราะห์' : 'Stats & Analytics',
+                    lang == AppLanguage.th
+                        ? 'สถิติ & วิเคราะห์'
+                        : 'Stats & Analytics',
                     style: GoogleFonts.barlowCondensed(
                       fontSize: 30,
                       fontWeight: FontWeight.w800,
@@ -149,29 +156,38 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const HistoryScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => const HistoryScreen(),
+                        ),
                       );
                     },
                     borderRadius: BorderRadius.circular(10),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                        color: AppColors.primary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                          color: AppColors.primary.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.history_rounded, size: 16, color: Color(0xFF10B981)),
+                          const Icon(
+                            Icons.history_rounded,
+                            size: 16,
+                            color: AppColors.primary,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             lang == AppLanguage.th ? 'ประวัติ' : 'History',
                             style: GoogleFonts.sarabun(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF10B981),
+                              color: AppColors.primary,
                             ),
                           ),
                         ],
@@ -194,13 +210,13 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? const Color(0xFF10B981)
-                                : const Color(0xFF1A241E),
+                                ? AppColors.primary
+                                : AppColors.surface,
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: isSelected
                                   ? Colors.transparent
-                                  : Colors.white.withValues(alpha: 0.08),
+                                  : AppColors.border,
                             ),
                           ),
                           alignment: Alignment.center,
@@ -210,8 +226,8 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
                               color: isSelected
-                                  ? const Color(0xFF000000)
-                                  : const Color(0xFF94A3B8),
+                                  ? AppColors.onPrimary
+                                  : AppColors.textMuted,
                             ),
                           ),
                         ),
@@ -230,11 +246,9 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
             margin: const EdgeInsets.only(bottom: 24),
             decoration: BoxDecoration(
-              color: const Color(0xFF121A15),
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: const Color(0xFF223326),
-              ),
+              border: Border.all(color: AppColors.border),
             ),
             child: Column(
               children: [
@@ -304,23 +318,25 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                             ),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? const Color(0xFF10B981).withValues(alpha: 0.15)
-                                  : const Color(0xFF1A241E),
+                                  ? AppColors.primary.withValues(alpha: 0.15)
+                                  : AppColors.surface,
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color: isSelected
-                                    ? const Color(0xFF10B981).withValues(alpha: 0.5)
-                                    : Colors.white.withValues(alpha: 0.06),
+                                    ? AppColors.primary.withValues(alpha: 0.5)
+                                    : AppColors.border,
                               ),
                             ),
                             child: Text(
                               ex,
                               style: GoogleFonts.sarabun(
                                 fontSize: 13,
-                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
                                 color: isSelected
-                                    ? const Color(0xFF10B981)
-                                    : const Color(0xFF94A3B8),
+                                    ? AppColors.primary
+                                    : AppColors.textMuted,
                               ),
                             ),
                           ),
@@ -336,11 +352,9 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
           // ── PR Trend Line Chart Card ─────────────────────────────────────────
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF121A15),
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: const Color(0xFF223326),
-              ),
+              border: Border.all(color: AppColors.border),
             ),
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
             margin: const EdgeInsets.only(bottom: 24),
@@ -358,7 +372,7 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                           style: GoogleFonts.barlowCondensed(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF94A3B8),
+                            color: AppColors.textMuted,
                             letterSpacing: 0.8,
                           ),
                         ),
@@ -366,7 +380,7 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                           selectedEx,
                           style: GoogleFonts.sarabun(
                             fontSize: 13,
-                            color: const Color(0xFF94A3B8),
+                            color: AppColors.textMuted,
                           ),
                         ),
                       ],
@@ -379,7 +393,7 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                           style: GoogleFonts.jetBrainsMono(
                             fontSize: 24,
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF10B981),
+                            color: AppColors.primary,
                           ),
                         ),
                         Text(
@@ -551,8 +565,12 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
               },
             ),
           ),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
         ),
         borderData: FlBorderData(show: false),
         minX: 0,
@@ -563,21 +581,21 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
           LineChartBarData(
             spots: spots,
             isCurved: true,
-            color: const Color(0xFF10B981),
+            color: AppColors.primary,
             barWidth: 2.5,
             isStrokeCapRound: true,
             dotData: FlDotData(
               show: true,
               getDotPainter: (spot, percent, barData, index) =>
                   FlDotCirclePainter(
-                radius: 3.5,
-                color: const Color(0xFF10B981),
-                strokeWidth: 0,
-              ),
+                    radius: 3.5,
+                    color: AppColors.primary,
+                    strokeWidth: 0,
+                  ),
             ),
             belowBarData: BarAreaData(
               show: true,
-              color: const Color(0xFF10B981).withValues(alpha: 0.08),
+              color: AppColors.primary.withValues(alpha: 0.08),
             ),
           ),
         ],
@@ -596,24 +614,22 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF121A15),
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFF223326)),
+          border: Border.all(color: AppColors.border),
         ),
         alignment: Alignment.center,
         child: Text(
           lang == AppLanguage.th
               ? 'ยังไม่มีสถิติส่วนตัว (PR)'
               : 'No Personal Records Yet',
-          style: GoogleFonts.sarabun(
-            fontSize: 13,
-            color: const Color(0xFF94A3B8),
-          ),
+          style: GoogleFonts.sarabun(fontSize: 13, color: AppColors.textMuted),
         ),
       );
     }
 
-    final displayPrs = List<({String name, double prKg, int prReps, int totalSets})>.from(prs);
+    final displayPrs =
+        List<({String name, double prKg, int prReps, int totalSets})>.from(prs);
     displayPrs.sort((a, b) {
       if (a.name == selectedEx) return -1;
       if (b.name == selectedEx) return 1;
@@ -635,13 +651,13 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: isSelected
-                ? const Color(0xFF10B981).withValues(alpha: 0.08)
-                : const Color(0xFF121A15),
+                ? AppColors.primary.withValues(alpha: 0.08)
+                : AppColors.surface,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: isSelected
-                  ? const Color(0xFF10B981).withValues(alpha: 0.6)
-                  : const Color(0xFF223326),
+                  ? AppColors.primary.withValues(alpha: 0.6)
+                  : AppColors.border,
               width: isSelected ? 1.5 : 1.0,
             ),
           ),
@@ -662,7 +678,7 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                             style: GoogleFonts.jetBrainsMono(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFF94A3B8),
+                              color: AppColors.textMuted,
                             ),
                           ),
                           Text(
@@ -670,7 +686,7 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                             style: GoogleFonts.barlowCondensed(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
-                              color: const Color(0xFFFFFFFF),
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ],
@@ -682,7 +698,7 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                             : '${pr.totalSets} total sets',
                         style: GoogleFonts.sarabun(
                           fontSize: 11,
-                          color: const Color(0xFF94A3B8),
+                          color: AppColors.textMuted,
                         ),
                       ),
                     ],
@@ -698,14 +714,14 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                               style: GoogleFonts.jetBrainsMono(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF10B981),
+                                color: AppColors.primary,
                               ),
                             ),
                             TextSpan(
                               text: ' $unit',
                               style: GoogleFonts.sarabun(
                                 fontSize: 11,
-                                color: const Color(0xFF94A3B8),
+                                color: AppColors.textMuted,
                               ),
                             ),
                           ],
@@ -715,7 +731,7 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                         '× ${pr.prReps} reps',
                         style: GoogleFonts.jetBrainsMono(
                           fontSize: 11,
-                          color: const Color(0xFF94A3B8),
+                          color: AppColors.textMuted,
                         ),
                       ),
                     ],
@@ -739,7 +755,7 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                       height: 4,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF059669), Color(0xFF10B981)],
+                          colors: [AppColors.primaryVariant, AppColors.primary],
                         ),
                         borderRadius: BorderRadius.circular(2),
                       ),
@@ -817,18 +833,44 @@ class _CalendarCard extends StatelessWidget {
 
     // Month/year label
     const thaiMonths = [
-      '', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม',
+      '',
+      'มกราคม',
+      'กุมภาพันธ์',
+      'มีนาคม',
+      'เมษายน',
+      'พฤษภาคม',
+      'มิถุนายน',
+      'กรกฎาคม',
+      'สิงหาคม',
+      'กันยายน',
+      'ตุลาคม',
+      'พฤศจิกายน',
+      'ธันวาคม',
     ];
     const enMonths = [
-      '', 'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
+      '',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
-    final monthName = lang == AppLanguage.th ? thaiMonths[focusedMonth.month] : enMonths[focusedMonth.month];
-    final yearStr = lang == AppLanguage.th ? '${focusedMonth.year + 543}' : '${focusedMonth.year}';
+    final monthName = lang == AppLanguage.th
+        ? thaiMonths[focusedMonth.month]
+        : enMonths[focusedMonth.month];
+    final yearStr = lang == AppLanguage.th
+        ? '${focusedMonth.year + 543}'
+        : '${focusedMonth.year}';
     final monthLabel = '$monthName $yearStr';
 
-    final dayHeaders = lang == AppLanguage.th 
+    final dayHeaders = lang == AppLanguage.th
         ? const ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา']
         : const ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
@@ -847,7 +889,7 @@ class _CalendarCard extends StatelessWidget {
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 1,
-                    color: Color(0xFF7C8A7C),
+                    color: AppColors.textMuted,
                   ),
                 ),
                 const Spacer(),
@@ -905,7 +947,7 @@ class _CalendarCard extends StatelessWidget {
                           d,
                           style: const TextStyle(
                             fontSize: 11,
-                            color: Color(0xFF7C8A7C),
+                            color: AppColors.textMuted,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -966,18 +1008,27 @@ class _CalendarCard extends StatelessWidget {
                                     color: isWorked
                                         ? accent
                                         : isToday
-                                        ? Theme.of(context).inputDecorationTheme.fillColor ?? Theme.of(context).colorScheme.surface
+                                        ? Theme.of(context)
+                                                  .inputDecorationTheme
+                                                  .fillColor ??
+                                              Theme.of(
+                                                context,
+                                              ).colorScheme.surface
                                         : Colors.transparent,
                                     border: isToday && !isWorked
                                         ? Border.all(
-                                            color: Theme.of(context).colorScheme.outline,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.outline,
                                             width: 1,
                                           )
                                         : null,
                                     boxShadow: isWorked
                                         ? [
                                             BoxShadow(
-                                              color: accent.withValues(alpha: 0.35),
+                                              color: accent.withValues(
+                                                alpha: 0.35,
+                                              ),
                                               blurRadius: 8,
                                             ),
                                           ]
@@ -992,10 +1043,18 @@ class _CalendarCard extends StatelessWidget {
                                             ? FontWeight.w700
                                             : FontWeight.w400,
                                         color: isWorked
-                                            ? Theme.of(context).colorScheme.onPrimary
+                                            ? Theme.of(
+                                                context,
+                                              ).colorScheme.onPrimary
                                             : isFuture
-                                            ? Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.3)
-                                            : Theme.of(context).textTheme.bodyMedium?.color,
+                                            ? Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall
+                                                  ?.color
+                                                  ?.withValues(alpha: 0.3)
+                                            : Theme.of(
+                                                context,
+                                              ).textTheme.bodyMedium?.color,
                                       ),
                                     ),
                                   ),
@@ -1015,7 +1074,10 @@ class _CalendarCard extends StatelessWidget {
             const SizedBox(height: 10),
             Row(
               children: [
-                _LegendDot(color: accent, label: lang == AppLanguage.th ? 'เล่นแล้ว' : 'Worked'),
+                _LegendDot(
+                  color: accent,
+                  label: lang == AppLanguage.th ? 'เล่นแล้ว' : 'Worked',
+                ),
                 const SizedBox(width: 16),
                 _LegendDot(
                   color: Theme.of(context).colorScheme.outline,
@@ -1030,7 +1092,9 @@ class _CalendarCard extends StatelessWidget {
                       .length;
                   if (count == 0) return const SizedBox.shrink();
                   return Text(
-                    lang == AppLanguage.th ? 'เดือนนี้ $count ครั้ง' : '$count times this month',
+                    lang == AppLanguage.th
+                        ? 'เดือนนี้ $count ครั้ง'
+                        : '$count times this month',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -1084,14 +1148,17 @@ class _NavBtn extends StatelessWidget {
         width: 30,
         height: 30,
         decoration: BoxDecoration(
-          color: Theme.of(context).inputDecorationTheme.fillColor ?? Theme.of(context).colorScheme.surface,
+          color:
+              Theme.of(context).inputDecorationTheme.fillColor ??
+              Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(
           icon,
           size: 18,
           color: onTap == null
-              ? (Theme.of(context).inputDecorationTheme.fillColor ?? Theme.of(context).colorScheme.surface)
+              ? (Theme.of(context).inputDecorationTheme.fillColor ??
+                    Theme.of(context).colorScheme.surface)
               : Theme.of(context).textTheme.bodySmall?.color,
         ),
       ),
@@ -1105,7 +1172,11 @@ class _MonthPickerDialog extends StatefulWidget {
   final DateTime current;
   final DateTime maxMonth;
   final AppLanguage lang;
-  const _MonthPickerDialog({required this.current, required this.maxMonth, required this.lang});
+  const _MonthPickerDialog({
+    required this.current,
+    required this.maxMonth,
+    required this.lang,
+  });
 
   @override
   State<_MonthPickerDialog> createState() => _MonthPickerDialogState();
@@ -1114,8 +1185,34 @@ class _MonthPickerDialog extends StatefulWidget {
 class _MonthPickerDialogState extends State<_MonthPickerDialog> {
   late int _year;
 
-  static const _thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-  static const _enMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  static const _thaiMonths = [
+    'ม.ค.',
+    'ก.พ.',
+    'มี.ค.',
+    'เม.ย.',
+    'พ.ค.',
+    'มิ.ย.',
+    'ก.ค.',
+    'ส.ค.',
+    'ก.ย.',
+    'ต.ค.',
+    'พ.ย.',
+    'ธ.ค.',
+  ];
+  static const _enMonths = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
 
   @override
   void initState() {
@@ -1184,7 +1281,12 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
                         child: Container(
                           height: 36,
                           decoration: BoxDecoration(
-                            color: isCurrent ? accent : (Theme.of(context).inputDecorationTheme.fillColor ?? Theme.of(context).colorScheme.surface),
+                            color: isCurrent
+                                ? accent
+                                : (Theme.of(
+                                        context,
+                                      ).inputDecorationTheme.fillColor ??
+                                      Theme.of(context).colorScheme.surface),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           alignment: Alignment.center,
@@ -1196,7 +1298,8 @@ class _MonthPickerDialogState extends State<_MonthPickerDialog> {
                               color: isCurrent
                                   ? Theme.of(context).colorScheme.onPrimary
                                   : disabled
-                                  ? Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.3)
+                                  ? Theme.of(context).textTheme.bodySmall?.color
+                                        ?.withValues(alpha: 0.3)
                                   : accent,
                             ),
                           ),
@@ -1251,8 +1354,36 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
   String _formatDate(String dateStr, AppLanguage lang) {
     final parts = dateStr.split('-');
     if (parts.length != 3) return dateStr;
-    const thaiMonths = ['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-    const enMonths = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const thaiMonths = [
+      '',
+      'ม.ค.',
+      'ก.พ.',
+      'มี.ค.',
+      'เม.ย.',
+      'พ.ค.',
+      'มิ.ย.',
+      'ก.ค.',
+      'ส.ค.',
+      'ก.ย.',
+      'ต.ค.',
+      'พ.ย.',
+      'ธ.ค.',
+    ];
+    const enMonths = [
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     final month = int.tryParse(parts[1]) ?? 0;
     if (lang == AppLanguage.th) {
       return '${parts[2]} ${thaiMonths[month]} ${int.parse(parts[0]) + 543}';
@@ -1269,9 +1400,11 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF16221B),
+        backgroundColor: AppColors.surface,
         title: Text(
-          lang == AppLanguage.th ? 'ลบประวัติการออกกำลังกาย' : 'Delete Workout Session',
+          lang == AppLanguage.th
+              ? 'ลบประวัติการออกกำลังกาย'
+              : 'Delete Workout Session',
           style: GoogleFonts.barlowCondensed(
             fontWeight: FontWeight.bold,
             color: const Color(0xFFFFFFFF),
@@ -1328,9 +1461,16 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
+        color:
+            Theme.of(context).cardTheme.color ??
+            Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        border: Border(top: BorderSide(color: Theme.of(context).colorScheme.outline, width: 0.5)),
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).colorScheme.outline,
+            width: 0.5,
+          ),
+        ),
       ),
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
@@ -1362,7 +1502,10 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
                   height: 8,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: widget.isWorked ? accent : Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
+                    color: widget.isWorked
+                        ? accent
+                        : Theme.of(context).textTheme.bodySmall?.color ??
+                              Colors.grey,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -1371,7 +1514,9 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white,
+                    color:
+                        Theme.of(context).textTheme.bodyLarge?.color ??
+                        Colors.white,
                   ),
                 ),
                 const Spacer(),
@@ -1380,7 +1525,9 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
                     onPressed: () => _deleteSession(context, lang),
                     icon: const Icon(Icons.delete_outline_rounded),
                     color: const Color(0xFFEF4444),
-                    tooltip: lang == AppLanguage.th ? 'ลบประวัติวันนี้' : 'Delete Day Session',
+                    tooltip: lang == AppLanguage.th
+                        ? 'ลบประวัติวันนี้'
+                        : 'Delete Day Session',
                   ),
               ],
             ),
@@ -1400,14 +1547,18 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
                   Icon(
                     Icons.hotel_outlined,
                     size: 18,
-                    color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
+                    color:
+                        Theme.of(context).textTheme.bodySmall?.color ??
+                        Colors.grey,
                   ),
                   const SizedBox(width: 10),
                   Text(
                     lang == AppLanguage.th ? 'วันพักผ่อน' : 'Rest Day',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
+                      color:
+                          Theme.of(context).textTheme.bodySmall?.color ??
+                          Colors.grey,
                     ),
                   ),
                 ],
@@ -1433,7 +1584,9 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white,
+                          color:
+                              Theme.of(context).textTheme.bodyLarge?.color ??
+                              Colors.white,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -1451,7 +1604,11 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
                                   '${e.key + 1}',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
+                                    color:
+                                        Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall?.color ??
+                                        Colors.grey,
                                   ),
                                 ),
                               ),
@@ -1459,7 +1616,11 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
                                 '$wStr × ${s.reps} reps',
                                 style: TextStyle(
                                   fontSize: 13,
-                                  color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey,
+                                  color:
+                                      Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall?.color ??
+                                      Colors.grey,
                                 ),
                               ),
                             ],

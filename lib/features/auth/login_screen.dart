@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/theme/app_colors.dart';
 import 'auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -123,7 +124,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           children: [
             Icon(
               isError ? Icons.error_outline : Icons.check_circle_outline,
-              color: isError ? const Color(0xFFFF8A8A) : accent,
+              color: isError ? AppColors.error : accent,
               size: 20,
             ),
             const SizedBox(width: 12),
@@ -131,9 +132,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: Text(
                 message,
                 style: TextStyle(
-                  color: isError
-                      ? const Color(0xFFFFC5C5)
-                      : const Color(0xFFF2F5EF),
+                  color: isError ? AppColors.onError : AppColors.textPrimary,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
@@ -143,13 +142,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
         backgroundColor: isError
             ? const Color(0xFF2C1010)
-            : const Color(0xFF151816),
+            : AppColors.surfaceElevated,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: BorderSide(
             color: isError
-                ? const Color(0xFFFF8A8A).withValues(alpha: 0.4)
+                ? AppColors.error.withValues(alpha: 0.4)
                 : accent.withValues(alpha: 0.4),
             width: 0.5,
           ),
@@ -168,18 +167,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       context: context,
       builder: (ctx) {
         final accent = Theme.of(context).colorScheme.primary;
-        const textPrimary = Color(0xFFFFFFFF);
-        const textMuted = Color(0xFF94A3B8);
+        const textPrimary = AppColors.textPrimary;
+        const textMuted = AppColors.textMuted;
 
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              backgroundColor: const Color(
-                0xFF171B17,
-              ), // Match rgba(23,27,23,0.92)
+              backgroundColor: AppColors.surfaceElevated,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
-                side: BorderSide(color: accent.withValues(alpha: 0.1)),
+                side: BorderSide(color: AppColors.border),
               ),
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,7 +204,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   style: GoogleFonts.sarabun(color: textPrimary, fontSize: 15),
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: const Color(0xFF1E211F),
+                    fillColor: AppColors.inputBg,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 14,
@@ -219,9 +216,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.08),
-                      ),
+                      borderSide: BorderSide(color: AppColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -246,11 +241,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: OutlinedButton(
                         onPressed: isSending ? null : () => Navigator.pop(ctx),
                         style: OutlinedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1E211F),
-                          foregroundColor: const Color(0xFF8E9A8E),
-                          side: BorderSide(
-                            color: Colors.white.withValues(alpha: 0.1),
-                          ),
+                          backgroundColor: AppColors.surface,
+                          foregroundColor: AppColors.textMuted,
+                          side: BorderSide(color: AppColors.border),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -304,7 +297,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: accent,
-                          foregroundColor: const Color(0xFF0A0C0A),
+                          foregroundColor: AppColors.onPrimary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -317,7 +310,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 height: 16,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Color(0xFF0A0C0A),
+                                  color: AppColors.onPrimary,
                                 ),
                               )
                             : Text(
@@ -429,12 +422,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                           child: Container(
                             decoration: BoxDecoration(
-                              color: const Color(
-                                0xFF1B1F1B,
-                              ).withValues(alpha: 0.55),
+                              color: AppColors.surface,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.08),
+                                color: AppColors.border,
                                 width: 1.0,
                               ),
                             ),
@@ -461,11 +452,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         'เข้าสู่ระบบ',
                                         textAlign: TextAlign.center,
                                         style: GoogleFonts.sarabun(
-                                          fontWeight: FontWeight.w600,
+                                          fontWeight: FontWeight.w700,
                                           fontSize: 15,
                                           color: !_isSignUp
-                                              ? bg
-                                              : const Color(0xFF5A6A5A),
+                                              ? AppColors.onPrimary
+                                              : AppColors.textMuted,
                                         ),
                                       ),
                                     ),
@@ -491,11 +482,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         'สมัครสมาชิก',
                                         textAlign: TextAlign.center,
                                         style: GoogleFonts.sarabun(
-                                          fontWeight: FontWeight.w600,
+                                          fontWeight: FontWeight.w700,
                                           fontSize: 15,
                                           color: _isSignUp
-                                              ? bg
-                                              : const Color(0xFF5A6A5A),
+                                              ? AppColors.onPrimary
+                                              : AppColors.textMuted,
                                         ),
                                       ),
                                     ),
@@ -575,7 +566,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const SizedBox(height: 16),
                       ],
 
-                      // Email Field (Vite styles: background: rgba(27,31,27,0.6), border: 1px solid rgba(255,255,255,0.09))
+                      // Email Field
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
@@ -585,28 +576,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         decoration: InputDecoration(
                           filled: true,
-                          fillColor: const Color(
-                            0xFF1B1F1B,
-                          ).withValues(alpha: 0.6),
+                          fillColor: AppColors.inputBg,
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
                             vertical: 15,
                           ),
                           hintText: 'อีเมล',
                           hintStyle: GoogleFonts.sarabun(
-                            color: const Color(0xFF5A6A5A),
+                            color: AppColors.textMuted,
                             fontSize: 15,
                           ),
                           prefixIcon: const Icon(
                             Icons.email_outlined,
-                            color: Color(0xFF5A6A5A),
+                            color: AppColors.textMuted,
                             size: 18,
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: Colors.white.withValues(alpha: 0.09),
-                            ),
+                            borderSide: BorderSide(color: AppColors.border),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -635,21 +622,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         decoration: InputDecoration(
                           filled: true,
-                          fillColor: const Color(
-                            0xFF1B1F1B,
-                          ).withValues(alpha: 0.6),
+                          fillColor: AppColors.inputBg,
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
                             vertical: 15,
                           ),
                           hintText: 'รหัสผ่าน',
                           hintStyle: GoogleFonts.sarabun(
-                            color: const Color(0xFF5A6A5A),
+                            color: AppColors.textMuted,
                             fontSize: 15,
                           ),
                           prefixIcon: const Icon(
                             Icons.lock_outlined,
-                            color: Color(0xFF5A6A5A),
+                            color: AppColors.textMuted,
                             size: 18,
                           ),
                           suffixIcon: IconButton(
@@ -667,9 +652,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: Colors.white.withValues(alpha: 0.09),
-                            ),
+                            borderSide: BorderSide(color: AppColors.border),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -717,7 +700,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         onPressed: _isLoading ? null : _submit,
                         style: FilledButton.styleFrom(
                           backgroundColor: accent,
-                          foregroundColor: bg,
+                          foregroundColor: AppColors.onPrimary,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
@@ -730,7 +713,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 width: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(bg),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppColors.onPrimary,
+                                  ),
                                 ),
                               )
                             : Text(
@@ -749,7 +734,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         'Demo: อีเมลใดก็ได้ + รหัสผ่าน lift123',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.sarabun(
-                          color: const Color(0xFF333333),
+                          color: AppColors.textMuted,
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),

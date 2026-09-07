@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../core/providers/translation_provider.dart';
+import '../../core/theme/app_colors.dart';
 import 'active_workout_provider.dart';
 import 'active_workout_screen.dart';
 import 'add_exercise_dialog.dart';
@@ -19,7 +20,8 @@ class RoutinesScreen extends ConsumerWidget {
     final state = ref.watch(routineProvider);
     final lang = ref.watch(languageProvider);
     final theme = Theme.of(context);
-    final textPrimary = theme.textTheme.bodyLarge?.color ?? const Color(0xFFF2F5EF);
+    final textPrimary =
+        theme.textTheme.bodyLarge?.color ?? AppColors.textPrimary;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -51,10 +53,10 @@ class RoutinesScreen extends ConsumerWidget {
                           width: 38,
                           height: 38,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1E211F),
+                            color: AppColors.surfaceElevated,
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.08),
+                              color: AppColors.border,
                               width: 1,
                             ),
                           ),
@@ -62,7 +64,7 @@ class RoutinesScreen extends ConsumerWidget {
                           child: const Icon(
                             Icons.qr_code_scanner_outlined,
                             size: 18,
-                            color: Color(0xFF8E9A8E),
+                            color: AppColors.textMuted,
                           ),
                         ),
                       ),
@@ -81,7 +83,7 @@ class RoutinesScreen extends ConsumerWidget {
                           child: const Icon(
                             Icons.add,
                             size: 22,
-                            color: Color(0xFF000000),
+                            color: AppColors.onPrimary,
                           ),
                         ),
                       ),
@@ -91,17 +93,20 @@ class RoutinesScreen extends ConsumerWidget {
               ),
             ),
             // Header separator line
-            Container(
-              height: 1,
-              color: Colors.white.withValues(alpha: 0.06),
-            ),
+            Container(height: 1, color: AppColors.border),
             // Routines content
             Expanded(
               child: state.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : state.routines.isEmpty
-                      ? _buildEmptyState(context, lang)
-                      : _buildRoutinesList(context, ref, state.routines, lang, Theme.of(context).colorScheme.primary),
+                  ? _buildEmptyState(context, lang)
+                  : _buildRoutinesList(
+                      context,
+                      ref,
+                      state.routines,
+                      lang,
+                      Theme.of(context).colorScheme.primary,
+                    ),
             ),
           ],
         ),
@@ -134,7 +139,10 @@ class RoutinesScreen extends ConsumerWidget {
               lang == AppLanguage.th
                   ? 'สร้างแม่แบบตารางฝึกเพื่อใช้อ้างอิงการฝึกซ้อม หรือสแกน QR Code จากเพื่อนเพื่อนำมาใช้งานได้ทันที'
                   : 'Create custom routine templates to start workouts quickly, or scan a friend\'s QR Code to import.',
-              style: TextStyle(color: theme.textTheme.bodySmall?.color, fontSize: 13),
+              style: TextStyle(
+                color: theme.textTheme.bodySmall?.color,
+                fontSize: 13,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -150,8 +158,6 @@ class RoutinesScreen extends ConsumerWidget {
     AppLanguage lang,
     Color accent,
   ) {
-
-
     return ListView.separated(
       padding: const EdgeInsets.all(20),
       itemCount: routines.length,
@@ -162,22 +168,39 @@ class RoutinesScreen extends ConsumerWidget {
         final exercises = item.exercises;
 
         final gradients = [
-          const LinearGradient(colors: [Color(0xFF10B981), Color(0xFF059669)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-          const LinearGradient(colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-          const LinearGradient(colors: [Color(0xFFEF4444), Color(0xFFB91C1C)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-          const LinearGradient(colors: [Color(0xFF10B981), Color(0xFF047857)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-          const LinearGradient(colors: [Color(0xFFFBBF24), Color(0xFFD97706)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+          LinearGradient(
+            colors: [AppColors.primary, AppColors.primaryVariant],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          const LinearGradient(
+            colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          const LinearGradient(
+            colors: [Color(0xFFEF4444), Color(0xFFB91C1C)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          LinearGradient(
+            colors: [AppColors.primary, AppColors.primaryVariant],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          const LinearGradient(
+            colors: [Color(0xFFFBBF24), Color(0xFFD97706)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
         ];
         final gradient = gradients[index % gradients.length];
 
         return Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF1B1F1B),
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.06),
-              width: 1,
-            ),
+            border: Border.all(color: AppColors.border, width: 1),
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -206,7 +229,7 @@ class RoutinesScreen extends ConsumerWidget {
                           gradient: LinearGradient(
                             colors: [
                               Colors.black.withValues(alpha: 0.15),
-                              const Color(0xFF1B1F1B),
+                              AppColors.surface,
                             ],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
@@ -234,7 +257,7 @@ class RoutinesScreen extends ConsumerWidget {
                                 style: GoogleFonts.barlowCondensed(
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
-                                  color: const Color(0xFFF2F5EF),
+                                  color: AppColors.textPrimary,
                                 ),
                               ),
                               const SizedBox(height: 2),
@@ -244,7 +267,7 @@ class RoutinesScreen extends ConsumerWidget {
                                     : '${exercises.length} exercises',
                                 style: GoogleFonts.sarabun(
                                   fontSize: 12,
-                                  color: const Color(0xFF7C8A7C),
+                                  color: AppColors.textMuted,
                                 ),
                               ),
                             ],
@@ -279,37 +302,46 @@ class RoutinesScreen extends ConsumerWidget {
                             const SizedBox(width: 8),
                             // QR share button
                             GestureDetector(
-                              onTap: () => _shareRoutineAsQr(context, item, lang),
+                              onTap: () =>
+                                  _shareRoutineAsQr(context, item, lang),
                               child: Container(
                                 width: 34,
                                 height: 34,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF1E211F),
+                                  color: AppColors.surfaceElevated,
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.08),
-                                  ),
+                                  border: Border.all(color: AppColors.border),
                                 ),
                                 alignment: Alignment.center,
                                 child: const Icon(
                                   Icons.qr_code_2_outlined,
                                   size: 17,
-                                  color: Color(0xFF8E9A8E),
+                                  color: AppColors.textMuted,
                                 ),
                               ),
                             ),
                             const SizedBox(width: 8),
                             // Delete button
                             GestureDetector(
-                              onTap: () => _confirmDeleteRoutine(context, ref, routine.id!, routine.name, lang),
+                              onTap: () => _confirmDeleteRoutine(
+                                context,
+                                ref,
+                                routine.id!,
+                                routine.name,
+                                lang,
+                              ),
                               child: Container(
                                 width: 34,
                                 height: 34,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFEF4444).withValues(alpha: 0.08),
+                                  color: const Color(
+                                    0xFFEF4444,
+                                  ).withValues(alpha: 0.08),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: const Color(0xFFEF4444).withValues(alpha: 0.2),
+                                    color: const Color(
+                                      0xFFEF4444,
+                                    ).withValues(alpha: 0.2),
                                   ),
                                 ),
                                 alignment: Alignment.center,
@@ -330,20 +362,27 @@ class RoutinesScreen extends ConsumerWidget {
                       spacing: 6,
                       runSpacing: 6,
                       children: [
-                        ...exercises.take(4).map((ex) => Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.04),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                ex.exercise.name,
-                                style: GoogleFonts.sarabun(
-                                  fontSize: 11,
-                                  color: const Color(0xFF7C8A7C),
+                        ...exercises
+                            .take(4)
+                            .map(
+                              (ex) => Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.04),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  ex.exercise.name,
+                                  style: GoogleFonts.sarabun(
+                                    fontSize: 11,
+                                    color: AppColors.textMuted,
+                                  ),
                                 ),
                               ),
-                            )),
+                            ),
                         if (exercises.length > 4)
                           Padding(
                             padding: const EdgeInsets.only(top: 4.0),
@@ -351,7 +390,7 @@ class RoutinesScreen extends ConsumerWidget {
                               '+${exercises.length - 4} ${lang == AppLanguage.th ? 'อื่นๆ' : 'more'}',
                               style: GoogleFonts.sarabun(
                                 fontSize: 11,
-                                color: const Color(0xFF5A6A5A),
+                                color: AppColors.textMuted,
                               ),
                             ),
                           ),
@@ -365,37 +404,48 @@ class RoutinesScreen extends ConsumerWidget {
                       child: FilledButton.icon(
                         icon: const Icon(Icons.play_arrow, size: 16),
                         label: Text(
-                          lang == AppLanguage.th ? 'เริ่มการฝึก' : 'Start Workout',
+                          lang == AppLanguage.th
+                              ? 'เริ่มการฝึก'
+                              : 'Start Workout',
                           style: GoogleFonts.barlowCondensed(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         style: FilledButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
                           foregroundColor: const Color(0xFF000000),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                         onPressed: () async {
-                          final exNames = exercises.map((e) => e.exercise.name).toList();
-                          await ref.read(activeWorkoutProvider.notifier).startSessionFromTemplate(
-                                routine.name,
-                                exNames,
-                              );
+                          final exNames = exercises
+                              .map((e) => e.exercise.name)
+                              .toList();
+                          await ref
+                              .read(activeWorkoutProvider.notifier)
+                              .startSessionFromTemplate(routine.name, exNames);
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text(lang == AppLanguage.th
-                                    ? 'เริ่มเซสชันการฝึก ${routine.name} แล้ว!'
-                                    : 'Started session ${routine.name}!'),
-                                backgroundColor: Theme.of(context).colorScheme.primary,
+                                content: Text(
+                                  lang == AppLanguage.th
+                                      ? 'เริ่มเซสชันการฝึก ${routine.name} แล้ว!'
+                                      : 'Started session ${routine.name}!',
+                                ),
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.primary,
                               ),
                             );
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => const ActiveWorkoutScreen()),
+                              MaterialPageRoute(
+                                builder: (_) => const ActiveWorkoutScreen(),
+                              ),
                             );
                           }
                         },
@@ -422,9 +472,11 @@ class RoutinesScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(lang == AppLanguage.th ? 'ลบตารางฝึก?' : 'Delete Routine?'),
-        content: Text(lang == AppLanguage.th
-            ? 'คุณแน่ใจว่าต้องการลบตารางฝึก "$name" หรือไม่?'
-            : 'Are you sure you want to delete the routine "$name"?'),
+        content: Text(
+          lang == AppLanguage.th
+              ? 'คุณแน่ใจว่าต้องการลบตารางฝึก "$name" หรือไม่?'
+              : 'Are you sure you want to delete the routine "$name"?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -447,20 +499,35 @@ class RoutinesScreen extends ConsumerWidget {
     }
   }
 
-  void _shareRoutineAsQr(BuildContext context, RoutineWithDetails details, AppLanguage lang) {
+  void _shareRoutineAsQr(
+    BuildContext context,
+    RoutineWithDetails details,
+    AppLanguage lang,
+  ) {
     final Map<String, dynamic> data = {
       'name': details.routine.name,
-      'exercises': details.exercises.map((ex) => {
-        'name': ex.exercise.name,
-        'sets': ex.sets.map((s) => {
-          'weight_kg': s.weightKg,
-          'reps': s.reps,
-          'is_warmup': s.isWarmup,
-        }).toList(),
-      }).toList(),
+      'exercises': details.exercises
+          .map(
+            (ex) => {
+              'name': ex.exercise.name,
+              'sets': ex.sets
+                  .map(
+                    (s) => {
+                      'weight_kg': s.weightKg,
+                      'reps': s.reps,
+                      'is_warmup': s.isWarmup,
+                    },
+                  )
+                  .toList(),
+            },
+          )
+          .toList(),
     };
     final jsonStr = jsonEncode(data);
-    final totalSets = details.exercises.fold<int>(0, (sum, ex) => sum + ex.sets.length);
+    final totalSets = details.exercises.fold<int>(
+      0,
+      (sum, ex) => sum + ex.sets.length,
+    );
 
     showDialog(
       context: context,
@@ -471,10 +538,12 @@ class RoutinesScreen extends ConsumerWidget {
           insetPadding: const EdgeInsets.symmetric(horizontal: 20),
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF141814),
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.2),
                 width: 1,
               ),
               boxShadow: [
@@ -496,7 +565,9 @@ class RoutinesScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
@@ -511,18 +582,20 @@ class RoutinesScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            lang == AppLanguage.th ? 'แชร์ตารางฝึก' : 'Share Routine',
+                            lang == AppLanguage.th
+                                ? 'แชร์ตารางฝึก'
+                                : 'Share Routine',
                             style: GoogleFonts.barlowCondensed(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
-                              color: const Color(0xFFF2F5EF),
+                              color: AppColors.textPrimary,
                             ),
                           ),
                           Text(
                             '${details.routine.name} · ${details.exercises.length} ${lang == AppLanguage.th ? 'ท่า' : 'exercises'} ($totalSets ${lang == AppLanguage.th ? 'เซ็ต' : 'sets'})',
                             style: GoogleFonts.sarabun(
                               fontSize: 13,
-                              color: const Color(0xFF8B9B8B),
+                              color: AppColors.textMuted,
                             ),
                           ),
                         ],
@@ -530,7 +603,11 @@ class RoutinesScreen extends ConsumerWidget {
                     ),
                     IconButton(
                       onPressed: () => Navigator.pop(ctx),
-                      icon: const Icon(Icons.close_rounded, color: Color(0xFF8B9B8B), size: 20),
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        color: AppColors.textMuted,
+                        size: 20,
+                      ),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     ),
@@ -546,7 +623,9 @@ class RoutinesScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.15),
                           blurRadius: 20,
                           spreadRadius: 2,
                         ),
@@ -558,11 +637,11 @@ class RoutinesScreen extends ConsumerWidget {
                       size: 200.0,
                       eyeStyle: const QrEyeStyle(
                         eyeShape: QrEyeShape.square,
-                        color: Color(0xFF101410),
+                        color: AppColors.bg,
                       ),
                       dataModuleStyle: const QrDataModuleStyle(
                         dataModuleShape: QrDataModuleShape.square,
-                        color: Color(0xFF101410),
+                        color: AppColors.bg,
                       ),
                     ),
                   ),
@@ -572,12 +651,9 @@ class RoutinesScreen extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0C0F0C),
+                    color: AppColors.bg,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: const Color(0xFF222B22),
-                      width: 1,
-                    ),
+                    border: Border.all(color: AppColors.border, width: 1),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -591,11 +667,13 @@ class RoutinesScreen extends ConsumerWidget {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            lang == AppLanguage.th ? 'รายการท่าในตาราง' : 'Included Exercises',
+                            lang == AppLanguage.th
+                                ? 'รายการท่าในตาราง'
+                                : 'Included Exercises',
                             style: GoogleFonts.sarabun(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF8B9B8B),
+                              color: AppColors.textMuted,
                             ),
                           ),
                         ],
@@ -606,12 +684,15 @@ class RoutinesScreen extends ConsumerWidget {
                         runSpacing: 6,
                         children: details.exercises.map((ex) {
                           return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1A211A),
+                              color: AppColors.surfaceElevated,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: const Color(0xFF2A362A),
+                                color: AppColors.border,
                                 width: 1,
                               ),
                             ),
@@ -619,7 +700,7 @@ class RoutinesScreen extends ConsumerWidget {
                               '${ex.exercise.name} (${ex.sets.length}${lang == AppLanguage.th ? 'เซ็ต' : 's'})',
                               style: GoogleFonts.sarabun(
                                 fontSize: 12,
-                                color: const Color(0xFFE0E8DC),
+                                color: AppColors.textPrimary,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -638,7 +719,7 @@ class RoutinesScreen extends ConsumerWidget {
                     onPressed: () => Navigator.pop(ctx),
                     style: FilledButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: const Color(0xFF000000),
+                      foregroundColor: AppColors.onPrimary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -669,7 +750,9 @@ class RoutinesScreen extends ConsumerWidget {
       MaterialPageRoute(
         builder: (_) => Scaffold(
           appBar: AppBar(
-            title: Text(lang == AppLanguage.th ? 'สแกนคิวอาร์โค้ด' : 'Scan QR Code'),
+            title: Text(
+              lang == AppLanguage.th ? 'สแกนคิวอาร์โค้ด' : 'Scan QR Code',
+            ),
           ),
           body: MobileScanner(
             onDetect: (capture) async {
@@ -693,7 +776,8 @@ class RoutinesScreen extends ConsumerWidget {
                     for (final s in setsJson) {
                       final sMap = s as Map<String, dynamic>;
                       sets.add({
-                        'weight_kg': (sMap['weight_kg'] as num?)?.toDouble() ?? 0.0,
+                        'weight_kg':
+                            (sMap['weight_kg'] as num?)?.toDouble() ?? 0.0,
                         'reps': sMap['reps'] as int? ?? 10,
                         'is_warmup': sMap['is_warmup'] as bool? ?? false,
                       });
@@ -705,13 +789,17 @@ class RoutinesScreen extends ConsumerWidget {
                     });
                   }
 
-                  await ref.read(routineProvider.notifier).addRoutine(name, exercises);
+                  await ref
+                      .read(routineProvider.notifier)
+                      .addRoutine(name, exercises);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(lang == AppLanguage.th
-                            ? 'นำเข้าตารางฝึก "$name" สำเร็จ!'
-                            : 'Imported routine "$name" successfully!'),
+                        content: Text(
+                          lang == AppLanguage.th
+                              ? 'นำเข้าตารางฝึก "$name" สำเร็จ!'
+                              : 'Imported routine "$name" successfully!',
+                        ),
                         backgroundColor: Theme.of(context).colorScheme.primary,
                       ),
                     );
@@ -721,9 +809,11 @@ class RoutinesScreen extends ConsumerWidget {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(lang == AppLanguage.th
-                            ? 'สแกนล้มเหลว: รูปแบบ QR Code ไม่ถูกต้อง'
-                            : 'Scan failed: Invalid QR Code format'),
+                        content: Text(
+                          lang == AppLanguage.th
+                              ? 'สแกนล้มเหลว: รูปแบบ QR Code ไม่ถูกต้อง'
+                              : 'Scan failed: Invalid QR Code format',
+                        ),
                         backgroundColor: Colors.redAccent,
                       ),
                     );
@@ -738,7 +828,10 @@ class RoutinesScreen extends ConsumerWidget {
     );
   }
 
-  void _editRoutine(BuildContext context, RoutineWithDetails routineWithDetails) {
+  void _editRoutine(
+    BuildContext context,
+    RoutineWithDetails routineWithDetails,
+  ) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -764,12 +857,11 @@ class RoutinesScreen extends ConsumerWidget {
               curve: Curves.decelerate,
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFF101410).withValues(alpha: 0.94),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.09),
-                    width: 1,
+                  color: AppColors.surface,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
                   ),
+                  border: Border.all(color: AppColors.border, width: 1),
                 ),
                 padding: const EdgeInsets.fromLTRB(20, 10, 20, 32),
                 child: Column(
@@ -782,18 +874,20 @@ class RoutinesScreen extends ConsumerWidget {
                         width: 36,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF333333),
+                          color: AppColors.border,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      lang == AppLanguage.th ? 'สร้างตารางใหม่' : 'Create New Routine',
+                      lang == AppLanguage.th
+                          ? 'สร้างตารางใหม่'
+                          : 'Create New Routine',
                       style: GoogleFonts.barlowCondensed(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFFF2F5EF),
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -802,18 +896,23 @@ class RoutinesScreen extends ConsumerWidget {
                       autofocus: true,
                       style: GoogleFonts.sarabun(
                         fontSize: 15,
-                        color: const Color(0xFFF2F5EF),
+                        color: AppColors.textPrimary,
                       ),
                       decoration: InputDecoration(
-                        hintText: lang == AppLanguage.th ? 'ชื่อตารางฝึก เช่น Push Day' : 'Routine Name e.g. Push Day',
-                        hintStyle: const TextStyle(color: Color(0xFF555555)),
+                        hintText: lang == AppLanguage.th
+                            ? 'ชื่อตารางฝึก เช่น Push Day'
+                            : 'Routine Name e.g. Push Day',
+                        hintStyle: const TextStyle(color: AppColors.textMuted),
                         filled: true,
-                        fillColor: const Color(0xFF1E211F),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        fillColor: AppColors.inputBg,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Colors.white.withValues(alpha: 0.08),
+                          borderSide: const BorderSide(
+                            color: AppColors.border,
                             width: 1,
                           ),
                         ),
@@ -836,10 +935,8 @@ class RoutinesScreen extends ConsumerWidget {
                             child: OutlinedButton(
                               onPressed: () => Navigator.pop(ctx),
                               style: OutlinedButton.styleFrom(
-                                backgroundColor: const Color(0xFF1E211F),
-                                side: BorderSide(
-                                  color: Colors.white.withValues(alpha: 0.1),
-                                ),
+                                backgroundColor: AppColors.surfaceElevated,
+                                side: const BorderSide(color: AppColors.border),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
@@ -848,7 +945,7 @@ class RoutinesScreen extends ConsumerWidget {
                                 lang == AppLanguage.th ? 'ยกเลิก' : 'Cancel',
                                 style: GoogleFonts.sarabun(
                                   fontSize: 14,
-                                  color: const Color(0xFF8E9A8E),
+                                  color: AppColors.textMuted,
                                 ),
                               ),
                             ),
@@ -868,19 +965,24 @@ class RoutinesScreen extends ConsumerWidget {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => _CreateRoutineScreen(initialName: name),
+                                    builder: (_) =>
+                                        _CreateRoutineScreen(initialName: name),
                                   ),
                                 );
                               },
                               style: FilledButton.styleFrom(
-                                backgroundColor: Theme.of(context).colorScheme.primary,
-                                foregroundColor: const Color(0xFF000000),
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.primary,
+                                foregroundColor: AppColors.onPrimary,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
                               child: Text(
-                                lang == AppLanguage.th ? 'สร้างตาราง' : 'Create Routine',
+                                lang == AppLanguage.th
+                                    ? 'สร้างตาราง'
+                                    : 'Create Routine',
                                 style: GoogleFonts.barlowCondensed(
                                   fontSize: 17,
                                   fontWeight: FontWeight.bold,
@@ -909,7 +1011,8 @@ class _CreateRoutineScreen extends ConsumerStatefulWidget {
   const _CreateRoutineScreen({this.initialName, this.routineToEdit});
 
   @override
-  ConsumerState<_CreateRoutineScreen> createState() => _CreateRoutineScreenState();
+  ConsumerState<_CreateRoutineScreen> createState() =>
+      _CreateRoutineScreenState();
 }
 
 class _CreateRoutineScreenState extends ConsumerState<_CreateRoutineScreen> {
@@ -943,10 +1046,7 @@ class _CreateRoutineScreenState extends ConsumerState<_CreateRoutineScreen> {
     final name = await showAddExerciseSheet(context);
     if (name != null && name.trim().isNotEmpty) {
       setState(() {
-        _exercises.add({
-          'name': name.trim(),
-          'sets': <Map<String, dynamic>>[],
-        });
+        _exercises.add({'name': name.trim(), 'sets': <Map<String, dynamic>>[]});
       });
     }
   }
@@ -963,7 +1063,11 @@ class _CreateRoutineScreenState extends ConsumerState<_CreateRoutineScreen> {
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(lang == AppLanguage.th ? 'กรุณากรอกชื่อตารางฝึก' : 'Please enter routine name'),
+          content: Text(
+            lang == AppLanguage.th
+                ? 'กรุณากรอกชื่อตารางฝึก'
+                : 'Please enter routine name',
+          ),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -972,7 +1076,11 @@ class _CreateRoutineScreenState extends ConsumerState<_CreateRoutineScreen> {
     if (_exercises.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(lang == AppLanguage.th ? 'กรุณาเพิ่มท่าออกกำลังกายอย่างน้อย 1 ท่า' : 'Please add at least 1 exercise'),
+          content: Text(
+            lang == AppLanguage.th
+                ? 'กรุณาเพิ่มท่าออกกำลังกายอย่างน้อย 1 ท่า'
+                : 'Please add at least 1 exercise',
+          ),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -980,11 +1088,9 @@ class _CreateRoutineScreenState extends ConsumerState<_CreateRoutineScreen> {
     }
 
     if (widget.routineToEdit != null) {
-      await ref.read(routineProvider.notifier).updateRoutine(
-        widget.routineToEdit!.routine.id!,
-        name,
-        _exercises,
-      );
+      await ref
+          .read(routineProvider.notifier)
+          .updateRoutine(widget.routineToEdit!.routine.id!, name, _exercises);
     } else {
       await ref.read(routineProvider.notifier).addRoutine(name, _exercises);
     }
@@ -1005,15 +1111,23 @@ class _CreateRoutineScreenState extends ConsumerState<_CreateRoutineScreen> {
         title: Text(
           widget.routineToEdit != null
               ? (lang == AppLanguage.th ? 'แก้ไขตารางฝึก' : 'Edit Routine')
-              : (lang == AppLanguage.th ? 'สร้างตารางฝึกใหม่' : 'Create Routine'),
-          style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.bold),
+              : (lang == AppLanguage.th
+                    ? 'สร้างตารางฝึกใหม่'
+                    : 'Create Routine'),
+          style: GoogleFonts.spaceGrotesk(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: _save,
             child: Text(
               lang == AppLanguage.th ? 'บันทึก' : 'Save',
-              style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.primary,
+              ),
             ),
           ),
         ],
@@ -1027,9 +1141,14 @@ class _CreateRoutineScreenState extends ConsumerState<_CreateRoutineScreen> {
               controller: _nameCtrl,
               autofocus: true,
               textCapitalization: TextCapitalization.words,
-              style: GoogleFonts.spaceGrotesk(fontSize: 18, fontWeight: FontWeight.bold),
+              style: GoogleFonts.spaceGrotesk(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
               decoration: InputDecoration(
-                labelText: lang == AppLanguage.th ? 'ชื่อตารางฝึก (เช่น Push Day)' : 'Routine Name (e.g. Push Day)',
+                labelText: lang == AppLanguage.th
+                    ? 'ชื่อตารางฝึก (เช่น Push Day)'
+                    : 'Routine Name (e.g. Push Day)',
                 prefixIcon: const Icon(Icons.edit_note_outlined),
               ),
             ),
@@ -1038,13 +1157,21 @@ class _CreateRoutineScreenState extends ConsumerState<_CreateRoutineScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  lang == AppLanguage.th ? 'ท่าออกกำลังกายในตาราง' : 'Exercises',
-                  style: GoogleFonts.spaceGrotesk(fontSize: 14, fontWeight: FontWeight.bold, color: textMuted),
+                  lang == AppLanguage.th
+                      ? 'ท่าออกกำลังกายในตาราง'
+                      : 'Exercises',
+                  style: GoogleFonts.spaceGrotesk(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: textMuted,
+                  ),
                 ),
                 TextButton.icon(
                   onPressed: _addExercise,
                   icon: const Icon(Icons.add, size: 16),
-                  label: Text(lang == AppLanguage.th ? 'เพิ่มท่า' : 'Add Exercise'),
+                  label: Text(
+                    lang == AppLanguage.th ? 'เพิ่มท่า' : 'Add Exercise',
+                  ),
                 ),
               ],
             ),
@@ -1053,9 +1180,14 @@ class _CreateRoutineScreenState extends ConsumerState<_CreateRoutineScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 40),
                 child: Text(
-                  lang == AppLanguage.th ? 'ยังไม่ได้เพิ่มท่าบริหารใดๆ' : 'No exercises added yet',
+                  lang == AppLanguage.th
+                      ? 'ยังไม่ได้เพิ่มท่าบริหารใดๆ'
+                      : 'No exercises added yet',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: textMuted, fontStyle: FontStyle.italic),
+                  style: TextStyle(
+                    color: textMuted,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
               )
             else
@@ -1067,18 +1199,23 @@ class _CreateRoutineScreenState extends ConsumerState<_CreateRoutineScreen> {
                   margin: const EdgeInsets.only(bottom: 10),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+                    side: const BorderSide(color: AppColors.border),
                   ),
-                  color: const Color(0xFF1E211F),
+                  color: AppColors.surfaceElevated,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     child: Row(
                       children: [
                         Container(
                           width: 26,
                           height: 26,
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.15),
                             shape: BoxShape.circle,
                           ),
                           alignment: Alignment.center,
@@ -1103,7 +1240,11 @@ class _CreateRoutineScreenState extends ConsumerState<_CreateRoutineScreen> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded, size: 20, color: Color(0xFFF87171)),
+                          icon: const Icon(
+                            Icons.delete_outline_rounded,
+                            size: 20,
+                            color: Color(0xFFF87171),
+                          ),
                           onPressed: () => _removeExercise(exIdx),
                         ),
                       ],

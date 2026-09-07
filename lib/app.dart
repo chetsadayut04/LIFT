@@ -5,6 +5,7 @@ import 'core/providers/theme_provider.dart';
 import 'core/providers/translation_provider.dart';
 import 'core/providers/cache_provider.dart';
 import 'core/providers/tab_provider.dart';
+import 'core/theme/app_colors.dart';
 import 'features/auth/auth_provider.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/reset_password_screen.dart';
@@ -59,7 +60,7 @@ class _AppState extends ConsumerState<App> {
           border: Border(
             top: BorderSide(
               color: themeMode == ThemeMode.dark
-                  ? const Color(0xFF262A24)
+                  ? AppColors.border
                   : const Color(0xFFE2E8DF),
               width: 0.5,
             ),
@@ -180,14 +181,14 @@ class _AppState extends ConsumerState<App> {
   }
 
   ThemeData _theme(ThemeMode mode) {
-    const bg = Color(0xFF0A0E0B);
-    const surfaceSolid = Color(0xFF121A15);
-    const border = Color(0xFF223326);
-    const accent = Color(0xFF10B981);
-    const onAccent = Color(0xFF000000);
-    const textPrimary = Color(0xFFFFFFFF);
-    const textMuted = Color(0xFF94A3B8);
-    const textSecondary = Color(0xFFE2E8F0);
+    const bg = AppColors.bg;
+    const surfaceSolid = AppColors.surface;
+    const border = AppColors.border;
+    const accent = AppColors.primary;
+    const onAccent = AppColors.onPrimary;
+    const textPrimary = AppColors.textPrimary;
+    const textMuted = AppColors.textMuted;
+    const textSecondary = AppColors.textSecondary;
 
     const brightness = Brightness.dark;
 
@@ -264,7 +265,7 @@ class _AppState extends ConsumerState<App> {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFF16221B),
+        fillColor: AppColors.inputBg,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 14,
           vertical: 12,
@@ -289,7 +290,7 @@ class _AppState extends ConsumerState<App> {
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: bg,
         surfaceTintColor: Colors.transparent,
-        indicatorColor: accent.withValues(alpha: 0.1),
+        indicatorColor: accent.withValues(alpha: 0.15),
         height: 64,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
         iconTheme: WidgetStateProperty.resolveWith((states) {
@@ -325,7 +326,7 @@ class _AppState extends ConsumerState<App> {
         style: TextButton.styleFrom(foregroundColor: accent),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: surfaceSolid,
+        backgroundColor: AppColors.surfaceElevated,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
@@ -338,10 +339,10 @@ class _AppState extends ConsumerState<App> {
         ),
         contentTextStyle: TextStyle(color: textMuted),
       ),
-      bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: surfaceSolid,
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.surfaceElevated,
         surfaceTintColor: Colors.transparent,
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),

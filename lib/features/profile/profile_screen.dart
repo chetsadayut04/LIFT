@@ -11,6 +11,7 @@ import '../../core/database/weight_log_dao.dart';
 import '../../core/providers/translation_provider.dart';
 import '../../core/providers/unit_provider.dart';
 import '../../core/utils/web_image_utils.dart';
+import '../../core/theme/app_colors.dart';
 import '../auth/auth_provider.dart';
 import '../stats/stats_provider.dart';
 
@@ -97,7 +98,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       builder: (context) {
         final border = Theme.of(context).colorScheme.outline;
         final bg = Theme.of(context).scaffoldBackgroundColor;
-        final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
+        final textPrimary =
+            Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
 
         return Padding(
           padding: EdgeInsets.only(
@@ -137,10 +139,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 const SizedBox(height: 16),
                 TextField(
                   controller: controller,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   autofocus: true,
                   decoration: InputDecoration(
-                    labelText: lang == AppLanguage.th ? 'ส่วนสูง (cm)' : 'Height (cm)',
+                    labelText: lang == AppLanguage.th
+                        ? 'ส่วนสูง (cm)'
+                        : 'Height (cm)',
                     prefixIcon: const Icon(Icons.height),
                   ),
                 ),
@@ -188,7 +194,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       builder: (context) {
         final border = Theme.of(context).colorScheme.outline;
         final bg = Theme.of(context).scaffoldBackgroundColor;
-        final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
+        final textPrimary =
+            Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
         final unit = isLbs ? 'lbs' : 'kg';
 
         return Padding(
@@ -213,7 +220,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      lang == AppLanguage.th ? 'บันทึกน้ำหนักตัว' : 'Log Weight',
+                      lang == AppLanguage.th
+                          ? 'บันทึกน้ำหนักตัว'
+                          : 'Log Weight',
                       style: GoogleFonts.spaceGrotesk(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -229,10 +238,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 const SizedBox(height: 16),
                 TextField(
                   controller: controller,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   autofocus: true,
                   decoration: InputDecoration(
-                    labelText: lang == AppLanguage.th ? 'น้ำหนักตัว ($unit)' : 'Weight ($unit)',
+                    labelText: lang == AppLanguage.th
+                        ? 'น้ำหนักตัว ($unit)'
+                        : 'Weight ($unit)',
                     prefixIcon: const Icon(Icons.scale),
                   ),
                 ),
@@ -285,7 +298,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ? 'ขอบคุณสำหรับความคิดเห็น! เราได้รับข้อมูลเรียบร้อยแล้ว'
                 : 'Thank you for your feedback! We have received it.',
           ),
-          backgroundColor: const Color(0xFF1B1F1B),
+          backgroundColor: AppColors.surfaceElevated,
         ),
       );
     } catch (e) {
@@ -297,8 +310,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       );
     }
   }
-
-
 
   void _showDeleteAccountDialog() {
     final lang = ref.read(languageProvider);
@@ -315,7 +326,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             onPressed: () => Navigator.pop(context),
             child: Text(
               lang.tr('btn_cancel'),
-              style: const TextStyle(color: Color(0xFF7C8A7C)),
+              style: const TextStyle(color: AppColors.textMuted),
             ),
           ),
           FilledButton(
@@ -402,7 +413,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
+          color: isSelected
+              ? Theme.of(context).colorScheme.primary
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(9),
         ),
         alignment: Alignment.center,
@@ -411,7 +424,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           style: GoogleFonts.sarabun(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: isSelected ? const Color(0xFF000000) : const Color(0xFF94A3B8),
+            color: isSelected ? AppColors.onPrimary : AppColors.textMuted,
           ),
         ),
       ),
@@ -429,12 +442,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           insetPadding: const EdgeInsets.symmetric(horizontal: 28),
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF1B1F1B),
+              color: AppColors.surfaceElevated,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.08),
-                width: 1,
-              ),
+              border: Border.all(color: AppColors.border, width: 1),
             ),
             padding: const EdgeInsets.all(28),
             child: Column(
@@ -447,7 +457,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   style: GoogleFonts.barlowCondensed(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFFF2F5EF),
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -457,7 +467,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       : 'Are you sure you want to log out?',
                   style: GoogleFonts.sarabun(
                     fontSize: 14,
-                    color: const Color(0xFF7C8A7C),
+                    color: AppColors.textMuted,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -471,10 +481,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         child: OutlinedButton(
                           onPressed: () => Navigator.pop(ctx),
                           style: OutlinedButton.styleFrom(
-                            backgroundColor: const Color(0xFF1E211F),
-                            side: BorderSide(
-                              color: Colors.white.withValues(alpha: 0.1),
-                            ),
+                            backgroundColor: AppColors.surface,
+                            side: BorderSide(color: AppColors.border),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -483,7 +491,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             lang == AppLanguage.th ? 'ยกเลิก' : 'Cancel',
                             style: GoogleFonts.sarabun(
                               fontSize: 14,
-                              color: const Color(0xFF8E9A8E),
+                              color: AppColors.textMuted,
                             ),
                           ),
                         ),
@@ -500,9 +508,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             await ref.read(authProvider.notifier).signOut();
                           },
                           style: OutlinedButton.styleFrom(
-                            backgroundColor: const Color(0xFFEF4444).withValues(alpha: 0.15),
+                            backgroundColor: const Color(
+                              0xFFEF4444,
+                            ).withValues(alpha: 0.15),
                             side: BorderSide(
-                              color: const Color(0xFFEF4444).withValues(alpha: 0.3),
+                              color: const Color(
+                                0xFFEF4444,
+                              ).withValues(alpha: 0.3),
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
@@ -537,11 +549,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     final bg = Theme.of(context).scaffoldBackgroundColor;
     final accent = Theme.of(context).colorScheme.primary;
-    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? const Color(0xFFF2F5EF);
-    final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? const Color(0xFF7C8A7C);
+    final textPrimary =
+        Theme.of(context).textTheme.bodyLarge?.color ?? AppColors.textPrimary;
+    final textMuted =
+        Theme.of(context).textTheme.bodySmall?.color ?? AppColors.textMuted;
 
     final avatarUrl = user?.userMetadata?['avatar_url'] as String?;
-    final displayName = user?.userMetadata?['full_name'] as String? ??
+    final displayName =
+        user?.userMetadata?['full_name'] as String? ??
         user?.userMetadata?['name'] as String? ??
         user?.email?.split('@').first ??
         (lang == AppLanguage.th ? 'ผู้ใช้งาน LIFT' : 'LIFT User');
@@ -551,9 +566,39 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (userCreatedAt != null) {
       try {
         final dt = DateTime.parse(userCreatedAt);
-        final monthsEn = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        final monthsTh = ['', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-        final m = lang == AppLanguage.th ? monthsTh[dt.month] : monthsEn[dt.month];
+        final monthsEn = [
+          '',
+          'Jan',
+          'Feb',
+          'Mar',
+          'Apr',
+          'May',
+          'Jun',
+          'Jul',
+          'Aug',
+          'Sep',
+          'Oct',
+          'Nov',
+          'Dec',
+        ];
+        final monthsTh = [
+          '',
+          'ม.ค.',
+          'ก.พ.',
+          'มี.ค.',
+          'เม.ย.',
+          'พ.ค.',
+          'มิ.ย.',
+          'ก.ค.',
+          'ส.ค.',
+          'ก.ย.',
+          'ต.ค.',
+          'พ.ย.',
+          'ธ.ค.',
+        ];
+        final m = lang == AppLanguage.th
+            ? monthsTh[dt.month]
+            : monthsEn[dt.month];
         final year = lang == AppLanguage.th ? dt.year + 543 : dt.year;
         memberSinceLabel = '$m $year';
       } catch (_) {}
@@ -566,23 +611,30 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     // Sessions this week
     int sessionsThisWeek = 0;
     final now = DateTime.now();
-    final thisMonday = DateTime(now.year, now.month, now.day).subtract(Duration(days: now.weekday - 1));
+    final thisMonday = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(Duration(days: now.weekday - 1));
     final thisSunday = thisMonday.add(const Duration(days: 6));
     for (final dStr in stats.workoutDates) {
       final date = DateTime.tryParse(dStr);
-      if (date != null && !date.isBefore(thisMonday) && !date.isAfter(thisSunday)) {
+      if (date != null &&
+          !date.isBefore(thisMonday) &&
+          !date.isAfter(thisSunday)) {
         sessionsThisWeek++;
       }
     }
 
     // Streak
     int streak = 0;
-    final sortedDates = stats.workoutDates
-        .map((d) => DateTime.tryParse(d))
-        .where((d) => d != null)
-        .map((d) => DateTime(d!.year, d.month, d.day))
-        .toList()
-      ..sort((a, b) => b.compareTo(a));
+    final sortedDates =
+        stats.workoutDates
+            .map((d) => DateTime.tryParse(d))
+            .where((d) => d != null)
+            .map((d) => DateTime(d!.year, d.month, d.day))
+            .toList()
+          ..sort((a, b) => b.compareTo(a));
 
     if (sortedDates.isNotEmpty) {
       final today = DateTime(now.year, now.month, now.day);
@@ -608,11 +660,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // ── Header / Profile ────────────────────────────────────
+              // ── Top Header matching Figma ──────────────────────────
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 24.0,
+                  horizontal: 16.0,
+                ),
                 child: Column(
                   children: [
                     // Avatar with Gradient border matching Figma
@@ -622,12 +676,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF10B981), Color(0xFF059669)],
+                          colors: [AppColors.primary, AppColors.primaryVariant],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         border: Border.all(
-                          color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                          color: AppColors.primary.withValues(alpha: 0.3),
                           width: 3,
                         ),
                       ),
@@ -640,22 +694,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 width: 80,
                                 height: 80,
                                 fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) => Text(
-                                  displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U',
-                                  style: GoogleFonts.barlowCondensed(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color(0xFF0A0C0A),
-                                  ),
-                                ),
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Text(
+                                      displayName.isNotEmpty
+                                          ? displayName[0].toUpperCase()
+                                          : 'U',
+                                      style: GoogleFonts.barlowCondensed(
+                                        fontSize: 32,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.onPrimary,
+                                      ),
+                                    ),
                               ),
                             )
                           : Text(
-                              displayName.isNotEmpty ? displayName[0].toUpperCase() : 'U',
+                              displayName.isNotEmpty
+                                  ? displayName[0].toUpperCase()
+                                  : 'U',
                               style: GoogleFonts.barlowCondensed(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
-                                color: const Color(0xFF0A0C0A),
+                                color: AppColors.onPrimary,
                               ),
                             ),
                     ),
@@ -679,14 +738,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     const SizedBox(height: 8),
                     // Google connect status badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1E211F),
+                        color: AppColors.surface,
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.06),
-                          width: 1,
-                        ),
+                        border: Border.all(color: AppColors.border, width: 1),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -703,10 +762,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            lang == AppLanguage.th ? 'เชื่อมต่อผ่าน Google' : 'Connected with Google',
+                            lang == AppLanguage.th
+                                ? 'เชื่อมต่อผ่าน Google'
+                                : 'Connected with Google',
                             style: GoogleFonts.sarabun(
                               fontSize: 11,
-                              color: const Color(0xFF777777),
+                              color: AppColors.textMuted,
                             ),
                           ),
                         ],
@@ -718,19 +779,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1B1F1B),
+                        color: AppColors.surface,
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.06),
-                          width: 1,
-                        ),
+                        border: Border.all(color: AppColors.border, width: 1),
                       ),
                       child: Row(
                         children: [
                           _buildStatItem('เซสชัน', '$totalSessions', lang),
-                          Container(width: 1, height: 40, color: Colors.white.withValues(alpha: 0.04)),
-                          _buildStatItem('สัปดาห์นี้', '$sessionsThisWeek', lang),
-                          Container(width: 1, height: 40, color: Colors.white.withValues(alpha: 0.04)),
+                          Container(
+                            width: 1,
+                            height: 40,
+                            color: AppColors.border,
+                          ),
+                          _buildStatItem(
+                            'สัปดาห์นี้',
+                            '$sessionsThisWeek',
+                            lang,
+                          ),
+                          Container(
+                            width: 1,
+                            height: 40,
+                            color: AppColors.border,
+                          ),
                           _buildStatItem('วันต่อเนื่อง', '$streak', lang),
                         ],
                       ),
@@ -750,19 +820,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       style: GoogleFonts.barlowCondensed(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF5A6A5A),
+                        color: AppColors.textMuted,
                         letterSpacing: 1.0,
                       ),
                     ),
                     const SizedBox(height: 10),
                     Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1B1F1B),
+                        color: AppColors.surface,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.06),
-                          width: 1,
-                        ),
+                        border: Border.all(color: AppColors.border, width: 1),
                       ),
                       padding: const EdgeInsets.all(4),
                       child: Row(
@@ -771,14 +838,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             child: _buildSelectorButton(
                               isSelected: lang == AppLanguage.th,
                               label: '🇹🇭 ภาษาไทย',
-                              onTap: () => ref.read(languageProvider.notifier).setLanguage(AppLanguage.th),
+                              onTap: () => ref
+                                  .read(languageProvider.notifier)
+                                  .setLanguage(AppLanguage.th),
                             ),
                           ),
                           Expanded(
                             child: _buildSelectorButton(
                               isSelected: lang == AppLanguage.en,
                               label: '🇬🇧 English',
-                              onTap: () => ref.read(languageProvider.notifier).setLanguage(AppLanguage.en),
+                              onTap: () => ref
+                                  .read(languageProvider.notifier)
+                                  .setLanguage(AppLanguage.en),
                             ),
                           ),
                         ],
@@ -800,19 +871,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       style: GoogleFonts.barlowCondensed(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF5A6A5A),
+                        color: AppColors.textMuted,
                         letterSpacing: 1.0,
                       ),
                     ),
                     const SizedBox(height: 10),
                     Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1B1F1B),
+                        color: AppColors.surface,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.06),
-                          width: 1,
-                        ),
+                        border: Border.all(color: AppColors.border, width: 1),
                       ),
                       padding: const EdgeInsets.all(4),
                       child: Row(
@@ -820,15 +888,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           Expanded(
                             child: _buildSelectorButton(
                               isSelected: !isLbs,
-                              label: lang == AppLanguage.th ? 'กิโลกรัม (kg)' : 'Kilograms (kg)',
-                              onTap: isLbs ? () => ref.read(isLbsProvider.notifier).toggle() : () {},
+                              label: lang == AppLanguage.th
+                                  ? 'กิโลกรัม (kg)'
+                                  : 'Kilograms (kg)',
+                              onTap: isLbs
+                                  ? () => ref
+                                        .read(isLbsProvider.notifier)
+                                        .toggle()
+                                  : () {},
                             ),
                           ),
                           Expanded(
                             child: _buildSelectorButton(
                               isSelected: isLbs,
-                              label: lang == AppLanguage.th ? 'ปอนด์ (lbs)' : 'Pounds (lbs)',
-                              onTap: !isLbs ? () => ref.read(isLbsProvider.notifier).toggle() : () {},
+                              label: lang == AppLanguage.th
+                                  ? 'ปอนด์ (lbs)'
+                                  : 'Pounds (lbs)',
+                              onTap: !isLbs
+                                  ? () => ref
+                                        .read(isLbsProvider.notifier)
+                                        .toggle()
+                                  : () {},
                             ),
                           ),
                         ],
@@ -838,7 +918,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-
 
               // ── Extra: Body Metrics grid ───────────────────────────
               Padding(
@@ -851,7 +930,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         Icon(Icons.accessibility, color: textMuted, size: 16),
                         const SizedBox(width: 8),
                         Text(
-                          lang == AppLanguage.th ? 'ข้อมูลสรีระร่างกาย' : 'Body Metrics',
+                          lang == AppLanguage.th
+                              ? 'ข้อมูลสรีระร่างกาย'
+                              : 'Body Metrics',
                           style: GoogleFonts.spaceGrotesk(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
@@ -866,14 +947,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       children: [
                         Expanded(
                           child: GestureDetector(
-                            onTap: () => _showEditHeightBottomSheet(_profile?.height),
+                            onTap: () =>
+                                _showEditHeightBottomSheet(_profile?.height),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 18,
+                                horizontal: 16,
+                              ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF1B1F1B),
+                                color: AppColors.surface,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.06),
+                                  color: AppColors.border,
                                   width: 1,
                                 ),
                               ),
@@ -881,10 +966,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        lang == AppLanguage.th ? 'ส่วนสูง' : 'HEIGHT',
+                                        lang == AppLanguage.th
+                                            ? 'ส่วนสูง'
+                                            : 'HEIGHT',
                                         style: TextStyle(
                                           fontSize: 10,
                                           fontWeight: FontWeight.w700,
@@ -899,7 +987,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                   Text(
                                     _profile?.height != null
                                         ? '${_profile!.height!.toStringAsFixed(1)} cm'
-                                        : (lang == AppLanguage.th ? 'ไม่ได้ตั้งค่า' : 'Not set'),
+                                        : (lang == AppLanguage.th
+                                              ? 'ไม่ได้ตั้งค่า'
+                                              : 'Not set'),
                                     style: GoogleFonts.spaceGrotesk(
                                       fontSize: 20,
                                       fontWeight: FontWeight.w700,
@@ -915,15 +1005,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         Expanded(
                           child: GestureDetector(
                             onTap: () => _showEditWeightBottomSheet(
-                              _weightLogs.isNotEmpty ? _weightLogs.first.weightKg : null,
+                              _weightLogs.isNotEmpty
+                                  ? _weightLogs.first.weightKg
+                                  : null,
                             ),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 18,
+                                horizontal: 16,
+                              ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF1B1F1B),
+                                color: AppColors.surface,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.06),
+                                  color: AppColors.border,
                                   width: 1,
                                 ),
                               ),
@@ -931,10 +1026,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        lang == AppLanguage.th ? 'น้ำหนักตัว' : 'WEIGHT',
+                                        lang == AppLanguage.th
+                                            ? 'น้ำหนักตัว'
+                                            : 'WEIGHT',
                                         style: TextStyle(
                                           fontSize: 10,
                                           fontWeight: FontWeight.w700,
@@ -942,14 +1040,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                           letterSpacing: 0.8,
                                         ),
                                       ),
-                                      Icon(Icons.scale, size: 12, color: accent),
+                                      Icon(
+                                        Icons.scale,
+                                        size: 12,
+                                        color: accent,
+                                      ),
                                     ],
                                   ),
                                   const SizedBox(height: 10),
                                   Text(
                                     _weightLogs.isNotEmpty
                                         ? '${(isLbs ? _weightLogs.first.weightKg * kgToLbs : _weightLogs.first.weightKg).toStringAsFixed(1)} ${isLbs ? 'lbs' : 'kg'}'
-                                        : (lang == AppLanguage.th ? 'ไม่ได้ตั้งค่า' : 'Not set'),
+                                        : (lang == AppLanguage.th
+                                              ? 'ไม่ได้ตั้งค่า'
+                                              : 'Not set'),
                                     style: GoogleFonts.spaceGrotesk(
                                       fontSize: 20,
                                       fontWeight: FontWeight.w700,
@@ -971,7 +1075,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           icon: const Icon(Icons.history, size: 16),
                           label: Text(
                             lang.tr('btn_view_history'),
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],
@@ -981,10 +1088,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               const SizedBox(height: 10),
 
-
-
               // ── Extra: Stats Section (Calendar & charts) ───────────
-
 
               // ── Feedback ──────────────────────────────────────────
               Padding(
@@ -994,14 +1098,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.chat_bubble_outline_rounded, size: 14, color: accent),
+                        Icon(
+                          Icons.chat_bubble_outline_rounded,
+                          size: 14,
+                          color: accent,
+                        ),
                         const SizedBox(width: 6),
                         Text(
-                          lang == AppLanguage.th ? 'ส่งความคิดเห็น' : 'FEEDBACK',
+                          lang == AppLanguage.th
+                              ? 'ส่งความคิดเห็น'
+                              : 'FEEDBACK',
                           style: GoogleFonts.barlowCondensed(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
-                            color: const Color(0xFF8E9A8E),
+                            color: AppColors.textMuted,
                             letterSpacing: 1.0,
                           ),
                         ),
@@ -1010,18 +1120,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     const SizedBox(height: 10),
                     Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1A1E1A),
+                        color: AppColors.surface,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.12),
-                          width: 1,
-                        ),
+                        border: Border.all(color: AppColors.border, width: 1),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.3),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
-                          )
+                          ),
                         ],
                       ),
                       padding: const EdgeInsets.all(6),
@@ -1032,15 +1139,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             maxLines: 4,
                             style: GoogleFonts.sarabun(
                               fontSize: 14,
-                              color: const Color(0xFFF2F5EF),
+                              color: AppColors.textPrimary,
                               height: 1.5,
                             ),
                             decoration: InputDecoration(
                               hintText: lang == AppLanguage.th
                                   ? 'แจ้งปัญหา หรือแนะนำฟีเจอร์ใหม่...'
                                   : 'Report bugs or suggest features...',
-                              hintStyle: const TextStyle(color: Color(0xFF7E8D7E)),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              hintStyle: const TextStyle(
+                                color: AppColors.textMuted,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
                               border: InputBorder.none,
                             ),
                             onChanged: (text) => setState(() {}),
@@ -1048,7 +1160,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           if (_feedbackSent) ...[
                             Container(
                               margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
                               width: double.infinity,
                               decoration: BoxDecoration(
                                 color: accent.withValues(alpha: 0.15),
@@ -1071,20 +1186,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             ),
                           ] else ...[
                             GestureDetector(
-                              onTap: _feedbackController.text.trim().isEmpty ? null : _sendFeedbackFromProfile,
+                              onTap: _feedbackController.text.trim().isEmpty
+                                  ? null
+                                  : _sendFeedbackFromProfile,
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 200),
                                 margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
                                 width: double.infinity,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: _feedbackController.text.trim().isNotEmpty
+                                  color:
+                                      _feedbackController.text.trim().isNotEmpty
                                       ? accent
-                                      : const Color(0xFF262B26),
+                                      : AppColors.surfaceElevated,
                                   border: Border.all(
-                                    color: _feedbackController.text.trim().isNotEmpty
+                                    color:
+                                        _feedbackController.text
+                                            .trim()
+                                            .isNotEmpty
                                         ? accent
-                                        : Colors.white.withValues(alpha: 0.1),
+                                        : AppColors.border,
                                   ),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -1095,19 +1218,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     Icon(
                                       Icons.send_rounded,
                                       size: 15,
-                                      color: _feedbackController.text.trim().isNotEmpty
-                                          ? const Color(0xFF000000)
-                                          : const Color(0xFF8E9A8E),
+                                      color:
+                                          _feedbackController.text
+                                              .trim()
+                                              .isNotEmpty
+                                          ? AppColors.onPrimary
+                                          : AppColors.textMuted,
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      lang == AppLanguage.th ? 'ส่งความคิดเห็น' : 'Send Feedback',
+                                      lang == AppLanguage.th
+                                          ? 'ส่งความคิดเห็น'
+                                          : 'Send Feedback',
                                       style: GoogleFonts.sarabun(
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
-                                        color: _feedbackController.text.trim().isNotEmpty
-                                            ? const Color(0xFF000000)
-                                            : const Color(0xFF8E9A8E),
+                                        color:
+                                            _feedbackController.text
+                                                .trim()
+                                                .isNotEmpty
+                                            ? AppColors.onPrimary
+                                            : AppColors.textMuted,
                                       ),
                                     ),
                                   ],
@@ -1128,14 +1259,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1B1F1B),
+                    color: AppColors.surface,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.06),
-                      width: 1,
-                    ),
+                    border: Border.all(color: AppColors.border, width: 1),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   child: Column(
                     children: [
                       Row(
@@ -1145,14 +1276,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             lang == AppLanguage.th ? 'เวอร์ชัน' : 'Version',
                             style: GoogleFonts.sarabun(
                               fontSize: 13,
-                              color: const Color(0xFF7C8A7C),
+                              color: AppColors.textMuted,
                             ),
                           ),
                           Text(
                             '1.0.0-beta',
                             style: GoogleFonts.jetBrainsMono(
                               fontSize: 13,
-                              color: const Color(0xFF5A6A5A),
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],
@@ -1162,17 +1293,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            lang == AppLanguage.th ? 'สมาชิกตั้งแต่' : 'Member since',
+                            lang == AppLanguage.th
+                                ? 'สมาชิกตั้งแต่'
+                                : 'Member since',
                             style: GoogleFonts.sarabun(
                               fontSize: 13,
-                              color: const Color(0xFF7C8A7C),
+                              color: AppColors.textMuted,
                             ),
                           ),
                           Text(
                             memberSinceLabel ?? 'ม.ค. 2025',
                             style: GoogleFonts.sarabun(
                               fontSize: 13,
-                              color: const Color(0xFF5A6A5A),
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],
@@ -1192,7 +1325,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   child: OutlinedButton(
                     onPressed: _showLogoutConfirmDialog,
                     style: OutlinedButton.styleFrom(
-                      backgroundColor: const Color(0xFFEF4444).withValues(alpha: 0.08),
+                      backgroundColor: const Color(
+                        0xFFEF4444,
+                      ).withValues(alpha: 0.08),
                       side: BorderSide(
                         color: const Color(0xFFEF4444).withValues(alpha: 0.2),
                       ),
@@ -1222,8 +1357,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     foregroundColor: const Color(0xFFFF5A3C),
                   ),
                   child: Text(
-                    lang == AppLanguage.th ? 'ลบบัญชีผู้ใช้งานถาวร' : 'Delete Account Permanently',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    lang == AppLanguage.th
+                        ? 'ลบบัญชีผู้ใช้งานถาวร'
+                        : 'Delete Account Permanently',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
@@ -1239,8 +1379,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final lang = ref.read(languageProvider);
     final isLbs = ref.read(isLbsProvider);
     final accent = Theme.of(context).colorScheme.primary;
-    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
-    final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
+    final textPrimary =
+        Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
+    final textMuted =
+        Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
 
     showModalBottomSheet(
       context: context,
@@ -1249,17 +1391,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            final startingLog = _weightLogs.isNotEmpty ? _weightLogs.last : null;
-            final currentLog = _weightLogs.isNotEmpty ? _weightLogs.first : null;
-            
-            final startingDisplay = startingLog != null 
-                ? (isLbs ? startingLog.weightKg * kgToLbs : startingLog.weightKg) 
+            final startingLog = _weightLogs.isNotEmpty
+                ? _weightLogs.last
+                : null;
+            final currentLog = _weightLogs.isNotEmpty
+                ? _weightLogs.first
+                : null;
+
+            final startingDisplay = startingLog != null
+                ? (isLbs
+                      ? startingLog.weightKg * kgToLbs
+                      : startingLog.weightKg)
                 : 0.0;
-            final currentDisplay = currentLog != null 
-                ? (isLbs ? currentLog.weightKg * kgToLbs : currentLog.weightKg) 
+            final currentDisplay = currentLog != null
+                ? (isLbs ? currentLog.weightKg * kgToLbs : currentLog.weightKg)
                 : 0.0;
             final diffDisplay = currentDisplay - startingDisplay;
-            
+
             final unit = isLbs ? 'lbs' : 'kg';
 
             final chartLogs = _weightLogs.reversed.toList();
@@ -1288,7 +1436,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               interval = (chartLogs.length / 5).ceil();
             }
 
-            Widget metricCol({required String title, required String value, required Color color}) {
+            Widget metricCol({
+              required String title,
+              required String value,
+              required Color color,
+            }) {
               return Expanded(
                 child: Column(
                   children: [
@@ -1348,7 +1500,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 4,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -1367,7 +1522,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                   ),
                   const Divider(),
-                  
+
                   if (_weightLogs.length >= 2) ...[
                     const SizedBox(height: 16),
                     Container(
@@ -1384,15 +1539,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             drawVerticalLine: false,
                             horizontalInterval: range > 0 ? (range / 3) : 2.0,
                             getDrawingHorizontalLine: (value) => FlLine(
-                              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.4),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outline.withValues(alpha: 0.4),
                               strokeWidth: 0.5,
                               dashArray: [5, 5],
                             ),
                           ),
                           titlesData: FlTitlesData(
                             show: true,
-                            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            rightTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                            topTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
                             bottomTitles: AxisTitles(
                               sideTitles: SideTitles(
                                 showTitles: true,
@@ -1400,11 +1561,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 interval: 1,
                                 getTitlesWidget: (value, meta) {
                                   final index = value.toInt();
-                                  if (index < 0 || index >= chartLogs.length) return const SizedBox.shrink();
-                                  if (index % interval != 0) return const SizedBox.shrink();
+                                  if (index < 0 || index >= chartLogs.length)
+                                    return const SizedBox.shrink();
+                                  if (index % interval != 0)
+                                    return const SizedBox.shrink();
                                   final log = chartLogs[index];
-                                  final date = DateTime.fromMillisecondsSinceEpoch(log.loggedAt);
-                                  final label = "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}";
+                                  final date =
+                                      DateTime.fromMillisecondsSinceEpoch(
+                                        log.loggedAt,
+                                      );
+                                  final label =
+                                      "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}";
                                   return Padding(
                                     padding: const EdgeInsets.only(top: 6.0),
                                     child: Text(
@@ -1455,13 +1622,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               isStrokeCapRound: true,
                               dotData: FlDotData(
                                 show: true,
-                                getDotPainter: (spot, percent, barData, index) =>
-                                    FlDotCirclePainter(
-                                  radius: 4,
-                                  color: accent,
-                                  strokeWidth: 1,
-                                  strokeColor: Theme.of(context).scaffoldBackgroundColor,
-                                ),
+                                getDotPainter:
+                                    (spot, percent, barData, index) =>
+                                        FlDotCirclePainter(
+                                          radius: 4,
+                                          color: accent,
+                                          strokeWidth: 1,
+                                          strokeColor: Theme.of(
+                                            context,
+                                          ).scaffoldBackgroundColor,
+                                        ),
                               ),
                               belowBarData: BarAreaData(
                                 show: true,
@@ -1483,8 +1653,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
                   if (_weightLogs.isNotEmpty) ...[
                     Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 16,
+                      ),
                       decoration: BoxDecoration(
                         color: Theme.of(context).cardTheme.color,
                         borderRadius: BorderRadius.circular(10),
@@ -1496,22 +1672,30 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       child: Row(
                         children: [
                           metricCol(
-                            title: lang == AppLanguage.th ? 'เริ่มต้น' : 'Starting',
-                            value: "${startingDisplay.toStringAsFixed(1)} $unit",
+                            title: lang == AppLanguage.th
+                                ? 'เริ่มต้น'
+                                : 'Starting',
+                            value:
+                                "${startingDisplay.toStringAsFixed(1)} $unit",
                             color: textPrimary,
                           ),
                           dividerCol(),
                           metricCol(
-                            title: lang == AppLanguage.th ? 'ปัจจุบัน' : 'Current',
+                            title: lang == AppLanguage.th
+                                ? 'ปัจจุบัน'
+                                : 'Current',
                             value: "${currentDisplay.toStringAsFixed(1)} $unit",
                             color: textPrimary,
                           ),
                           dividerCol(),
                           metricCol(
-                            title: lang == AppLanguage.th ? 'เปลี่ยนแปลง' : 'Net Change',
-                            value: "${diffDisplay >= 0 ? '+' : ''}${diffDisplay.toStringAsFixed(1)} $unit",
-                            color: diffDisplay < 0 
-                                ? accent 
+                            title: lang == AppLanguage.th
+                                ? 'เปลี่ยนแปลง'
+                                : 'Net Change',
+                            value:
+                                "${diffDisplay >= 0 ? '+' : ''}${diffDisplay.toStringAsFixed(1)} $unit",
+                            color: diffDisplay < 0
+                                ? accent
                                 : (diffDisplay > 0 ? Colors.cyan : textMuted),
                           ),
                         ],
@@ -1533,29 +1717,55 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             ),
                           )
                         : ListView.separated(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
                             itemCount: _weightLogs.length,
-                            separatorBuilder: (_, __) => const Divider(height: 1),
+                            separatorBuilder: (_, __) =>
+                                const Divider(height: 1),
                             itemBuilder: (context, index) {
                               final log = _weightLogs[index];
-                              final weightDisplay = isLbs ? log.weightKg * kgToLbs : log.weightKg;
-                              final date = DateTime.fromMillisecondsSinceEpoch(log.loggedAt);
-                              final dateFormatted = "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
+                              final weightDisplay = isLbs
+                                  ? log.weightKg * kgToLbs
+                                  : log.weightKg;
+                              final date = DateTime.fromMillisecondsSinceEpoch(
+                                log.loggedAt,
+                              );
+                              final dateFormatted =
+                                  "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
 
                               return ListTile(
                                 contentPadding: EdgeInsets.zero,
-                                leading: Icon(Icons.scale_outlined, color: accent, size: 20),
+                                leading: Icon(
+                                  Icons.scale_outlined,
+                                  color: accent,
+                                  size: 20,
+                                ),
                                 title: Text(
                                   "${weightDisplay.toStringAsFixed(1)} ${isLbs ? 'lbs' : 'kg'}",
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  ),
                                 ),
                                 subtitle: Text(
                                   dateFormatted,
-                                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
                                 ),
                                 trailing: IconButton(
-                                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
-                                  onPressed: () => _confirmDeleteWeightLog(log.id!, setModalState),
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    color: Colors.redAccent,
+                                    size: 20,
+                                  ),
+                                  onPressed: () => _confirmDeleteWeightLog(
+                                    log.id!,
+                                    setModalState,
+                                  ),
                                 ),
                               );
                             },
@@ -1570,7 +1780,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Future<void> _confirmDeleteWeightLog(int logId, void Function(void Function()) setModalState) async {
+  Future<void> _confirmDeleteWeightLog(
+    int logId,
+    void Function(void Function()) setModalState,
+  ) async {
     final lang = ref.read(languageProvider);
     final proceed = await showDialog<bool>(
       context: context,
@@ -1582,7 +1795,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               lang.tr('btn_cancel'),
-              style: const TextStyle(color: Color(0xFF7C8A7C)),
+              style: const TextStyle(color: AppColors.textMuted),
             ),
           ),
           FilledButton(

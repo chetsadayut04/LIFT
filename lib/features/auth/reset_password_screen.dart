@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/theme/app_colors.dart';
 import 'auth_provider.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
@@ -50,7 +51,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               children: const [
                 Icon(
                   Icons.check_circle_outline,
-                  color: Color(0xFF10B981),
+                  color: AppColors.primary,
                   size: 20,
                 ),
                 SizedBox(width: 12),
@@ -58,7 +59,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                   child: Text(
                     'เปลี่ยนรหัสผ่านใหม่สำเร็จแล้ว!',
                     style: TextStyle(
-                      color: Color(0xFFF2F5EF),
+                      color: AppColors.textPrimary,
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                     ),
@@ -66,11 +67,11 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 ),
               ],
             ),
-            backgroundColor: const Color(0xFF151816),
+            backgroundColor: AppColors.surfaceElevated,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: const BorderSide(color: Color(0xFF10B981), width: 0.5),
+              side: const BorderSide(color: AppColors.primary, width: 0.5),
             ),
             margin: const EdgeInsets.all(16),
           ),
@@ -115,12 +116,12 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const bg = Color(0xFF0A0E0B);
-    const surfaceSolid = Color(0xFF16221B);
-    const border = Color(0xFF223326);
-    const accent = Color(0xFF10B981);
-    const textPrimary = Color(0xFFFFFFFF);
-    const textMuted = Color(0xFF94A3B8);
+    const bg = AppColors.bg;
+    const surfaceSolid = AppColors.surface;
+    const border = AppColors.border;
+    const accent = AppColors.primary;
+    const textPrimary = AppColors.textPrimary;
+    const textMuted = AppColors.textMuted;
 
     final userEmail = Supabase.instance.client.auth.currentUser?.email;
 
