@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers/unit_provider.dart';
-import '../../core/widgets/plate_calculator_dialog.dart';
 
 // ลบสีค่าคงที่ฮาร์ดโค้ดออกเพื่อให้ใช้สีระบบตาม Theme ได้อย่างสมบูรณ์แบบ
 
@@ -69,7 +68,11 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
     super.dispose();
   }
 
-  void _stepField(TextEditingController ctrl, double delta, {bool isInt = false}) {
+  void _stepField(
+    TextEditingController ctrl,
+    double delta, {
+    bool isInt = false,
+  }) {
     final current = double.tryParse(ctrl.text) ?? 0;
     final next = (current + delta).clamp(0.0, double.maxFinite);
     setState(() {
@@ -80,7 +83,8 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
   void _submit(bool isLbs) {
     final rawWeight = double.tryParse(_weightCtrl.text);
     final reps = int.tryParse(_repsCtrl.text);
-    if (rawWeight == null || reps == null || rawWeight <= 0 || reps <= 0) return;
+    if (rawWeight == null || reps == null || rawWeight <= 0 || reps <= 0)
+      return;
     final weightKg = inputToKg(rawWeight, isLbs);
     widget.onAdd(weightKg, reps, _isWarmup);
     if (!_isWarmup) widget.onAfterAdd?.call();
@@ -90,7 +94,8 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
     final theme = Theme.of(context);
     final accent = theme.colorScheme.primary;
     final border = theme.colorScheme.outline;
-    final surfaceHi = theme.inputDecorationTheme.fillColor ?? theme.colorScheme.surface;
+    final surfaceHi =
+        theme.inputDecorationTheme.fillColor ?? theme.colorScheme.surface;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(6),
@@ -112,7 +117,8 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
     final theme = Theme.of(context);
     final accent = theme.colorScheme.primary;
     final border = theme.colorScheme.outline;
-    final surfaceHi = theme.inputDecorationTheme.fillColor ?? theme.colorScheme.surface;
+    final surfaceHi =
+        theme.inputDecorationTheme.fillColor ?? theme.colorScheme.surface;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(4),
@@ -123,7 +129,14 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
           border: Border.all(color: border),
           borderRadius: BorderRadius.circular(4),
         ),
-        child: Text(label, style: TextStyle(fontSize: 11, color: accent, fontWeight: FontWeight.w600)),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: accent,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }
@@ -139,7 +152,8 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
     final textSec = theme.textTheme.bodyMedium?.color ?? Colors.grey;
     final textMuted = theme.textTheme.bodySmall?.color ?? Colors.grey;
     final border = theme.colorScheme.outline;
-    final surfaceHi = theme.inputDecorationTheme.fillColor ?? theme.colorScheme.surface;
+    final surfaceHi =
+        theme.inputDecorationTheme.fillColor ?? theme.colorScheme.surface;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,7 +164,12 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
             children: [
               Text(
                 'ครั้งก่อน  ',
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: textMuted, letterSpacing: 0.5),
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: textMuted,
+                  letterSpacing: 0.5,
+                ),
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -168,7 +187,9 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
                           style: TextStyle(
                             fontSize: 11,
                             color: isCurrent ? accent : textSec,
-                            fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w400,
+                            fontWeight: isCurrent
+                                ? FontWeight.w700
+                                : FontWeight.w400,
                           ),
                         ),
                       );
@@ -196,9 +217,14 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
               onTap: () => setState(() => _isWarmup = !_isWarmup),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
-                  color: _isWarmup ? const Color(0xFFFF9F1C).withValues(alpha: 0.18) : surfaceHi,
+                  color: _isWarmup
+                      ? const Color(0xFFFF9F1C).withValues(alpha: 0.18)
+                      : surfaceHi,
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
                     color: _isWarmup ? const Color(0xFFFF9F1C) : border,
@@ -214,32 +240,6 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
                     letterSpacing: 0.5,
                   ),
                 ),
-              ),
-            ),
-            const Spacer(),
-            TextButton.icon(
-              onPressed: () async {
-                final currentWeight = double.tryParse(_weightCtrl.text) ?? 0.0;
-                final result = await showPlateCalculator(
-                  context: context,
-                  initialWeight: currentWeight,
-                  isLbs: isLbs,
-                );
-                if (result != null && mounted) {
-                  setState(() {
-                    _weightCtrl.text = fmtNum(result);
-                  });
-                }
-              },
-              icon: Icon(Icons.fitness_center, size: 14, color: accent),
-              label: Text(
-                'คำนวณแผ่นเหล็ก',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: accent),
-              ),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ),
           ],
@@ -259,31 +259,48 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _microStepBtn('−2.5', () => _stepField(_weightCtrl, -2.5)),
+                        _microStepBtn(
+                          '−2.5',
+                          () => _stepField(_weightCtrl, -2.5),
+                        ),
                         const SizedBox(width: 4),
-                        _microStepBtn('+2.5', () => _stepField(_weightCtrl, 2.5)),
+                        _microStepBtn(
+                          '+2.5',
+                          () => _stepField(_weightCtrl, 2.5),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 4),
                   ],
                   Row(
                     children: [
-                      _stepBtn(Icons.remove, () => _stepField(_weightCtrl, -weightStep)),
+                      _stepBtn(
+                        Icons.remove,
+                        () => _stepField(_weightCtrl, -weightStep),
+                      ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: TextField(
                           controller: _weightCtrl,
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
                           textAlign: TextAlign.center,
                           style: const TextStyle(fontSize: 14),
                           decoration: InputDecoration(
                             labelText: unit,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 8,
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 4),
-                      _stepBtn(Icons.add, () => _stepField(_weightCtrl, weightStep)),
+                      _stepBtn(
+                        Icons.add,
+                        () => _stepField(_weightCtrl, weightStep),
+                      ),
                     ],
                   ),
                 ],
@@ -294,7 +311,10 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
             Expanded(
               child: Row(
                 children: [
-                  _stepBtn(Icons.remove, () => _stepField(_repsCtrl, -1, isInt: true)),
+                  _stepBtn(
+                    Icons.remove,
+                    () => _stepField(_repsCtrl, -1, isInt: true),
+                  ),
                   const SizedBox(width: 4),
                   Expanded(
                     child: TextField(
@@ -304,13 +324,19 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
                       style: const TextStyle(fontSize: 14),
                       decoration: const InputDecoration(
                         labelText: 'reps',
-                        contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 8,
+                        ),
                       ),
                       onSubmitted: (_) => _submit(isLbs),
                     ),
                   ),
                   const SizedBox(width: 4),
-                  _stepBtn(Icons.add, () => _stepField(_repsCtrl, 1, isInt: true)),
+                  _stepBtn(
+                    Icons.add,
+                    () => _stepField(_repsCtrl, 1, isInt: true),
+                  ),
                 ],
               ),
             ),
@@ -324,7 +350,9 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
             onPressed: () => _submit(isLbs),
             style: _isWarmup
                 ? FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF9F1C).withValues(alpha: 0.7),
+                    backgroundColor: const Color(
+                      0xFFFF9F1C,
+                    ).withValues(alpha: 0.7),
                     foregroundColor: Colors.white,
                   )
                 : null,
@@ -359,8 +387,8 @@ class _ProgressionHint extends StatelessWidget {
     final unit = isLbs ? 'lbs' : 'kg';
 
     // Celebration: Check if any set in this session achieved or exceeded repMax
-    final achievedGoal = previousSets.isNotEmpty &&
-        previousSets.any((s) => s.reps >= repMax);
+    final achievedGoal =
+        previousSets.isNotEmpty && previousSets.any((s) => s.reps >= repMax);
 
     if (achievedGoal) {
       return Row(
@@ -370,7 +398,11 @@ class _ProgressionHint extends StatelessWidget {
           Expanded(
             child: Text(
               'พิชิตเป้าหมายแล้ว! แนะนำให้ปรับเพิ่มน้ำหนักในรอบหน้า',
-              style: TextStyle(fontSize: 10, color: const Color(0xFFFF9F1C), fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 10,
+                color: const Color(0xFFFF9F1C),
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -381,7 +413,12 @@ class _ProgressionHint extends StatelessWidget {
     if (nextIdx >= lastSessionSets.length) return const SizedBox.shrink();
 
     final lastSet = lastSessionSets[nextIdx];
-    final s = progressionSuggestion(lastSet.weight, lastSet.reps, repMin: repMin, repMax: repMax);
+    final s = progressionSuggestion(
+      lastSet.weight,
+      lastSet.reps,
+      repMin: repMin,
+      repMax: repMax,
+    );
     final display = isLbs ? s.weightKg * kgToLbs : s.weightKg;
     final hint = s.addedWeight
         ? 'เพิ่มน้ำหนัก: ${fmtNum(display)} $unit × ${s.reps} reps'
@@ -394,7 +431,11 @@ class _ProgressionHint extends StatelessWidget {
         Expanded(
           child: Text(
             hint,
-            style: TextStyle(fontSize: 10, color: accent, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontSize: 10,
+              color: accent,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],

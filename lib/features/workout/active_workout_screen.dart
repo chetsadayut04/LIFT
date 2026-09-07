@@ -9,7 +9,6 @@ import 'add_exercise_dialog.dart';
 import 'add_set_form.dart';
 import 'rest_timer_provider.dart';
 import 'rest_timer_widget.dart';
-import '../../core/widgets/plate_calculator_dialog.dart';
 
 class ActiveWorkoutScreen extends ConsumerWidget {
   final bool readOnly;
@@ -46,13 +45,18 @@ class ActiveWorkoutScreen extends ConsumerWidget {
   }
 
   Future<void> _renameSession(
-      BuildContext context, WidgetRef ref, String? currentName) async {
+    BuildContext context,
+    WidgetRef ref,
+    String? currentName,
+  ) async {
     final lang = ref.read(languageProvider);
     final controller = TextEditingController(text: currentName ?? '');
     final name = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(lang == AppLanguage.th ? 'ตั้งชื่อ Workout' : 'Name Workout'),
+        title: Text(
+          lang == AppLanguage.th ? 'ตั้งชื่อ Workout' : 'Name Workout',
+        ),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -66,7 +70,8 @@ class ActiveWorkoutScreen extends ConsumerWidget {
             child: Text(lang.tr('btn_cancel')),
           ),
           FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()),
+            onPressed: () =>
+                Navigator.of(dialogContext).pop(controller.text.trim()),
             child: Text(lang.tr('btn_save')),
           ),
         ],
@@ -109,8 +114,10 @@ class ActiveWorkoutScreen extends ConsumerWidget {
     }
 
     final accent = Theme.of(context).colorScheme.primary;
-    final textSec = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
-    final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
+    final textSec =
+        Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+    final textMuted =
+        Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
     final border = Theme.of(context).colorScheme.outline;
 
     if (state.session == null) {
@@ -118,7 +125,8 @@ class ActiveWorkoutScreen extends ConsumerWidget {
         appBar: AppBar(title: Text(lang.tr('home_start'))),
         body: Center(
           child: FilledButton.icon(
-            onPressed: () => ref.read(activeWorkoutProvider.notifier).startSession(),
+            onPressed: () =>
+                ref.read(activeWorkoutProvider.notifier).startSession(),
             icon: const Icon(Icons.fitness_center),
             label: Text(lang.tr('home_start')),
           ),
@@ -149,7 +157,12 @@ class ActiveWorkoutScreen extends ConsumerWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Flexible(child: Text(displayTitle, overflow: TextOverflow.ellipsis)),
+                    Flexible(
+                      child: Text(
+                        displayTitle,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                     const SizedBox(width: 6),
                     Icon(Icons.edit_outlined, size: 14, color: textMuted),
                   ],
@@ -173,7 +186,11 @@ class ActiveWorkoutScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   Text(
                     lang.tr('workout_no_exercises'),
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textSec),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: textSec,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   if (!readOnly) ...[
@@ -207,21 +224,36 @@ class ActiveWorkoutScreen extends ConsumerWidget {
                     exerciseWithSets: ex,
                     readOnly: readOnly,
                     index: i,
-                    onAddSet: (weight, reps, isWarmup) => runSafe(() => ref
-                        .read(activeWorkoutProvider.notifier)
-                        .addSet(ex.exercise.id!, weight, reps, isWarmup: isWarmup)),
-                    onDeleteSet: (setId) => runSafe(() => ref
-                        .read(activeWorkoutProvider.notifier)
-                        .deleteSet(ex.exercise.id!, setId)),
-                    onDeleteExercise: () => runSafe(() => ref
-                        .read(activeWorkoutProvider.notifier)
-                        .deleteExercise(ex.exercise.id!)),
-                    onRenameExercise: (name) => runSafe(() => ref
-                        .read(activeWorkoutProvider.notifier)
-                        .renameExercise(ex.exercise.id!, name)),
-                    onUpdateRepRange: (repMin, repMax) => runSafe(() => ref
-                        .read(activeWorkoutProvider.notifier)
-                        .updateRepRange(ex.exercise.id!, repMin, repMax)),
+                    onAddSet: (weight, reps, isWarmup) => runSafe(
+                      () => ref
+                          .read(activeWorkoutProvider.notifier)
+                          .addSet(
+                            ex.exercise.id!,
+                            weight,
+                            reps,
+                            isWarmup: isWarmup,
+                          ),
+                    ),
+                    onDeleteSet: (setId) => runSafe(
+                      () => ref
+                          .read(activeWorkoutProvider.notifier)
+                          .deleteSet(ex.exercise.id!, setId),
+                    ),
+                    onDeleteExercise: () => runSafe(
+                      () => ref
+                          .read(activeWorkoutProvider.notifier)
+                          .deleteExercise(ex.exercise.id!),
+                    ),
+                    onRenameExercise: (name) => runSafe(
+                      () => ref
+                          .read(activeWorkoutProvider.notifier)
+                          .renameExercise(ex.exercise.id!, name),
+                    ),
+                    onUpdateRepRange: (repMin, repMax) => runSafe(
+                      () => ref
+                          .read(activeWorkoutProvider.notifier)
+                          .updateRepRange(ex.exercise.id!, repMin, repMax),
+                    ),
                     onAfterAdd: () => _showRestTimer(context, ref),
                   ),
                 );
@@ -273,9 +305,12 @@ class _ExerciseCard extends ConsumerWidget {
     final prKg = exerciseWithSets.prKg;
 
     final accent = Theme.of(context).colorScheme.primary;
-    final textPrimary = Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
-    final textSec = Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
-    final textMuted = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
+    final textPrimary =
+        Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white;
+    final textSec =
+        Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey;
+    final textMuted =
+        Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -298,7 +333,11 @@ class _ExerciseCard extends ConsumerWidget {
                             index: index,
                             child: Padding(
                               padding: const EdgeInsets.only(right: 10),
-                              child: Icon(Icons.drag_handle, size: 18, color: textMuted),
+                              child: Icon(
+                                Icons.drag_handle,
+                                size: 18,
+                                color: textMuted,
+                              ),
                             ),
                           ),
                         Expanded(
@@ -312,31 +351,34 @@ class _ExerciseCard extends ConsumerWidget {
                             ),
                           ),
                         ),
-                        if (sets.isNotEmpty)
-                          PlateVisual(
-                            weight: sets.first.weightKg,
-                            onTap: () async {
-                              await showPlateCalculator(
-                                context: context,
-                                initialWeight: sets.first.weightKg,
-                                isLbs: isLbs,
-                              );
-                            },
-                          ),
                         if (!readOnly)
                           GestureDetector(
-                            onTap: () => _showRepRangeDialog(context, lang, textSec, textMuted),
+                            onTap: () => _showRepRangeDialog(
+                              context,
+                              lang,
+                              textSec,
+                              textMuted,
+                            ),
                             child: Padding(
                               padding: const EdgeInsets.only(left: 8, right: 4),
-                              child: Icon(Icons.tune, size: 15, color: textMuted),
+                              child: Icon(
+                                Icons.tune,
+                                size: 15,
+                                color: textMuted,
+                              ),
                             ),
                           ),
                         if (!readOnly)
                           GestureDetector(
-                            onTap: () => _showRenameDialog(context, ex.name, lang),
+                            onTap: () =>
+                                _showRenameDialog(context, ex.name, lang),
                             child: Padding(
                               padding: const EdgeInsets.only(left: 4, right: 4),
-                              child: Icon(Icons.edit_outlined, size: 15, color: textMuted),
+                              child: Icon(
+                                Icons.edit_outlined,
+                                size: 15,
+                                color: textMuted,
+                              ),
                             ),
                           ),
                         if (!readOnly)
@@ -345,7 +387,9 @@ class _ExerciseCard extends ConsumerWidget {
                               context: context,
                               builder: (_) => AlertDialog(
                                 title: Text(lang.tr('dialog_delete_exercise')),
-                                content: Text('${lang.tr('dialog_delete_exercise_desc')} "${ex.name}"?'),
+                                content: Text(
+                                  '${lang.tr('dialog_delete_exercise_desc')} "${ex.name}"?',
+                                ),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(context),
@@ -367,7 +411,11 @@ class _ExerciseCard extends ConsumerWidget {
                             ),
                             child: Padding(
                               padding: const EdgeInsets.all(4),
-                              child: Icon(Icons.delete_outline, size: 17, color: textMuted),
+                              child: Icon(
+                                Icons.delete_outline,
+                                size: 17,
+                                color: textMuted,
+                              ),
                             ),
                           ),
                       ],
@@ -382,94 +430,149 @@ class _ExerciseCard extends ConsumerWidget {
                         children: [
                           SizedBox(
                             width: 36,
-                            child: Text('Set',
-                                style: TextStyle(fontSize: 11, color: textSec, fontWeight: FontWeight.w600)),
+                            child: Text(
+                              'Set',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: textSec,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                           Expanded(
-                            child: Text(unit,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 11, color: textSec, fontWeight: FontWeight.w600)),
+                            child: Text(
+                              unit,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: textSec,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                           Expanded(
-                            child: Text('Reps',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 11, color: textSec, fontWeight: FontWeight.w600)),
+                            child: Text(
+                              'Reps',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: textSec,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 28),
                         ],
                       ),
                       const SizedBox(height: 6),
-                      ...sets.map((s) => Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 5),
-                            child: Row(
-                              children: [
-                                SizedBox(
-                                  width: 36,
-                                  child: s.isWarmup
-                                      ? Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFFF9F1C).withValues(alpha: 0.18),
-                                            borderRadius: BorderRadius.circular(4),
-                                          ),
-                                          child: const Text('W',
-                                              style: TextStyle(
-                                                  fontSize: 11, color: Color(0xFFFF9F1C), fontWeight: FontWeight.w700)),
-                                        )
-                                      : Text('${s.setNumber}',
-                                          style: TextStyle(fontSize: 13, color: textSec)),
-                                ),
-                                Expanded(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        s.weightKg.display(isLbs),
-                                        style: GoogleFonts.jetBrainsMono(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: s.isWarmup ? textSec : textPrimary),
-                                      ),
-                                      if (!s.isWarmup && prKg != null && s.weightKg >= prKg) ...[
-                                        const SizedBox(width: 4),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFFF5A3C),
-                                            borderRadius: BorderRadius.circular(3),
-                                          ),
-                                          child: const Text('PR',
-                                              style: TextStyle(
-                                                  fontSize: 9,
-                                                  fontWeight: FontWeight.w800,
-                                                  color: Color(0xFF1A0800))),
+                      ...sets.map(
+                        (s) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 5),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 36,
+                                child: s.isWarmup
+                                    ? Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 5,
+                                          vertical: 2,
                                         ),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    '${s.reps}',
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.jetBrainsMono(
+                                        decoration: BoxDecoration(
+                                          color: const Color(
+                                            0xFFFF9F1C,
+                                          ).withValues(alpha: 0.18),
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'W',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Color(0xFFFF9F1C),
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      )
+                                    : Text(
+                                        '${s.setNumber}',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: textSec,
+                                        ),
+                                      ),
+                              ),
+                              Expanded(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      s.weightKg.display(isLbs),
+                                      style: GoogleFonts.jetBrainsMono(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
-                                        color: s.isWarmup ? textSec : textPrimary),
+                                        color: s.isWarmup
+                                            ? textSec
+                                            : textPrimary,
+                                      ),
+                                    ),
+                                    if (!s.isWarmup &&
+                                        prKg != null &&
+                                        s.weightKg >= prKg) ...[
+                                      const SizedBox(width: 4),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                          vertical: 1,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFFF5A3C),
+                                          borderRadius: BorderRadius.circular(
+                                            3,
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'PR',
+                                          style: TextStyle(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.w800,
+                                            color: Color(0xFF1A0800),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  '${s.reps}',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.jetBrainsMono(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: s.isWarmup ? textSec : textPrimary,
                                   ),
                                 ),
-                                SizedBox(
-                                  width: 28,
-                                  child: readOnly
-                                      ? const SizedBox.shrink()
-                                      : GestureDetector(
-                                          onTap: () => onDeleteSet(s.id!),
-                                          child: Icon(Icons.close, size: 14, color: textMuted),
+                              ),
+                              SizedBox(
+                                width: 28,
+                                child: readOnly
+                                    ? const SizedBox.shrink()
+                                    : GestureDetector(
+                                        onTap: () => onDeleteSet(s.id!),
+                                        child: Icon(
+                                          Icons.close,
+                                          size: 14,
+                                          color: textMuted,
                                         ),
-                                ),
-                              ],
-                            ),
-                          )),
+                                      ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                       const SizedBox(height: 14),
                     ] else
                       const SizedBox(height: 12),
@@ -478,7 +581,9 @@ class _ExerciseCard extends ConsumerWidget {
                       AddSetForm(
                         onAdd: onAddSet,
                         onAfterAdd: onAfterAdd,
-                        previousSets: sets.map((s) => (weight: s.weightKg, reps: s.reps)).toList(),
+                        previousSets: sets
+                            .map((s) => (weight: s.weightKg, reps: s.reps))
+                            .toList(),
                         lastSessionSets: exerciseWithSets.lastSessionSets,
                         repMin: exerciseWithSets.repMin,
                         repMax: exerciseWithSets.repMax,
@@ -493,7 +598,12 @@ class _ExerciseCard extends ConsumerWidget {
     );
   }
 
-  void _showRepRangeDialog(BuildContext context, AppLanguage lang, Color textSec, Color textMuted) {
+  void _showRepRangeDialog(
+    BuildContext context,
+    AppLanguage lang,
+    Color textSec,
+    Color textMuted,
+  ) {
     int repMin = exerciseWithSets.repMin;
     int repMax = exerciseWithSets.repMax;
 
@@ -501,53 +611,76 @@ class _ExerciseCard extends ConsumerWidget {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) {
-          Widget stepper(String label, int value, VoidCallback onDec, VoidCallback onInc) =>
-              Row(
-                children: [
-                  SizedBox(
-                    width: 60,
-                    child: Text(label, style: TextStyle(fontSize: 13, color: textSec)),
+          Widget stepper(
+            String label,
+            int value,
+            VoidCallback onDec,
+            VoidCallback onInc,
+          ) => Row(
+            children: [
+              SizedBox(
+                width: 60,
+                child: Text(
+                  label,
+                  style: TextStyle(fontSize: 13, color: textSec),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.remove, size: 16),
+                onPressed: onDec,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              ),
+              SizedBox(
+                width: 32,
+                child: Text(
+                  '$value',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.remove, size: 16),
-                    onPressed: onDec,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                  ),
-                  SizedBox(
-                    width: 32,
-                    child: Text('$value',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.add, size: 16),
-                    onPressed: onInc,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                  ),
-                ],
-              );
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.add, size: 16),
+                onPressed: onInc,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              ),
+            ],
+          );
 
           return AlertDialog(
-            title: Text('${lang.tr('dialog_target_title')} ${exerciseWithSets.exercise.name}',
-                style: const TextStyle(fontSize: 15)),
+            title: Text(
+              '${lang.tr('dialog_target_title')} ${exerciseWithSets.exercise.name}',
+              style: const TextStyle(fontSize: 15),
+            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Rep range', style: TextStyle(fontSize: 11, color: textMuted)),
+                Text(
+                  'Rep range',
+                  style: TextStyle(fontSize: 11, color: textMuted),
+                ),
                 const SizedBox(height: 8),
                 stepper(
                   'Min',
                   repMin,
-                  () => setDialogState(() { if (repMin > 1) repMin--; }),
-                  () => setDialogState(() { if (repMin < repMax) repMin++; }),
+                  () => setDialogState(() {
+                    if (repMin > 1) repMin--;
+                  }),
+                  () => setDialogState(() {
+                    if (repMin < repMax) repMin++;
+                  }),
                 ),
                 stepper(
                   'Max',
                   repMax,
-                  () => setDialogState(() { if (repMax > repMin) repMax--; }),
+                  () => setDialogState(() {
+                    if (repMax > repMin) repMax--;
+                  }),
                   () => setDialogState(() => repMax++),
                 ),
               ],
@@ -571,7 +704,11 @@ class _ExerciseCard extends ConsumerWidget {
     );
   }
 
-  void _showRenameDialog(BuildContext context, String currentName, AppLanguage lang) {
+  void _showRenameDialog(
+    BuildContext context,
+    String currentName,
+    AppLanguage lang,
+  ) {
     final controller = TextEditingController(text: currentName);
     showDialog<void>(
       context: context,
@@ -599,88 +736,6 @@ class _ExerciseCard extends ConsumerWidget {
             child: Text(lang.tr('btn_save')),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class PlateVisual extends StatelessWidget {
-  final double weight;
-  final VoidCallback onTap;
-
-  const PlateVisual({
-    super.key,
-    required this.weight,
-    required this.onTap,
-  });
-
-  List<double> _calcPlates(double targetKg) {
-    const barWeight = 20.0;
-    final perSide = (targetKg - barWeight) / 2.0;
-    if (perSide <= 0) return [];
-
-    const sizes = [20.0, 15.0, 10.0, 5.0, 2.5, 1.25];
-    final plates = <double>[];
-    var remaining = perSide;
-    for (final size in sizes) {
-      while (remaining >= size - 0.001) {
-        plates.add(size);
-        remaining -= size;
-      }
-    }
-    return plates;
-  }
-
-  Color _getPlateColor(double size) {
-    if (size >= 20) return const Color(0xFFEF4444); // red
-    if (size >= 15) return const Color(0xFF3B82F6); // blue
-    if (size >= 10) return const Color(0xFF10B981); // green
-    if (size >= 5) return const Color(0xFFFBBF24);  // yellow
-    return const Color(0xFF9CA3AF);                 // grey
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final plates = weight > 20 ? _calcPlates(weight) : <double>[];
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        color: Colors.transparent,
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Bar center
-            Container(
-              width: 3,
-              height: 24,
-              decoration: BoxDecoration(
-                color: const Color(0xFF444444),
-                borderRadius: BorderRadius.circular(1),
-              ),
-            ),
-            const SizedBox(width: 1),
-            if (plates.isEmpty)
-              Text(
-                'BW',
-                style: GoogleFonts.jetBrainsMono(
-                  fontSize: 9,
-                  color: const Color(0xFF555555),
-                  fontWeight: FontWeight.bold,
-                ),
-              )
-            else
-              ...plates.take(4).map((p) => Container(
-                    margin: const EdgeInsets.only(right: 1),
-                    width: 5,
-                    height: 10 + p * 0.7,
-                    decoration: BoxDecoration(
-                      color: _getPlateColor(p).withValues(alpha: 0.85),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  )),
-          ],
-        ),
       ),
     );
   }
