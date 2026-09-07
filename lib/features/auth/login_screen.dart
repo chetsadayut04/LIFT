@@ -69,28 +69,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  Future<void> _loginWithGoogle() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-    try {
-      await ref.read(authProvider.notifier).signInWithGoogle();
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = _getFriendlyErrorMessage(e);
-        });
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
   String _getFriendlyErrorMessage(dynamic e) {
     final str = e.toString();
     if (str.contains('invalid_credentials') ||
@@ -196,7 +174,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              backgroundColor: const Color(0xFF171B17), // Match rgba(23,27,23,0.92)
+              backgroundColor: const Color(
+                0xFF171B17,
+              ), // Match rgba(23,27,23,0.92)
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
                 side: BorderSide(color: accent.withValues(alpha: 0.1)),
@@ -215,10 +195,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 8),
                   Text(
                     'กรอกอีเมลของคุณเพื่อรับลิงก์รีเซ็ตรหัสผ่าน',
-                    style: GoogleFonts.sarabun(
-                      color: textMuted,
-                      fontSize: 13,
-                    ),
+                    style: GoogleFonts.sarabun(color: textMuted, fontSize: 13),
                   ),
                 ],
               ),
@@ -231,12 +208,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: const Color(0xFF1E211F),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     hintText: 'อีเมลของคุณ',
-                    hintStyle: GoogleFonts.sarabun(color: textMuted, fontSize: 15),
+                    hintStyle: GoogleFonts.sarabun(
+                      color: textMuted,
+                      fontSize: 15,
+                    ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.08),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -244,7 +229,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   validator: (val) {
-                    if (val == null || val.trim().isEmpty) return 'กรุณากรอกอีเมล';
+                    if (val == null || val.trim().isEmpty)
+                      return 'กรุณากรอกอีเมล';
                     if (!val.contains('@')) return 'รูปแบบอีเมลไม่ถูกต้อง';
                     return null;
                   },
@@ -259,7 +245,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         style: OutlinedButton.styleFrom(
                           backgroundColor: const Color(0xFF1E211F),
                           foregroundColor: const Color(0xFF8E9A8E),
-                          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                          side: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.1),
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -284,7 +272,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 try {
                                   await ref
                                       .read(authProvider.notifier)
-                                      .sendPasswordResetEmail(emailController.text);
+                                      .sendPasswordResetEmail(
+                                        emailController.text,
+                                      );
                                   if (ctx.mounted) {
                                     Navigator.pop(ctx);
                                     _showCustomSnackBar(
@@ -367,10 +357,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
-                  colors: [
-                    accent.withValues(alpha: 0.07),
-                    Colors.transparent,
-                  ],
+                  colors: [accent.withValues(alpha: 0.07), Colors.transparent],
                 ),
               ),
             ),
@@ -385,10 +372,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
-                  colors: [
-                    accent.withValues(alpha: 0.04),
-                    Colors.transparent,
-                  ],
+                  colors: [accent.withValues(alpha: 0.04), Colors.transparent],
                 ),
               ),
             ),
@@ -442,7 +426,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                           child: Container(
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1B1F1B).withValues(alpha: 0.55),
+                              color: const Color(
+                                0xFF1B1F1B,
+                              ).withValues(alpha: 0.55),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: Colors.white.withValues(alpha: 0.08),
@@ -459,9 +445,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       _errorMessage = null;
                                     }),
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(vertical: 10),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 10,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: !_isSignUp ? accent : Colors.transparent,
+                                        color: !_isSignUp
+                                            ? accent
+                                            : Colors.transparent,
                                         borderRadius: BorderRadius.circular(9),
                                       ),
                                       child: Text(
@@ -470,7 +460,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         style: GoogleFonts.sarabun(
                                           fontWeight: FontWeight.w600,
                                           fontSize: 15,
-                                          color: !_isSignUp ? bg : const Color(0xFF5A6A5A),
+                                          color: !_isSignUp
+                                              ? bg
+                                              : const Color(0xFF5A6A5A),
                                         ),
                                       ),
                                     ),
@@ -483,9 +475,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       _errorMessage = null;
                                     }),
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(vertical: 10),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 10,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: _isSignUp ? accent : Colors.transparent,
+                                        color: _isSignUp
+                                            ? accent
+                                            : Colors.transparent,
                                         borderRadius: BorderRadius.circular(9),
                                       ),
                                       child: Text(
@@ -494,7 +490,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         style: GoogleFonts.sarabun(
                                           fontWeight: FontWeight.w600,
                                           fontSize: 15,
-                                          color: _isSignUp ? bg : const Color(0xFF5A6A5A),
+                                          color: _isSignUp
+                                              ? bg
+                                              : const Color(0xFF5A6A5A),
                                         ),
                                       ),
                                     ),
@@ -515,15 +513,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             horizontal: 16,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF2C1010).withValues(alpha: 0.7),
+                            color: const Color(
+                              0xFF2C1010,
+                            ).withValues(alpha: 0.7),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: const Color(0xFFFF8A8A).withValues(alpha: 0.35),
+                              color: const Color(
+                                0xFFFF8A8A,
+                              ).withValues(alpha: 0.35),
                               width: 1,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFFF5A3C).withValues(alpha: 0.08),
+                                color: const Color(
+                                  0xFFFF5A3C,
+                                ).withValues(alpha: 0.08),
                                 blurRadius: 12,
                                 spreadRadius: 1,
                               ),
@@ -572,17 +576,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        style: GoogleFonts.sarabun(color: textPrimary, fontSize: 15),
+                        style: GoogleFonts.sarabun(
+                          color: textPrimary,
+                          fontSize: 15,
+                        ),
                         decoration: InputDecoration(
                           filled: true,
-                          fillColor: const Color(0xFF1B1F1B).withValues(alpha: 0.6),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+                          fillColor: const Color(
+                            0xFF1B1F1B,
+                          ).withValues(alpha: 0.6),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 15,
+                          ),
                           hintText: 'อีเมล',
-                          hintStyle: GoogleFonts.sarabun(color: const Color(0xFF5A6A5A), fontSize: 15),
-                          prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF5A6A5A), size: 18),
+                          hintStyle: GoogleFonts.sarabun(
+                            color: const Color(0xFF5A6A5A),
+                            fontSize: 15,
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.email_outlined,
+                            color: Color(0xFF5A6A5A),
+                            size: 18,
+                          ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.09)),
+                            borderSide: BorderSide(
+                              color: Colors.white.withValues(alpha: 0.09),
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -590,8 +611,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                         validator: (val) {
-                          if (val == null || val.trim().isEmpty) return 'กรุณากรอกอีเมล';
-                          if (!val.contains('@')) return 'รูปแบบอีเมลไม่ถูกต้อง';
+                          if (val == null || val.trim().isEmpty)
+                            return 'กรุณากรอกอีเมล';
+                          if (!val.contains('@'))
+                            return 'รูปแบบอีเมลไม่ถูกต้อง';
                           return null;
                         },
                       ),
@@ -601,13 +624,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       TextFormField(
                         controller: _passwordController,
                         obscureText: _obscurePassword,
-                        style: GoogleFonts.sarabun(color: textPrimary, fontSize: 15),
+                        style: GoogleFonts.sarabun(
+                          color: textPrimary,
+                          fontSize: 15,
+                        ),
                         decoration: InputDecoration(
                           filled: true,
-                          fillColor: const Color(0xFF1B1F1B).withValues(alpha: 0.6),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+                          fillColor: const Color(
+                            0xFF1B1F1B,
+                          ).withValues(alpha: 0.6),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 15,
+                          ),
                           hintText: 'รหัสผ่าน',
-                          hintStyle: GoogleFonts.sarabun(color: const Color(0xFF5A6A5A), fontSize: 15),
+                          hintStyle: GoogleFonts.sarabun(
+                            color: const Color(0xFF5A6A5A),
+                            fontSize: 15,
+                          ),
                           prefixIcon: const Icon(
                             Icons.lock_outlined,
                             color: Color(0xFF5A6A5A),
@@ -628,7 +662,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.09)),
+                            borderSide: BorderSide(
+                              color: Colors.white.withValues(alpha: 0.09),
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -636,8 +672,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                         validator: (val) {
-                          if (val == null || val.isEmpty) return 'กรุณากรอกรหัสผ่าน';
-                          if (val.length < 6) return 'รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร';
+                          if (val == null || val.isEmpty)
+                            return 'กรุณากรอกรหัสผ่าน';
+                          if (val.length < 6)
+                            return 'รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร';
                           return null;
                         },
                       ),
@@ -697,85 +735,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                               ),
                       ),
-                      const SizedBox(height: 24),
-
-                      // Divider "หรือ"
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Divider(
-                              color: Colors.white.withValues(alpha: 0.07),
-                              thickness: 1,
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(
-                              'หรือ',
-                              style: GoogleFonts.sarabun(
-                                color: const Color(0xFF5A6A5A),
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Divider(
-                              color: Colors.white.withValues(alpha: 0.07),
-                              thickness: 1,
-                            ),
-                          ),
-                        ],
-                      ),
                       const SizedBox(height: 20),
-
-                      // Google Login Button (Vite style)
-                      OutlinedButton(
-                        onPressed: _isLoading ? null : _loginWithGoogle,
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1E211F),
-                          foregroundColor: const Color(0xFFCCCCCC),
-                          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            // Custom G logo container
-                            Container(
-                              width: 18,
-                              height: 18,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                              ),
-                              alignment: Alignment.center,
-                              child: const Text(
-                                'G',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Roboto',
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              'เข้าสู่ระบบด้วย Google',
-                              style: GoogleFonts.sarabun(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                                color: const Color(0xFFCCCCCC),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
 
                       // Demo Hint Text
                       Text(
