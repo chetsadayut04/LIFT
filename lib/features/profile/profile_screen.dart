@@ -1561,10 +1561,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 interval: 1,
                                 getTitlesWidget: (value, meta) {
                                   final index = value.toInt();
-                                  if (index < 0 || index >= chartLogs.length)
+                                  if (index < 0 || index >= chartLogs.length) {
                                     return const SizedBox.shrink();
-                                  if (index % interval != 0)
+                                  }
+                                  if (index % interval != 0) {
                                     return const SizedBox.shrink();
+                                  }
                                   final log = chartLogs[index];
                                   final date =
                                       DateTime.fromMillisecondsSinceEpoch(
