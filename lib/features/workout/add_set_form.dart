@@ -83,8 +83,9 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
   void _submit(bool isLbs) {
     final rawWeight = double.tryParse(_weightCtrl.text);
     final reps = int.tryParse(_repsCtrl.text);
-    if (rawWeight == null || reps == null || rawWeight <= 0 || reps <= 0)
+    if (rawWeight == null || reps == null || rawWeight <= 0 || reps <= 0) {
       return;
+    }
     final weightKg = inputToKg(rawWeight, isLbs);
     widget.onAdd(weightKg, reps, _isWarmup);
     if (!_isWarmup) widget.onAfterAdd?.call();
