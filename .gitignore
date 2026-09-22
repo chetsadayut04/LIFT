@@ -46,3 +46,7 @@ app.*.map.json
 
 # Personal report documents (not part of the app)
 /เอกสารรายงาน/
+/ภาพไดอแกรม/
+*.docx
+*.doc
+*.drawio

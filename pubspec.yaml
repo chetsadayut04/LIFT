@@ -41,9 +41,7 @@ dependencies:
   shared_preferences: ^2.5.5
   google_fonts: ^6.2.1
   supabase_flutter: ^2.8.3
-  google_sign_in: ^6.2.2
   http: ^1.6.0
-  google_generative_ai: ^0.4.7
   flutter_markdown: ^0.7.7+1
   flutter_local_notifications: ^18.0.1
   live_activities: ^2.0.2
