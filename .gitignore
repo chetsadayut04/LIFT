@@ -50,3 +50,7 @@ app.*.map.json
 *.docx
 *.doc
 *.drawio
+
+# Firebase cache
+.firebase/
+

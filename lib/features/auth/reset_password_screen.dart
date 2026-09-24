@@ -79,6 +79,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       }
     } catch (e) {
       if (mounted) {
+        _passwordController.clear();
+        _confirmPasswordController.clear();
         setState(() {
           _errorMessage = _getFriendlyErrorMessage(e);
         });
@@ -103,15 +105,17 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
         str.contains('should be at least 6 characters')) {
       return 'รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร';
     }
-    if (str.contains('network') ||
+    if (str.contains('AuthRetryableFetchException') ||
+        str.contains('ClientFailed to fetch') ||
+        str.contains('Failed to fetch') ||
+        str.contains('network') ||
         str.contains('SocketException') ||
-        str.contains('Network')) {
-      return 'ไม่สามารถเชื่อมต่ออินเทอร์เน็ตได้ กรุณาตรวจสอบเครือข่ายของคุณ';
+        str.contains('Network') ||
+        str.contains('Failed host lookup') ||
+        str.contains('statusCode: null')) {
+      return 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบอินเทอร์เน็ต หรือรอสักครู่แล้วลองใหม่อีกครั้ง';
     }
-    return str
-        .replaceAll('Exception: ', '')
-        .replaceAll('AuthException: ', '')
-        .replaceAll('AuthApiException: ', '');
+    return 'เกิดข้อผิดพลาดในการตั้งรหัสผ่านใหม่ กรุณาลองใหม่อีกครั้ง';
   }
 
   @override

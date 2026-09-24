@@ -16,6 +16,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _passwordFocusNode = FocusNode();
   bool _isSignUp = false;
   bool _isLoading = false;
   String? _errorMessage;
@@ -25,6 +26,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
@@ -57,6 +59,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     } catch (e) {
       if (mounted) {
+        _passwordController.clear();
+        _passwordFocusNode.requestFocus();
         setState(() {
           _errorMessage = _getFriendlyErrorMessage(e);
         });
@@ -74,7 +78,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final str = e.toString();
     if (str.contains('invalid_credentials') ||
         str.contains('Invalid login credentials')) {
-      return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง หรือสมัครสมาชิกหากยังไม่มีบัญชี';
+      return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง';
     }
     if (str.contains('email_not_confirmed') ||
         str.contains('Email not confirmed')) {
@@ -93,21 +97,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         str.contains('Unable to validate email')) {
       return 'รูปแบบอีเมลไม่ถูกต้อง กรุณาตรวจสอบการสะกดอีเมล';
     }
-    if (str.contains('network') ||
+    if (str.contains('AuthRetryableFetchException') ||
+        str.contains('ClientFailed to fetch') ||
+        str.contains('Failed to fetch') ||
+        str.contains('network') ||
         str.contains('SocketException') ||
-        str.contains('Network')) {
-      return 'ไม่สามารถเชื่อมต่ออินเทอร์เน็ตได้ กรุณาตรวจสอบเครือข่ายของคุณ';
+        str.contains('Network') ||
+        str.contains('Failed host lookup') ||
+        str.contains('statusCode: null')) {
+      return 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบอินเทอร์เน็ต หรือรอสักครู่แล้วลองใหม่อีกครั้ง';
     }
     if (str.contains('rate_limit') ||
         str.contains('rate limit exceeded') ||
         str.contains('over_email_send_rate_limit') ||
         str.contains('429')) {
-      return 'คุณส่งคำขอส่งอีเมลบ่อยเกินไปเพื่อความปลอดภัย กรุณารอ 1-2 นาที แล้วลองใหม่อีกครั้งครับ';
+      return 'คุณส่งคำขอบ่อยเกินไปเพื่อความปลอดภัย กรุณารอ 1-2 นาที แล้วลองใหม่อีกครั้งครับ';
     }
-    return str
-        .replaceAll('Exception: ', '')
-        .replaceAll('AuthException: ', '')
-        .replaceAll('AuthApiException: ', '');
+    return 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ กรุณาลองใหม่อีกครั้ง';
   }
 
   void _showCustomSnackBar({
@@ -284,8 +290,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   if (ctx.mounted) {
                                     _showCustomSnackBar(
                                       context: context,
-                                      message:
-                                          'เกิดข้อผิดพลาด: ${_getFriendlyErrorMessage(e)}',
+                                      message: _getFriendlyErrorMessage(e),
                                       isError: true,
                                     );
                                   }
@@ -615,6 +620,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       // Password Field
                       TextFormField(
                         controller: _passwordController,
+                        focusNode: _passwordFocusNode,
                         obscureText: _obscurePassword,
                         style: GoogleFonts.sarabun(
                           color: textPrimary,
