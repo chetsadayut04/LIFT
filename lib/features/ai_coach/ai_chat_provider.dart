@@ -75,6 +75,23 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
         text: greeting,
         timestamp: initialMsg.timestamp,
       );
+    try {
+      final stored = await _dao.getMessages();
+      if (stored.isNotEmpty) {
+        state = AiChatState(
+          messages: stored
+              .map((item) => ChatMessage(
+                    text: item.text,
+                    isUser: item.isUser,
+                    timestamp: item.timestamp,
+                  ))
+              .toList(),
+        );
+      } else {
+        state = const AiChatState(messages: []);
+      }
+    } catch (_) {
+      state = const AiChatState(messages: []);
     }
   }
 
@@ -98,6 +115,10 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
       text: greeting,
       timestamp: initialMsg.timestamp,
     );
+    state = const AiChatState(messages: []);
+    try {
+      await _dao.clearAll();
+    } catch (_) {}
   }
 
   Future<void> sendMessage(String text) async {

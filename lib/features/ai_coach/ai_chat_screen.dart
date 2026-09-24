@@ -154,6 +154,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                         ? 'ลบประวัติแชท'
                         : 'Clear Chat History',
                     onPressed: () async {
+                      final messenger = ScaffoldMessenger.of(context);
                       final confirm = await showDialog<bool>(
                         context: context,
                         builder: (ctx) => AlertDialog(
@@ -190,6 +191,19 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                       if (confirm == true && mounted) {
                         await ref.read(aiChatProvider.notifier).clearHistory();
                       }
+                      if (confirm != true) return;
+                      await ref.read(aiChatProvider.notifier).clearHistory();
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            lang == AppLanguage.th
+                                ? 'ลบประวัติการสนทนาทั้งหมดแล้ว'
+                                : 'All chat history cleared',
+                          ),
+                          duration: const Duration(seconds: 2),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
                     },
                   ),
                 ],
@@ -208,6 +222,67 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                   if (index == state.messages.length) {
                     return _buildThinkingBubble(context, accent, surface);
                   }
+              child: state.messages.isEmpty
+                  ? Center(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 16,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                color: accent.withValues(alpha: 0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.auto_awesome_rounded,
+                                size: 30,
+                                color: accent,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              lang == AppLanguage.th
+                                  ? 'เริ่มต้นการสนทนากับ LIFT AI'
+                                  : 'Start chatting with LIFT AI',
+                              style: GoogleFonts.barlowCondensed(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              lang == AppLanguage.th
+                                  ? 'สอบถามเทคนิคการฝึก ตารางซ้อม โภชนาการ หรือสถิติของคุณ'
+                                  : 'Ask about workouts, routines, nutrition, or your statistics',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.sarabun(
+                                fontSize: 14,
+                                color: textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                      itemCount:
+                          state.messages.length + (state.isLoading ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == state.messages.length) {
+                          return _buildThinkingBubble(context, accent, surface);
+                        }
 
                   final msg = state.messages[index];
                   return _buildChatBubble(
@@ -220,6 +295,17 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                   );
                 },
               ),
+                        final msg = state.messages[index];
+                        return _buildChatBubble(
+                          context,
+                          msg,
+                          accent,
+                          surface,
+                          textPrimary,
+                          textMuted,
+                        );
+                      },
+                    ),
             ),
 
             // Suggestion chips matching Figma
