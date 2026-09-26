@@ -24,15 +24,9 @@ class AiChatState {
   final bool isLoading;
   final List<ChatMessage> messages;
 
-  const AiChatState({
-    this.isLoading = false,
-    this.messages = const [],
-  });
+  const AiChatState({this.isLoading = false, this.messages = const []});
 
-  AiChatState copyWith({
-    bool? isLoading,
-    List<ChatMessage>? messages,
-  }) =>
+  AiChatState copyWith({bool? isLoading, List<ChatMessage>? messages}) =>
       AiChatState(
         isLoading: isLoading ?? this.isLoading,
         messages: messages ?? this.messages,
@@ -49,46 +43,39 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
   }
 
   Future<void> _init() async {
-    final stored = await _dao.getMessages();
-    final user = _ref.read(authProvider);
-
-    if (stored.isNotEmpty) {
-      state = AiChatState(
-        messages: stored
-            .map((item) => ChatMessage(
-                  text: item.text,
-                  isUser: item.isUser,
-                  timestamp: item.timestamp,
-                ))
-            .toList(),
-      );
-    } else {
-      final greeting = user != null
-          ? "สวัสดีครับ! ผมคือ LIFT AI โค้ชส่วนตัวของคุณ ยินดีที่ได้คุยด้วยครับ มีอะไรที่ผมสามารถช่วยแนะนำเกี่ยวกับการออกกำลังกาย โภชนาการ หรือวิเคราะห์สถิติวันนี้ไหมครับ?"
-          : "Hello! I am LIFT AI, your personal coach. How can I help you today with your fitness journey?";
-
-      final initialMsg = ChatMessage(text: greeting, isUser: false, timestamp: DateTime.now());
-      state = AiChatState(messages: [initialMsg]);
-      await _dao.insertMessage(
-        uuid: generateUUID(),
-        isUser: false,
-        text: greeting,
-        timestamp: initialMsg.timestamp,
-      );
     try {
       final stored = await _dao.getMessages();
+      final user = _ref.read(authProvider);
+
       if (stored.isNotEmpty) {
         state = AiChatState(
           messages: stored
-              .map((item) => ChatMessage(
-                    text: item.text,
-                    isUser: item.isUser,
-                    timestamp: item.timestamp,
-                  ))
+              .map(
+                (item) => ChatMessage(
+                  text: item.text,
+                  isUser: item.isUser,
+                  timestamp: item.timestamp,
+                ),
+              )
               .toList(),
         );
       } else {
-        state = const AiChatState(messages: []);
+        final greeting = user != null
+            ? "สวัสดีครับ! ผมคือ LIFT AI โค้ชส่วนตัวของคุณ ยินดีที่ได้คุยด้วยครับ มีอะไรที่ผมสามารถช่วยแนะนำเกี่ยวกับการออกกำลังกาย โภชนาการ หรือวิเคราะห์สถิติวันนี้ไหมครับ?"
+            : "Hello! I am LIFT AI, your personal coach. How can I help you today with your fitness journey?";
+
+        final initialMsg = ChatMessage(
+          text: greeting,
+          isUser: false,
+          timestamp: DateTime.now(),
+        );
+        state = AiChatState(messages: [initialMsg]);
+        await _dao.insertMessage(
+          uuid: generateUUID(),
+          isUser: false,
+          text: greeting,
+          timestamp: initialMsg.timestamp,
+        );
       }
     } catch (_) {
       state = const AiChatState(messages: []);
@@ -96,7 +83,7 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
   }
 
   void refreshContext() {
-    // Context is gathered dynamically on every sendMessage call, 
+    // Context is gathered dynamically on every sendMessage call,
     // so no explicit refresh needed here.
   }
 
@@ -107,7 +94,11 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
         ? "สวัสดีครับ! ผมคือ LIFT AI โค้ชส่วนตัวของคุณ มีอะไรเพิ่มเติมที่อยากสอบถามไหมครับ?"
         : "Hello! History cleared. How can I help you today?";
 
-    final initialMsg = ChatMessage(text: greeting, isUser: false, timestamp: DateTime.now());
+    final initialMsg = ChatMessage(
+      text: greeting,
+      isUser: false,
+      timestamp: DateTime.now(),
+    );
     state = AiChatState(messages: [initialMsg]);
     await _dao.insertMessage(
       uuid: generateUUID(),
@@ -163,7 +154,9 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
           for (final ex in exercises) {
             if (ex.id != null) {
               final sets = await routineDao.getSetsForExercise(ex.id!);
-              final setSummary = sets.map((s) => "${s.weightKg}kg x ${s.reps}").join(', ');
+              final setSummary = sets
+                  .map((s) => "${s.weightKg}kg x ${s.reps}")
+                  .join(', ');
               exDetails.add("  - ${ex.name}: [$setSummary]");
             } else {
               exDetails.add("  - ${ex.name}");
@@ -174,16 +167,22 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
       }
 
       final heightVal = profile?.height?.toStringAsFixed(1) ?? 'Not set';
-      
+
       final weightHistoryStr = weightLogs.isNotEmpty
           ? weightLogs
-                .map((l) => "${l.weightKg.toStringAsFixed(1)} kg (${DateTime.fromMillisecondsSinceEpoch(l.loggedAt).toLocal().toString().split(' ').first})")
+                .map(
+                  (l) =>
+                      "${l.weightKg.toStringAsFixed(1)} kg (${DateTime.fromMillisecondsSinceEpoch(l.loggedAt).toLocal().toString().split(' ').first})",
+                )
                 .join(', ')
           : 'No logs recorded yet';
 
       final prsStr = exercisePrs.isNotEmpty
           ? exercisePrs
-                .map((pr) => "${pr.name}: PR ${pr.prKg.toStringAsFixed(1)} kg x ${pr.prReps} reps")
+                .map(
+                  (pr) =>
+                      "${pr.name}: PR ${pr.prKg.toStringAsFixed(1)} kg x ${pr.prReps} reps",
+                )
                 .join('\n')
           : 'No PR records yet';
 
@@ -191,7 +190,8 @@ class AiChatNotifier extends StateNotifier<AiChatState> {
           ? routineSummaries.join('\n\n')
           : 'No saved routines created yet';
 
-      final contextStr = """
+      final contextStr =
+          """
 The user profile and stats context:
 - Height: $heightVal cm
 - Weight History Logs (newest first): $weightHistoryStr
@@ -205,14 +205,13 @@ $routinesStr
       // 2. Invoke the Supabase Edge Function
       final response = await _supabase.functions.invoke(
         'ai-coach',
-        body: {
-          'message': cleanText,
-          'context': contextStr,
-        },
+        body: {'message': cleanText, 'context': contextStr},
       );
 
       final data = response.data as Map<String, dynamic>;
-      final responseText = data['reply'] as String? ?? "ขออภัยด้วยครับ ผมเกิดข้อผิดพลาดในการประมวลผลคำตอบ";
+      final responseText =
+          data['reply'] as String? ??
+          "ขออภัยด้วยครับ ผมเกิดข้อผิดพลาดในการประมวลผลคำตอบ";
 
       final aiTime = DateTime.now();
       final aiMessage = ChatMessage(
@@ -273,6 +272,8 @@ $routinesStr
   }
 }
 
-final aiChatProvider = StateNotifierProvider<AiChatNotifier, AiChatState>((ref) {
+final aiChatProvider = StateNotifierProvider<AiChatNotifier, AiChatState>((
+  ref,
+) {
   return AiChatNotifier(ref);
 });

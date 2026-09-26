@@ -211,17 +211,6 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
             ),
             // Messages area
             Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
-                itemCount: state.messages.length + (state.isLoading ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index == state.messages.length) {
-                    return _buildThinkingBubble(context, accent, surface);
-                  }
               child: state.messages.isEmpty
                   ? Center(
                       child: SingleChildScrollView(
@@ -283,18 +272,6 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                         if (index == state.messages.length) {
                           return _buildThinkingBubble(context, accent, surface);
                         }
-
-                  final msg = state.messages[index];
-                  return _buildChatBubble(
-                    context,
-                    msg,
-                    accent,
-                    surface,
-                    textPrimary,
-                    textMuted,
-                  );
-                },
-              ),
                         final msg = state.messages[index];
                         return _buildChatBubble(
                           context,
