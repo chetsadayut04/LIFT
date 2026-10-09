@@ -734,18 +734,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                       ),
                       const SizedBox(height: 20),
-
-                      // Demo Hint Text
-                      Text(
-                        'Demo: อีเมลใดก็ได้ + รหัสผ่าน lift123',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.sarabun(
-                          color: AppColors.textMuted,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
                     ],
                   ),
                 ),

@@ -1,4 +1,5 @@
 {
     "java.configuration.updateBuildConfiguration": "automatic",
-    "cmake.sourceDirectory": "C:/Users/jedsa/OneDrive/Desktop/Code/LIFT/windows"
+    "cmake.sourceDirectory": "C:/Users/jedsa/OneDrive/Desktop/Code/LIFT/windows",
+    "chat.disableAIFeatures": false
 }
