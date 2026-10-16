@@ -206,9 +206,9 @@ class RoutinesScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Routine Header Image Banner
+              // Routine Header Image Banner (Modern Hero Banner - Option A)
               SizedBox(
-                height: 75,
+                height: 120,
                 child: Stack(
                   children: [
                     Positioned.fill(
@@ -228,9 +228,11 @@ class RoutinesScreen extends ConsumerWidget {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              Colors.black.withValues(alpha: 0.15),
+                              Colors.transparent,
+                              AppColors.surface.withValues(alpha: 0.6),
                               AppColors.surface,
                             ],
+                            stops: const [0.0, 0.6, 1.0],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                           ),
@@ -241,7 +243,7 @@ class RoutinesScreen extends ConsumerWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -255,8 +257,9 @@ class RoutinesScreen extends ConsumerWidget {
                               Text(
                                 routine.name,
                                 style: GoogleFonts.barlowCondensed(
-                                  fontSize: 22,
+                                  fontSize: 24,
                                   fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
                                   color: AppColors.textPrimary,
                                 ),
                               ),
@@ -266,7 +269,8 @@ class RoutinesScreen extends ConsumerWidget {
                                     ? '${exercises.length} ท่าออกกำลังกาย'
                                     : '${exercises.length} exercises',
                                 style: GoogleFonts.sarabun(
-                                  fontSize: 12,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
                                   color: AppColors.textMuted,
                                 ),
                               ),
@@ -274,7 +278,7 @@ class RoutinesScreen extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        // Actions buttons Row
+                        // Action buttons Row
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -285,16 +289,14 @@ class RoutinesScreen extends ConsumerWidget {
                                 width: 34,
                                 height: 34,
                                 decoration: BoxDecoration(
-                                  color: accent.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: accent.withValues(alpha: 0.25),
-                                  ),
+                                  color: AppColors.surfaceElevated,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: AppColors.border),
                                 ),
                                 alignment: Alignment.center,
                                 child: Icon(
                                   Icons.edit_outlined,
-                                  size: 17,
+                                  size: 16,
                                   color: accent,
                                 ),
                               ),
@@ -309,13 +311,13 @@ class RoutinesScreen extends ConsumerWidget {
                                 height: 34,
                                 decoration: BoxDecoration(
                                   color: AppColors.surfaceElevated,
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(10),
                                   border: Border.all(color: AppColors.border),
                                 ),
                                 alignment: Alignment.center,
                                 child: const Icon(
                                   Icons.qr_code_2_outlined,
-                                  size: 17,
+                                  size: 16,
                                   color: AppColors.textMuted,
                                 ),
                               ),
@@ -334,20 +336,16 @@ class RoutinesScreen extends ConsumerWidget {
                                 width: 34,
                                 height: 34,
                                 decoration: BoxDecoration(
-                                  color: const Color(
-                                    0xFFEF4444,
-                                  ).withValues(alpha: 0.08),
-                                  borderRadius: BorderRadius.circular(8),
+                                  color: const Color(0xFFEF4444).withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(10),
                                   border: Border.all(
-                                    color: const Color(
-                                      0xFFEF4444,
-                                    ).withValues(alpha: 0.2),
+                                    color: const Color(0xFFEF4444).withValues(alpha: 0.25),
                                   ),
                                 ),
                                 alignment: Alignment.center,
                                 child: const Icon(
                                   Icons.delete_outline_rounded,
-                                  size: 17,
+                                  size: 16,
                                   color: Color(0xFFF87171),
                                 ),
                               ),
@@ -357,7 +355,7 @@ class RoutinesScreen extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    // Exercise tag chips list
+                    // Exercise tag chips list with subtle borders & clean background
                     Wrap(
                       spacing: 6,
                       runSpacing: 6,
@@ -367,18 +365,22 @@ class RoutinesScreen extends ConsumerWidget {
                             .map(
                               (ex) => Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 3,
+                                  horizontal: 10,
+                                  vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.04),
-                                  borderRadius: BorderRadius.circular(6),
+                                  color: AppColors.surfaceElevated,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.08),
+                                  ),
                                 ),
                                 child: Text(
                                   ex.exercise.name,
                                   style: GoogleFonts.sarabun(
-                                    fontSize: 11,
-                                    color: AppColors.textMuted,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.textPrimary.withValues(alpha: 0.85),
                                   ),
                                 ),
                               ),
@@ -389,7 +391,7 @@ class RoutinesScreen extends ConsumerWidget {
                             child: Text(
                               '+${exercises.length - 4} ${lang == AppLanguage.th ? 'อื่นๆ' : 'more'}',
                               style: GoogleFonts.sarabun(
-                                fontSize: 11,
+                                fontSize: 12,
                                 color: AppColors.textMuted,
                               ),
                             ),
@@ -397,28 +399,37 @@ class RoutinesScreen extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    // Bottom actions: Start Workout
-                    SizedBox(
+                    // Bottom actions: Modern Capsule Start Workout button
+                    Container(
                       width: double.infinity,
-                      height: 44,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(23),
+                        boxShadow: [
+                          BoxShadow(
+                            color: accent.withValues(alpha: 0.25),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
                       child: FilledButton.icon(
-                        icon: const Icon(Icons.play_arrow, size: 16),
+                        icon: const Icon(Icons.play_arrow_rounded, size: 20),
                         label: Text(
                           lang == AppLanguage.th
                               ? 'เริ่มการฝึก'
                               : 'Start Workout',
                           style: GoogleFonts.barlowCondensed(
-                            fontSize: 15,
+                            fontSize: 17,
                             fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
                           ),
                         ),
                         style: FilledButton.styleFrom(
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
+                          backgroundColor: accent,
                           foregroundColor: const Color(0xFF000000),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(23),
                           ),
                         ),
                         onPressed: () async {

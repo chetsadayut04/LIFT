@@ -84,7 +84,14 @@ class RestTimerNotifier extends StateNotifier<RestTimerState> {
   }
 
   void adjust(int delta) {
-    if (state.endTime == null) return;
+    if (state.endTime == null) {
+      final newSecs = (state.secondsLeft + delta).clamp(5, 600);
+      state = state.copyWith(
+        secondsLeft: newSecs,
+        totalSeconds: newSecs,
+      );
+      return;
+    }
     final newEndTime = state.endTime!.add(Duration(seconds: delta));
     final newSecs = newEndTime.difference(DateTime.now()).inSeconds.clamp(0, 600);
     state = state.copyWith(

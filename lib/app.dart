@@ -120,7 +120,10 @@ class _AppState extends ConsumerState<App> {
                           const SizedBox(
                             width: 32,
                             height: 32,
-                            child: CircularProgressIndicator(strokeWidth: 3),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 3,
+                              color: AppColors.primary,
+                            ),
                           ),
                           const SizedBox(height: 16),
                           Text(

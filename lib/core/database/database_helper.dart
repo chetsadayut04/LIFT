@@ -357,46 +357,45 @@ class DatabaseHelper {
     final user = supabase.auth.currentUser;
     if (user == null) return;
 
+    // 1. Fetch all remote data from Supabase in parallel
+    final results = await Future.wait<dynamic>([
+      supabase.from('sessions').select().eq('user_id', user.id),
+      supabase.from('exercises').select().eq('user_id', user.id),
+      supabase.from('sets').select().eq('user_id', user.id),
+      supabase.from('exercise_configs').select().eq('user_id', user.id),
+      supabase.from('profiles').select().eq('id', user.id).maybeSingle(),
+      supabase.from('weight_logs').select().eq('user_id', user.id),
+      supabase.from('routines').select().eq('user_id', user.id).catchError((_) => <Map<String, dynamic>>[]),
+      supabase.from('routine_exercises').select().eq('user_id', user.id).catchError((_) => <Map<String, dynamic>>[]),
+      supabase.from('routine_sets').select().eq('user_id', user.id).catchError((_) => <Map<String, dynamic>>[]),
+    ]);
+
+    final remoteSessions = results[0] as List;
+    final remoteExercises = results[1] as List;
+    final remoteSets = results[2] as List;
+    final remoteConfigs = results[3] as List;
+    final remoteProfile = results[4] as Map<String, dynamic>?;
+    final remoteWeightLogs = results[5] as List;
+    final remoteRoutines = results[6] as List;
+    final remoteRoutineExercises = results[7] as List;
+    final remoteRoutineSets = results[8] as List;
+
+    // 2. Clear and batch insert into local SQLite in a single transaction
     final db = await database;
     await db.transaction((txn) async {
+      final batch = txn.batch();
+
       // Clear existing local tables
-      await txn.delete('sets');
-      await txn.delete('exercises');
-      await txn.delete('sessions');
-      await txn.delete('exercise_configs');
-      await txn.delete('profiles');
-      await txn.delete('weight_logs');
+      batch.delete('sets');
+      batch.delete('exercises');
+      batch.delete('sessions');
+      batch.delete('exercise_configs');
+      batch.delete('profiles');
+      batch.delete('weight_logs');
 
-      // Fetch all from Supabase
-      final remoteSessions = await supabase
-          .from('sessions')
-          .select()
-          .eq('user_id', user.id);
-      final remoteExercises = await supabase
-          .from('exercises')
-          .select()
-          .eq('user_id', user.id);
-      final remoteSets = await supabase
-          .from('sets')
-          .select()
-          .eq('user_id', user.id);
-      final remoteConfigs = await supabase
-          .from('exercise_configs')
-          .select()
-          .eq('user_id', user.id);
-      final remoteProfile = await supabase
-          .from('profiles')
-          .select()
-          .eq('id', user.id)
-          .maybeSingle();
-      final remoteWeightLogs = await supabase
-          .from('weight_logs')
-          .select()
-          .eq('user_id', user.id);
-
-      // Insert into local SQLite
+      // Batch insert into local SQLite
       for (final s in remoteSessions) {
-        await txn.insert('sessions', {
+        batch.insert('sessions', {
           'id': s['id'] as int,
           'date': s['date'] as String,
           'name': s['name'] as String?,
@@ -406,7 +405,7 @@ class DatabaseHelper {
       }
 
       for (final ex in remoteExercises) {
-        await txn.insert('exercises', {
+        batch.insert('exercises', {
           'id': ex['id'] as int,
           'session_id': ex['session_id'] as int,
           'name': ex['name'] as String,
@@ -415,7 +414,7 @@ class DatabaseHelper {
       }
 
       for (final s in remoteSets) {
-        await txn.insert('sets', {
+        batch.insert('sets', {
           'id': s['id'] as int,
           'exercise_id': s['exercise_id'] as int,
           'set_number': s['set_number'] as int,
@@ -427,7 +426,7 @@ class DatabaseHelper {
       }
 
       for (final cfg in remoteConfigs) {
-        await txn.insert('exercise_configs', {
+        batch.insert('exercise_configs', {
           'name': cfg['name'] as String,
           'rep_min': cfg['rep_min'] as int,
           'rep_max': cfg['rep_max'] as int,
@@ -435,7 +434,7 @@ class DatabaseHelper {
       }
 
       if (remoteProfile != null) {
-        await txn.insert('profiles', {
+        batch.insert('profiles', {
           'id': remoteProfile['id'] as String,
           'height': (remoteProfile['height'] as num?)?.toDouble(),
           'updated_at': remoteProfile['updated_at'] as int,
@@ -443,7 +442,7 @@ class DatabaseHelper {
       }
 
       for (final wl in remoteWeightLogs) {
-        await txn.insert('weight_logs', {
+        batch.insert('weight_logs', {
           'id': wl['id'] as int,
           'uuid': wl['uuid'] as String,
           'weight_kg': (wl['weight_kg'] as num).toDouble(),
@@ -451,60 +450,45 @@ class DatabaseHelper {
         });
       }
 
-      try {
-        final remoteRoutines = await supabase
-            .from('routines')
-            .select()
-            .eq('user_id', user.id);
-        final remoteRoutineExercises = await supabase
-            .from('routine_exercises')
-            .select()
-            .eq('user_id', user.id);
-        final remoteRoutineSets = await supabase
-            .from('routine_sets')
-            .select()
-            .eq('user_id', user.id);
+      if (remoteRoutines.isNotEmpty) {
+        batch.delete('routine_sets');
+        batch.delete('routine_exercises');
+        batch.delete('routines');
 
-        if (remoteRoutines.isNotEmpty) {
-          await txn.delete('routine_sets');
-          await txn.delete('routine_exercises');
-          await txn.delete('routines');
-
-          for (final r in remoteRoutines) {
-            await txn.insert('routines', {
-              'id': r['id'] as int,
-              'uuid': r['uuid'] as String?,
-              'name': r['name'] as String,
-              'created_at': r['created_at'] as int,
-              'is_synced': 1,
-            });
-          }
-          for (final re in remoteRoutineExercises) {
-            await txn.insert('routine_exercises', {
-              'id': re['id'] as int,
-              'uuid': re['uuid'] as String?,
-              'routine_id': re['routine_id'] as int,
-              'name': re['name'] as String,
-              'order_index': re['order_index'] as int,
-              'is_synced': 1,
-            });
-          }
-          for (final rs in remoteRoutineSets) {
-            await txn.insert('routine_sets', {
-              'id': rs['id'] as int,
-              'uuid': rs['uuid'] as String?,
-              'routine_exercise_id': rs['routine_exercise_id'] as int,
-              'set_number': rs['set_number'] as int,
-              'weight_kg': (rs['weight_kg'] as num).toDouble(),
-              'reps': rs['reps'] as int,
-              'is_warmup': (rs['is_warmup'] as bool? ?? false) ? 1 : 0,
-              'is_synced': 1,
-            });
-          }
+        for (final r in remoteRoutines) {
+          batch.insert('routines', {
+            'id': r['id'] as int,
+            'uuid': r['uuid'] as String?,
+            'name': r['name'] as String,
+            'created_at': r['created_at'] as int,
+            'is_synced': 1,
+          });
         }
-      } catch (_) {
-        // Routines table on Supabase might not exist yet; fallback silently
+        for (final re in remoteRoutineExercises) {
+          batch.insert('routine_exercises', {
+            'id': re['id'] as int,
+            'uuid': re['uuid'] as String?,
+            'routine_id': re['routine_id'] as int,
+            'name': re['name'] as String,
+            'order_index': re['order_index'] as int,
+            'is_synced': 1,
+          });
+        }
+        for (final rs in remoteRoutineSets) {
+          batch.insert('routine_sets', {
+            'id': rs['id'] as int,
+            'uuid': rs['uuid'] as String?,
+            'routine_exercise_id': rs['routine_exercise_id'] as int,
+            'set_number': rs['set_number'] as int,
+            'weight_kg': (rs['weight_kg'] as num).toDouble(),
+            'reps': rs['reps'] as int,
+            'is_warmup': (rs['is_warmup'] as bool? ?? false) ? 1 : 0,
+            'is_synced': 1,
+          });
+        }
       }
+
+      await batch.commit(noResult: true);
     });
   }
 }

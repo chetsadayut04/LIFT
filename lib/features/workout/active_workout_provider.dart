@@ -164,19 +164,21 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState> {
   }
 
   Future<void> deleteSet(int exerciseId, int setId) async {
+    final idx = state.exercises.indexWhere((e) => e.exercise.id == exerciseId);
+    if (idx != -1) {
+      final updated = List<ExerciseWithSets>.from(state.exercises);
+      final cur = updated[idx];
+      final remaining = cur.sets.where((s) => s.id != setId).toList();
+      final renumbered = [
+        for (var i = 0; i < remaining.length; i++)
+          remaining[i].copyWith(setNumber: i + 1),
+      ];
+      updated[idx] = cur.copyWith(sets: renumbered);
+      state = state.copyWith(exercises: updated);
+    }
+
     await _setDao.delete(setId);
     await _setDao.renumberSets(exerciseId);
-    final idx = state.exercises.indexWhere((e) => e.exercise.id == exerciseId);
-    if (idx == -1) return;
-    final updated = List<ExerciseWithSets>.from(state.exercises);
-    final cur = updated[idx];
-    final remaining = cur.sets.where((s) => s.id != setId).toList();
-    final renumbered = [
-      for (var i = 0; i < remaining.length; i++)
-        remaining[i].copyWith(setNumber: i + 1),
-    ];
-    updated[idx] = cur.copyWith(sets: renumbered);
-    state = state.copyWith(exercises: updated);
   }
 
   Future<void> reorderExercises(int oldIndex, int newIndex) async {

@@ -283,115 +283,113 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
             ),
           )
         else ...[
-          // ── Exercise Chips Horizontal Selector ──────────────────────────────
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  lang == AppLanguage.th ? 'ท่าออกกำลังกาย' : 'EXERCISES',
-                  style: GoogleFonts.barlowCondensed(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF94A3B8),
-                    letterSpacing: 1.0,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: exercises.map((ex) {
-                      final isSelected = ex == selectedEx;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() => _currentExercise = ex);
-                            ref.read(statsProvider.notifier).selectExercise(ex);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 7,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? AppColors.primary.withValues(alpha: 0.15)
-                                  : AppColors.surface,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: isSelected
-                                    ? AppColors.primary.withValues(alpha: 0.5)
-                                    : AppColors.border,
-                              ),
-                            ),
-                            child: Text(
-                              ex,
-                              style: GoogleFonts.sarabun(
-                                fontSize: 13,
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.w400,
-                                color: isSelected
-                                    ? AppColors.primary
-                                    : AppColors.textMuted,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // ── PR Trend Line Chart Card ─────────────────────────────────────────
+          // ── PR Trend Line Chart Card with Embedded Exercise Selector ─────────
           Container(
             decoration: BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppColors.border),
             ),
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
             margin: const EdgeInsets.only(bottom: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Header: PR Trend title + Dropdown Picker & Max Value
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'PR TREND',
-                          style: GoogleFonts.barlowCondensed(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textMuted,
-                            letterSpacing: 0.8,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'PR TREND',
+                            style: GoogleFonts.barlowCondensed(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textMuted,
+                              letterSpacing: 0.8,
+                            ),
                           ),
-                        ),
-                        Text(
-                          selectedEx,
-                          style: GoogleFonts.sarabun(
-                            fontSize: 13,
-                            color: AppColors.textMuted,
+                          const SizedBox(height: 6),
+                          // Fixed-size Exercise Dropdown Selector with PopupMenu (Never jumps!)
+                          PopupMenuButton<String>(
+                            initialValue: selectedEx,
+                            position: PopupMenuPosition.under,
+                            color: AppColors.surfaceElevated,
+                            elevation: 8,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: const BorderSide(color: AppColors.border),
+                            ),
+                            onSelected: (newEx) {
+                              setState(() => _currentExercise = newEx);
+                              ref.read(statsProvider.notifier).selectExercise(newEx);
+                            },
+                            itemBuilder: (context) => exercises.map((ex) {
+                              final isCurrent = ex == selectedEx;
+                              return PopupMenuItem<String>(
+                                value: ex,
+                                height: 42,
+                                child: Text(
+                                  ex,
+                                  style: GoogleFonts.sarabun(
+                                    fontSize: 13,
+                                    fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
+                                    color: isCurrent ? AppColors.primary : AppColors.textPrimary,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                            child: Container(
+                              height: 38,
+                              constraints: const BoxConstraints(maxWidth: 240),
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceElevated,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: AppColors.primary.withValues(alpha: 0.35),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      selectedEx,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.sarabun(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  const Icon(
+                                    Icons.keyboard_arrow_down_rounded,
+                                    color: AppColors.primary,
+                                    size: 18,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
                           fmtNum(displayMaxVal),
                           style: GoogleFonts.jetBrainsMono(
-                            fontSize: 24,
+                            fontSize: 26,
                             fontWeight: FontWeight.w700,
                             color: AppColors.primary,
                           ),
@@ -409,7 +407,7 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 18),
                 // Line Chart
                 SizedBox(
                   height: 160,
@@ -630,11 +628,8 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
 
     final displayPrs =
         List<({String name, double prKg, int prReps, int totalSets})>.from(prs);
-    displayPrs.sort((a, b) {
-      if (a.name == selectedEx) return -1;
-      if (b.name == selectedEx) return 1;
-      return b.prKg.compareTo(a.prKg);
-    });
+    // Keep list order completely stable (sorted by PR weight), do not jump items around
+    displayPrs.sort((a, b) => b.prKg.compareTo(a.prKg));
 
     final maxPr = displayPrs.map((e) => e.prKg).reduce(math.max);
 
