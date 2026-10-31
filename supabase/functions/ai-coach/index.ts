@@ -6,10 +6,10 @@ const PREFERRED_MODEL = Deno.env.get("GEMINI_MODEL") || "gemini-2.0-flash";
 const CANDIDATE_MODELS = [
   PREFERRED_MODEL,
   "gemini-2.0-flash",
-  "gemini-2.0-flash-lite",
-  "gemini-1.5-flash",
-  "gemini-1.5-flash-8b",
-  "gemini-1.5-pro",
+  "gemini-2.0-flash",
+  "gemini-2.0-flash",
+  "gemini-2.0-flash",
+  "gemini-2.0-flash",
 ].filter((m, i, self) => Boolean(m) && self.indexOf(m) === i);
 
 serve(async (req) => {

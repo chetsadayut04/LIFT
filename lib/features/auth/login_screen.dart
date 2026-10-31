@@ -46,8 +46,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         if (mounted) {
           _showCustomSnackBar(
             context: context,
-            message:
-                'สมัครสมาชิกสำเร็จแล้ว! เข้าสู่ระบบหรือตรวจสอบอีเมลของคุณเพื่อยืนยันบัญชี',
+            message: 'สมัครสมาชิกสำเร็จแล้ว!',
             isError: false,
           );
           setState(() {
@@ -79,10 +78,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (str.contains('invalid_credentials') ||
         str.contains('Invalid login credentials')) {
       return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง';
-    }
-    if (str.contains('email_not_confirmed') ||
-        str.contains('Email not confirmed')) {
-      return 'กรุณายืนยันอีเมลของคุณก่อนเข้าสู่ระบบ โดยคลิกลิงก์ยืนยันในกล่องข้อความอีเมลของคุณ';
     }
     if (str.contains('user_already_exists') ||
         str.contains('User already registered') ||
@@ -230,10 +225,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   validator: (val) {
-                    if (val == null || val.trim().isEmpty) {
-                      return 'กรุณากรอกอีเมล';
+                    final text = val?.trim() ?? '';
+                    if (text.isEmpty) {
+                      return 'กรุณาใส่อีเมล';
                     }
-                    if (!val.contains('@')) {
+                    final emailRegex = RegExp(
+                      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                    );
+                    if (!emailRegex.hasMatch(text)) {
                       return 'รูปแบบอีเมลไม่ถูกต้อง';
                     }
                     return null;
@@ -439,10 +438,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               children: [
                                 Expanded(
                                   child: GestureDetector(
-                                    onTap: () => setState(() {
-                                      _isSignUp = false;
-                                      _errorMessage = null;
-                                    }),
+                                    onTap: () {
+                                      if (_isSignUp) {
+                                        setState(() {
+                                          _isSignUp = false;
+                                          _errorMessage = null;
+                                          _emailController.clear();
+                                          _passwordController.clear();
+                                          _formKey.currentState?.reset();
+                                        });
+                                      }
+                                    },
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 10,
@@ -469,10 +475,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                                 Expanded(
                                   child: GestureDetector(
-                                    onTap: () => setState(() {
-                                      _isSignUp = true;
-                                      _errorMessage = null;
-                                    }),
+                                    onTap: () {
+                                      if (!_isSignUp) {
+                                        setState(() {
+                                          _isSignUp = true;
+                                          _errorMessage = null;
+                                          _emailController.clear();
+                                          _passwordController.clear();
+                                          _formKey.currentState?.reset();
+                                        });
+                                      }
+                                    },
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 10,
@@ -606,10 +619,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                         validator: (val) {
-                          if (val == null || val.trim().isEmpty) {
-                            return 'กรุณากรอกอีเมล';
+                          final text = val?.trim() ?? '';
+                          if (text.isEmpty) {
+                            return 'กรุณาใส่อีเมล';
                           }
-                          if (!val.contains('@')) {
+                          final emailRegex = RegExp(
+                            r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                          );
+                          if (!emailRegex.hasMatch(text)) {
                             return 'รูปแบบอีเมลไม่ถูกต้อง';
                           }
                           return null;
