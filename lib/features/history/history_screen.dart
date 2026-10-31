@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/providers/translation_provider.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/utils/routine_image_helper.dart';
 import '../home/home_provider.dart';
 import '../stats/stats_provider.dart';
 import 'history_provider.dart';
@@ -28,7 +30,24 @@ class HistoryScreen extends ConsumerWidget {
         data: (sessions) {
           if (sessions.isEmpty) {
             return Center(
-              child: Text(lang.tr('history_no_records'), style: TextStyle(color: textMuted)),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.asset(
+                      'assets/images/empty_history.webp',
+                      width: 120,
+                      height: 120,
+                      fit: BoxFit.contain,
+                      cacheWidth: (120 * MediaQuery.devicePixelRatioOf(context)).round(),
+                      errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(lang.tr('history_no_records'), style: TextStyle(color: textMuted)),
+                ],
+              ),
             );
           }
           // Build grouped list: interleave month headers
@@ -154,6 +173,31 @@ class _SessionTile extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         child: Row(
           children: [
+            // Muscle group thumbnail
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                RoutineImageHelper.getImageUrl(s.name ?? ''),
+                width: 44,
+                height: 44,
+                fit: BoxFit.cover,
+                cacheWidth: (44 * MediaQuery.devicePixelRatioOf(context)).round(),
+                errorBuilder: (context, error, stackTrace) => Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceElevated,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.fitness_center_rounded,
+                    size: 20,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 14),
             // Date block
             SizedBox(
               width: 40,

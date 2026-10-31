@@ -205,7 +205,21 @@ class ActiveWorkoutScreen extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.fitness_center, size: 40, color: border),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.asset(
+                      'assets/images/empty_workout.webp',
+                      width: 120,
+                      height: 120,
+                      fit: BoxFit.contain,
+                      cacheWidth: (120 * MediaQuery.devicePixelRatioOf(context)).round(),
+                      errorBuilder: (context, error, stackTrace) => Icon(
+                        Icons.fitness_center,
+                        size: 40,
+                        color: border,
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     lang.tr('workout_no_exercises'),

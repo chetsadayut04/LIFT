@@ -400,8 +400,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 ? 'ลบรูปโปรไฟล์แล้ว'
                                 : 'Profile photo removed',
                           ),
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primary,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
                         ),
                       );
                     }
@@ -476,15 +477,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         final err = e.toString();
-        String msg =
-            lang == AppLanguage.th
-                ? 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ'
-                : 'Failed to upload image: $e';
+        String msg = lang == AppLanguage.th
+            ? 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ'
+            : 'Failed to upload image: $e';
         if (err.contains('Bucket not found') || err.contains('bucket')) {
-          msg =
-              lang == AppLanguage.th
-                  ? 'ยังไม่ได้สร้าง Bucket "avatars" ใน Supabase หรือยังไม่ได้ตั้งเป็น Public'
-                  : 'Bucket "avatars" not found in Supabase Storage or not set to Public.';
+          msg = lang == AppLanguage.th
+              ? 'ยังไม่ได้สร้าง Bucket "avatars" ใน Supabase หรือยังไม่ได้ตั้งเป็น Public'
+              : 'Bucket "avatars" not found in Supabase Storage or not set to Public.';
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -597,8 +596,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     ? 'เปลี่ยนรูปโปรไฟล์เป็น ${item['name']} แล้ว'
                                     : 'Profile photo updated to ${item['name']}',
                               ),
-                              backgroundColor:
-                                  Theme.of(context).colorScheme.primary,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
                             ),
                           );
                         }
@@ -618,10 +618,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       decoration: BoxDecoration(
                         color: AppColors.surfaceElevated,
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: AppColors.border,
-                          width: 1,
-                        ),
+                        border: Border.all(color: AppColors.border, width: 1),
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -1373,229 +1370,261 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // ── Top Header matching Figma ──────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 24.0,
-                  horizontal: 16.0,
-                ),
-                child: Column(
-                  children: [
-                    // Avatar with Cyber Volt gradient border & edit indicator
-                    GestureDetector(
-                      onTap: () => _showProfileOptionsSheet(
-                        context,
-                        displayName,
-                        avatarUrl,
+              // ── Top Header with Profile Cover ──────────────────────────
+              Stack(
+                children: [
+                  // Cover Image with fallback gradient
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 220,
+                    child: Image.asset(
+                      'assets/images/profile_cover.webp',
+                      fit: BoxFit.cover,
+                      cacheWidth:
+                          (MediaQuery.sizeOf(context).width *
+                                  MediaQuery.devicePixelRatioOf(context))
+                              .round(),
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [AppColors.surfaceElevated, AppColors.bg],
+                          ),
+                        ),
                       ),
-                      child: Stack(
-                        alignment: Alignment.bottomRight,
-                        children: [
-                          Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: const LinearGradient(
-                                colors: [
-                                  AppColors.primary,
-                                  AppColors.primaryVariant,
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              border: Border.all(
-                                color: AppColors.primary.withValues(
-                                  alpha: 0.35,
-                                ),
-                                width: 3,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primary.withValues(
-                                    alpha: 0.2,
+                    ),
+                  ),
+                  // Dark Scrim Overlay for contrast
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 220,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.2),
+                            AppColors.bg.withValues(alpha: 0.8),
+                            AppColors.bg,
+                          ],
+                          stops: const [0.0, 0.65, 1.0],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Header Content
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 24.0,
+                      horizontal: 16.0,
+                    ),
+                    child: Column(
+                      children: [
+                        // Avatar with Cyber Volt gradient border & edit indicator
+                        GestureDetector(
+                          onTap: () => _showProfileOptionsSheet(
+                            context,
+                            displayName,
+                            avatarUrl,
+                          ),
+                          child: Stack(
+                            alignment: Alignment.bottomRight,
+                            children: [
+                              Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      AppColors.primary,
+                                      AppColors.primaryVariant,
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
-                                  blurRadius: 16,
-                                  spreadRadius: 1,
-                                ),
-                              ],
-                            ),
-                            alignment: Alignment.center,
-                            child: avatarUrl != null
-                                ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(40),
-                                    child: avatarUrl.startsWith('assets/')
-                                        ? Image.asset(
-                                            avatarUrl,
-                                            width: 80,
-                                            height: 80,
-                                            fit: BoxFit.cover,
-                                            errorBuilder:
-                                                (context, error, stackTrace) =>
-                                                    Text(
-                                                      displayName.isNotEmpty
-                                                          ? displayName[0]
-                                                              .toUpperCase()
-                                                          : 'U',
-                                                      style:
-                                                          GoogleFonts
-                                                              .barlowCondensed(
-                                                                fontSize: 34,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color: AppColors
-                                                                    .onPrimary,
-                                                              ),
-                                                    ),
-                                          )
-                                        : Image.network(
-                                            WebImageUtils.getCorsSafeUrl(
-                                              avatarUrl,
-                                            ),
-                                            width: 80,
-                                            height: 80,
-                                            fit: BoxFit.cover,
-                                            errorBuilder:
-                                                (context, error, stackTrace) =>
-                                                    Text(
-                                                      displayName.isNotEmpty
-                                                          ? displayName[0]
-                                                              .toUpperCase()
-                                                          : 'U',
-                                                      style:
-                                                          GoogleFonts
-                                                              .barlowCondensed(
-                                                                fontSize: 34,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color: AppColors
-                                                                    .onPrimary,
-                                                              ),
-                                                    ),
-                                          ),
-                                  )
-                                : Text(
-                                    displayName.isNotEmpty
-                                        ? displayName[0].toUpperCase()
-                                        : 'U',
-                                    style: GoogleFonts.barlowCondensed(
-                                      fontSize: 34,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.onPrimary,
+                                  border: Border.all(
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.35,
                                     ),
+                                    width: 3,
                                   ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.all(5),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: AppColors.border,
-                                width: 1.5,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.primary.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                      blurRadius: 16,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
+                                ),
+                                alignment: Alignment.center,
+                                child: avatarUrl != null
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(40),
+                                        child: Image.network(
+                                          WebImageUtils.getCorsSafeUrl(
+                                            avatarUrl,
+                                          ),
+                                          width: 80,
+                                          height: 80,
+                                          fit: BoxFit.cover,
+                                          errorBuilder:
+                                              (
+                                                context,
+                                                error,
+                                                stackTrace,
+                                              ) => Text(
+                                                displayName.isNotEmpty
+                                                    ? displayName[0]
+                                                          .toUpperCase()
+                                                    : 'U',
+                                                style:
+                                                    GoogleFonts.barlowCondensed(
+                                                      fontSize: 34,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color:
+                                                          AppColors.onPrimary,
+                                                    ),
+                                              ),
+                                        ),
+                                      )
+                                    : Text(
+                                        displayName.isNotEmpty
+                                            ? displayName[0].toUpperCase()
+                                            : 'U',
+                                        style: GoogleFonts.barlowCondensed(
+                                          fontSize: 34,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.onPrimary,
+                                        ),
+                                      ),
                               ),
-                            ),
-                            child: const Icon(
-                              Icons.edit_rounded,
-                              size: 13,
-                              color: AppColors.primary,
-                            ),
+                              Container(
+                                padding: const EdgeInsets.all(5),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surface,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: AppColors.border,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.edit_rounded,
+                                  size: 13,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      displayName,
-                      style: GoogleFonts.barlowCondensed(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: textPrimary,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      user?.email ?? '',
-                      style: GoogleFonts.sarabun(
-                        fontSize: 13,
-                        color: textMuted,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    // Member status badge (replaced obsolete Google OAuth badge)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.border, width: 1),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.fitness_center_rounded,
-                            size: 13,
-                            color: AppColors.primary,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          displayName,
+                          style: GoogleFonts.barlowCondensed(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: textPrimary,
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            memberSinceLabel != null
-                                ? (lang == AppLanguage.th
-                                      ? 'สมาชิก LIFT · ตั้งแต่ $memberSinceLabel'
-                                      : 'LIFT Member · Since $memberSinceLabel')
-                                : (lang == AppLanguage.th
-                                      ? 'สมาชิก LIFT'
-                                      : 'LIFT Member'),
-                            style: GoogleFonts.sarabun(
-                              fontSize: 11,
-                              color: AppColors.textMuted,
-                              fontWeight: FontWeight.w500,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          user?.email ?? '',
+                          style: GoogleFonts.sarabun(
+                            fontSize: 13,
+                            color: textMuted,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        // Member status badge (replaced obsolete Google OAuth badge)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: AppColors.border,
+                              width: 1,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.fitness_center_rounded,
+                                size: 13,
+                                color: AppColors.primary,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                memberSinceLabel != null
+                                    ? (lang == AppLanguage.th
+                                          ? 'สมาชิก LIFT · ตั้งแต่ $memberSinceLabel'
+                                          : 'LIFT Member · Since $memberSinceLabel')
+                                    : (lang == AppLanguage.th
+                                          ? 'สมาชิก LIFT'
+                                          : 'LIFT Member'),
+                                style: GoogleFonts.sarabun(
+                                  fontSize: 11,
+                                  color: AppColors.textMuted,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
 
-                    // Stats Row Card
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppColors.border, width: 1),
-                      ),
-                      child: Row(
-                        children: [
-                          _buildStatItem('เซสชัน', '$totalSessions', lang),
-                          Container(
-                            width: 1,
-                            height: 40,
-                            color: AppColors.border,
+                        // Stats Row Card
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: AppColors.border,
+                              width: 1,
+                            ),
                           ),
-                          _buildStatItem(
-                            'สัปดาห์นี้',
-                            '$sessionsThisWeek',
-                            lang,
+                          child: Row(
+                            children: [
+                              _buildStatItem('เซสชัน', '$totalSessions', lang),
+                              Container(
+                                width: 1,
+                                height: 40,
+                                color: AppColors.border,
+                              ),
+                              _buildStatItem(
+                                'สัปดาห์นี้',
+                                '$sessionsThisWeek',
+                                lang,
+                              ),
+                              Container(
+                                width: 1,
+                                height: 40,
+                                color: AppColors.border,
+                              ),
+                              _buildStatItem('วันต่อเนื่อง', '$streak', lang),
+                            ],
                           ),
-                          Container(
-                            width: 1,
-                            height: 40,
-                            color: AppColors.border,
-                          ),
-                          _buildStatItem('วันต่อเนื่อง', '$streak', lang),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
 
               // ── Language ──────────────────────────────────────────
@@ -2056,30 +2085,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     horizontal: 16,
                     vertical: 14,
                   ),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            lang == AppLanguage.th ? 'เวอร์ชัน' : 'Version',
-                            style: GoogleFonts.sarabun(
-                              fontSize: 13,
-                              color: AppColors.textMuted,
-                            ),
-                          ),
-                          Text(
-                            '1.0.0-beta',
-                            style: GoogleFonts.jetBrainsMono(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                    ],
-                  ),
+                  child: Column(),
                 ),
               ),
               const SizedBox(height: 20),

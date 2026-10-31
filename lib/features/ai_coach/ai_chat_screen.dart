@@ -221,17 +221,27 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Container(
-                              width: 60,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                color: accent.withValues(alpha: 0.12),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.auto_awesome_rounded,
-                                size: 30,
-                                color: accent,
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: Image.asset(
+                                'assets/images/ai_coach.webp',
+                                width: 90,
+                                height: 90,
+                                fit: BoxFit.contain,
+                                cacheWidth: (90 * MediaQuery.devicePixelRatioOf(context)).round(),
+                                errorBuilder: (context, error, stackTrace) => Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    color: accent.withValues(alpha: 0.12),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.auto_awesome_rounded,
+                                    size: 30,
+                                    color: accent,
+                                  ),
+                                ),
                               ),
                             ),
                             const SizedBox(height: 16),

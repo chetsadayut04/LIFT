@@ -122,14 +122,18 @@ class _HomeBody extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'LIFT',
-                style: GoogleFonts.barlowCondensed(
-                  fontSize: 36,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -1.0,
-                  color: accent,
-                  height: 1.0,
+              ShaderMask(
+                shaderCallback: (bounds) =>
+                    AppColors.primaryGradient.createShader(bounds),
+                child: Text(
+                  'LIFT',
+                  style: GoogleFonts.barlowCondensed(
+                    fontSize: 38,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -1.0,
+                    color: Colors.white,
+                    height: 1.0,
+                  ),
                 ),
               ),
               Padding(
@@ -356,29 +360,43 @@ class _HomeBody extends ConsumerWidget {
             flex: 2,
             child: SizedBox(
               height: 52,
-              child: FilledButton(
-                onPressed: () => _continue(context, ref),
-                style: FilledButton.styleFrom(
-                  backgroundColor: accent,
-                  foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      lang == AppLanguage.th ? 'บันทึกต่อ' : 'Continue',
-                      style: GoogleFonts.barlowCondensed(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.arrow_forward, size: 16),
                   ],
+                ),
+                child: FilledButton(
+                  onPressed: () => _continue(context, ref),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        lang == AppLanguage.th ? 'บันทึกต่อ' : 'Continue',
+                        style: GoogleFonts.barlowCondensed(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.arrow_forward_rounded, size: 18),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -386,13 +404,25 @@ class _HomeBody extends ConsumerWidget {
         ],
       );
     }
-    return SizedBox(
+    return Container(
       width: double.infinity,
       height: 52,
+      decoration: BoxDecoration(
+        gradient: AppColors.primaryGradient,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.35),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: FilledButton(
         onPressed: () => _start(context, ref, lang),
         style: FilledButton.styleFrom(
-          backgroundColor: accent,
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
           foregroundColor: Colors.black,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
@@ -401,12 +431,12 @@ class _HomeBody extends ConsumerWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.play_arrow, size: 18),
-            const SizedBox(width: 4),
+            const Icon(Icons.play_arrow_rounded, size: 22),
+            const SizedBox(width: 6),
             Text(
               lang == AppLanguage.th ? 'เริ่มการฝึก' : 'Start Workout',
               style: GoogleFonts.barlowCondensed(
-                fontSize: 18,
+                fontSize: 19,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5,
               ),
@@ -1117,26 +1147,26 @@ class _ConsistencyCalendar extends ConsumerWidget {
                   height: 32,
                   decoration: BoxDecoration(
                     color: isCompleted
-                        ? accent.withValues(alpha: 0.15)
+                        ? AppColors.primary
                         : (isToday
-                              ? theme.colorScheme.outline.withValues(alpha: 0.1)
-                              : Colors.transparent),
+                            ? AppColors.secondary.withValues(alpha: 0.15)
+                            : Colors.transparent),
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: isCompleted
-                          ? accent
+                          ? AppColors.primary
                           : (isToday
-                                ? accent.withValues(alpha: 0.5)
-                                : theme.colorScheme.outline.withValues(
-                                    alpha: 0.5,
-                                  )),
+                              ? AppColors.secondary
+                              : theme.colorScheme.outline.withValues(
+                                  alpha: 0.35,
+                                )),
                       width: isCompleted || isToday ? 1.5 : 1,
                     ),
                     boxShadow: isCompleted
                         ? [
                             BoxShadow(
-                              color: accent.withValues(alpha: 0.3),
-                              blurRadius: 6,
+                              color: AppColors.primary.withValues(alpha: 0.45),
+                              blurRadius: 8,
                               spreadRadius: 1,
                             ),
                           ]
@@ -1144,7 +1174,7 @@ class _ConsistencyCalendar extends ConsumerWidget {
                   ),
                   alignment: Alignment.center,
                   child: isCompleted
-                      ? Icon(Icons.check, size: 14, color: accent)
+                      ? const Icon(Icons.check, size: 16, color: Colors.black)
                       : Text(
                           '${day.day}',
                           style: TextStyle(
@@ -1407,29 +1437,56 @@ class _StatsSummaryDashboardState
 
     return Row(
       children: [
-        // Left Card: Weekly Volume Summary
+        // Left Card: Weekly Volume Summary (Electric Cyan Glow)
         Expanded(
           child: Container(
             height: 130,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: isDark ? AppColors.surface : const Color(0xFFF1F5F0),
-              border: Border.all(color: border, width: 0.5),
+              border: Border.all(
+                color: isDark
+                    ? AppColors.secondary.withValues(alpha: 0.35)
+                    : border,
+                width: 1.0,
+              ),
               borderRadius: BorderRadius.circular(16),
+              boxShadow: isDark
+                  ? [
+                      BoxShadow(
+                        color: AppColors.secondary.withValues(alpha: 0.08),
+                        blurRadius: 12,
+                        spreadRadius: 1,
+                      ),
+                    ]
+                  : null,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  lang == AppLanguage.th
-                      ? 'น้ำหนักสัปดาห์นี้'
-                      : 'WEEKLY VOLUME',
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                    color: textMuted,
-                    letterSpacing: 0.5,
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: AppColors.secondary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      lang == AppLanguage.th
+                          ? 'น้ำหนักสัปดาห์นี้'
+                          : 'WEEKLY VOLUME',
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? AppColors.secondary : textMuted,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
                 ),
                 const Spacer(),
                 Text(
@@ -1477,9 +1534,19 @@ class _StatsSummaryDashboardState
                       height: barHeight,
                       decoration: BoxDecoration(
                         color: dayVol > 0
-                            ? accent
-                            : theme.colorScheme.outline.withValues(alpha: 0.3),
+                            ? AppColors.secondary
+                            : (isDark
+                                ? AppColors.secondary.withValues(alpha: 0.15)
+                                : theme.colorScheme.outline.withValues(alpha: 0.3)),
                         borderRadius: BorderRadius.circular(3),
+                        boxShadow: dayVol > 0 && isDark
+                            ? [
+                                BoxShadow(
+                                  color: AppColors.secondary.withValues(alpha: 0.4),
+                                  blurRadius: 4,
+                                ),
+                              ]
+                            : null,
                       ),
                     );
                   }),
@@ -1489,7 +1556,7 @@ class _StatsSummaryDashboardState
           ),
         ),
         const SizedBox(width: 12),
-        // Right Card: Monthly Workouts Target Progress Ring
+        // Right Card: Monthly Workouts Target Progress Ring (Electric Volt Glow)
         Expanded(
           child: InkWell(
             onTap: () => _showSetGoalDialog(context, lang),
@@ -1499,8 +1566,22 @@ class _StatsSummaryDashboardState
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: isDark ? AppColors.surface : const Color(0xFFF1F5F0),
-                border: Border.all(color: border, width: 0.5),
+                border: Border.all(
+                  color: isDark
+                      ? AppColors.primary.withValues(alpha: 0.35)
+                      : border,
+                  width: 1.0,
+                ),
                 borderRadius: BorderRadius.circular(16),
+                boxShadow: isDark
+                    ? [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.08),
+                          blurRadius: 12,
+                          spreadRadius: 1,
+                        ),
+                      ]
+                    : null,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1726,9 +1807,10 @@ class _RoutinesCarousel extends ConsumerWidget {
                 children: [
                   // Background Image with Fallback Gradient
                   Positioned.fill(
-                    child: Image.network(
+                    child: Image.asset(
                       imageUrl,
                       fit: BoxFit.cover,
+                      cacheWidth: (220 * MediaQuery.devicePixelRatioOf(context)).round(),
                       errorBuilder: (context, error, stackTrace) => Container(
                         decoration: BoxDecoration(gradient: gradient),
                       ),

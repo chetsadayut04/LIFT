@@ -2,17 +2,17 @@
 /// and provide high-quality thematic images & fallback gradients.
 class RoutineImageHelper {
   static final Map<String, String> _muscleImages = {
-    'upper': 'https://images.unsplash.com/photo-1534368959876-26bf04f2c947?q=80&w=1000&auto=format&fit=crop',
-    'chest': 'https://images.unsplash.com/photo-1534368959876-26bf04f2c947?q=80&w=1000&auto=format&fit=crop',
-    'lower': 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=1000&auto=format&fit=crop',
-    'leg': 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=1000&auto=format&fit=crop',
-    'back': 'https://images.unsplash.com/photo-1603287681836-b174ce5074c2?q=80&w=1000&auto=format&fit=crop',
-    'pull': 'https://images.unsplash.com/photo-1603287681836-b174ce5074c2?q=80&w=1000&auto=format&fit=crop',
-    'arm': 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?q=80&w=1000&auto=format&fit=crop',
-    'shoulder': 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=1000&auto=format&fit=crop',
-    'core': 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=1000&auto=format&fit=crop',
-    'abs': 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=1000&auto=format&fit=crop',
-    'default': 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=1000&auto=format&fit=crop',
+    'upper': 'assets/images/muscle_chest.webp',
+    'chest': 'assets/images/muscle_chest.webp',
+    'lower': 'assets/images/muscle_legs.webp',
+    'leg': 'assets/images/muscle_legs.webp',
+    'back': 'assets/images/muscle_back.webp',
+    'pull': 'assets/images/muscle_back.webp',
+    'arm': 'assets/images/muscle_arm.webp',
+    'shoulder': 'assets/images/muscle_shoulder.webp',
+    'core': 'assets/images/muscle_core.webp',
+    'abs': 'assets/images/muscle_core.webp',
+    'default': 'assets/images/muscle_default.webp',
   };
 
   /// Returns an image URL based on [routineName] and optional [exerciseNames].

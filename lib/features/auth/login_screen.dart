@@ -342,37 +342,74 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final accent = Theme.of(context).colorScheme.primary;
     const textPrimary = Color(0xFFFFFFFF);
     const textMuted = Color(0xFF94A3B8);
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final bgCacheWidth = screenWidth > 0 ? (screenWidth * dpr).round() : null;
 
     return Scaffold(
       backgroundColor: bg,
       body: Stack(
         children: [
-          // Radial Gradient 1 (bottom left)
-          Positioned(
-            left: -150,
-            bottom: -150,
-            width: 400,
-            height: 400,
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [accent.withValues(alpha: 0.07), Colors.transparent],
-                ),
+          // Background image with fallback to original radial gradients
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/login_bg.webp',
+              fit: BoxFit.cover,
+              cacheWidth: bgCacheWidth,
+              errorBuilder: (context, error, stackTrace) => Stack(
+                children: [
+                  Positioned(
+                    left: -150,
+                    bottom: -150,
+                    width: 400,
+                    height: 400,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            accent.withValues(alpha: 0.07),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: -100,
+                    top: -100,
+                    width: 300,
+                    height: 300,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            accent.withValues(alpha: 0.04),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          // Radial Gradient 2 (top right)
-          Positioned(
-            right: -100,
-            top: -100,
-            width: 300,
-            height: 300,
-            child: Container(
+          // Dark gradient scrim fading to solid background at bottom
+          Positioned.fill(
+            child: DecoratedBox(
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [accent.withValues(alpha: 0.04), Colors.transparent],
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    bg.withValues(alpha: 0.5),
+                    bg.withValues(alpha: 0.88),
+                    bg,
+                  ],
+                  stops: const [0.0, 0.4, 0.75, 1.0],
                 ),
               ),
             ),

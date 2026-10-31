@@ -212,12 +212,13 @@ class RoutinesScreen extends ConsumerWidget {
                 child: Stack(
                   children: [
                     Positioned.fill(
-                      child: Image.network(
+                      child: Image.asset(
                         RoutineImageHelper.getImageUrl(
                           routine.name,
                           exercises.map((e) => e.exercise.name).toList(),
                         ),
                         fit: BoxFit.cover,
+                        cacheWidth: (MediaQuery.sizeOf(context).width * MediaQuery.devicePixelRatioOf(context)).round(),
                         errorBuilder: (context, error, stackTrace) => Container(
                           decoration: BoxDecoration(gradient: gradient),
                         ),
@@ -399,15 +400,16 @@ class RoutinesScreen extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    // Bottom actions: Modern Capsule Start Workout button
+                    // Bottom actions: Modern Capsule Start Workout button (Volt & Cyan Gradient)
                     Container(
                       width: double.infinity,
                       height: 46,
                       decoration: BoxDecoration(
+                        gradient: AppColors.primaryGradient,
                         borderRadius: BorderRadius.circular(23),
                         boxShadow: [
                           BoxShadow(
-                            color: accent.withValues(alpha: 0.25),
+                            color: AppColors.primary.withValues(alpha: 0.3),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -426,7 +428,8 @@ class RoutinesScreen extends ConsumerWidget {
                           ),
                         ),
                         style: FilledButton.styleFrom(
-                          backgroundColor: accent,
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
                           foregroundColor: const Color(0xFF000000),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(23),
