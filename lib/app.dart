@@ -199,7 +199,12 @@ class _AppState extends ConsumerState<App> {
         .copyWith(
           primary: accent,
           onPrimary: onAccent,
+          secondary: AppColors.secondary,
+          onSecondary: AppColors.onSecondary,
+          tertiary: AppColors.tertiary,
+          onTertiary: AppColors.onTertiary,
           surface: surfaceSolid,
+          surfaceContainerHighest: AppColors.surfaceElevated,
           outline: border,
           onSurface: textPrimary,
         );
@@ -263,44 +268,58 @@ class _AppState extends ConsumerState<App> {
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: border, width: 0.5),
+          side: const BorderSide(color: border, width: 1.0),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.inputBg,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 12,
+          horizontal: 16,
+          vertical: 14,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: border, width: 0.5),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: border, width: 1.0),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: border, width: 0.5),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: border, width: 1.0),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: accent, width: 1.5),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: accent, width: 1.5),
         ),
         isDense: true,
-        labelStyle: TextStyle(color: textMuted),
-        hintStyle: TextStyle(color: textMuted),
+        labelStyle: const TextStyle(color: textMuted),
+        hintStyle: const TextStyle(color: textMuted),
       ),
-      dividerTheme: DividerThemeData(color: border, thickness: 0.5, space: 1),
+      dividerTheme: const DividerThemeData(color: border, thickness: 1.0, space: 1),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: bg,
         surfaceTintColor: Colors.transparent,
-        indicatorColor: accent.withValues(alpha: 0.15),
-        height: 64,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+        indicatorColor: accent.withValues(alpha: 0.18),
+        height: 68,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return GoogleFonts.barlowCondensed(
+              color: accent,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            );
+          }
+          return GoogleFonts.barlowCondensed(
+            color: textMuted,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          );
+        }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return IconThemeData(color: accent, size: 24);
+            return const IconThemeData(color: accent, size: 24);
           }
-          return IconThemeData(color: textMuted, size: 24);
+          return const IconThemeData(color: textMuted, size: 22);
         }),
       ),
       filledButtonTheme: FilledButtonThemeData(

@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/models/profile.dart';
@@ -169,6 +170,717 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     if (context.mounted) Navigator.pop(context);
                   },
                   child: Text(lang == AppLanguage.th ? 'บันทึก' : 'Save'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showProfileOptionsSheet(
+    BuildContext context,
+    String currentDisplayName,
+    String? currentAvatarUrl,
+  ) {
+    final lang = ref.read(languageProvider);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            border: Border.all(color: AppColors.border, width: 1),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                lang == AppLanguage.th
+                    ? 'เปลี่ยนรูปโปรไฟล์'
+                    : 'Change Profile Photo',
+                style: GoogleFonts.barlowCondensed(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Option 1: Choose from gallery
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.photo_library_outlined,
+                    color: AppColors.primary,
+                    size: 22,
+                  ),
+                ),
+                title: Text(
+                  lang == AppLanguage.th
+                      ? 'เลือกรูปจากคลังภาพ'
+                      : 'Choose from Gallery',
+                  style: GoogleFonts.sarabun(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                subtitle: Text(
+                  lang == AppLanguage.th
+                      ? 'อัปโหลดรูปภาพโปรไฟล์ของคุณ'
+                      : 'Upload your custom profile photo',
+                  style: GoogleFonts.sarabun(
+                    fontSize: 12,
+                    color: AppColors.textMuted,
+                  ),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  color: AppColors.textMuted,
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickAndUploadAvatar(ImageSource.gallery);
+                },
+              ),
+              const Divider(color: AppColors.border, height: 1),
+              // Option 2: Take photo with camera
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt_outlined,
+                    color: AppColors.primary,
+                    size: 22,
+                  ),
+                ),
+                title: Text(
+                  lang == AppLanguage.th ? 'ถ่ายภาพใหม่' : 'Take a Photo',
+                  style: GoogleFonts.sarabun(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  color: AppColors.textMuted,
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickAndUploadAvatar(ImageSource.camera);
+                },
+              ),
+              const Divider(color: AppColors.border, height: 1),
+              // Option 3: Choose Preset Avatar
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.fitness_center_rounded,
+                    color: AppColors.primary,
+                    size: 22,
+                  ),
+                ),
+                title: Text(
+                  lang == AppLanguage.th
+                      ? 'เลือกรูปฟิตเนสสำเร็จรูป'
+                      : 'Choose Fitness Photo',
+                  style: GoogleFonts.sarabun(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  color: AppColors.textMuted,
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showPresetAvatarsSheet(context);
+                },
+              ),
+              const Divider(color: AppColors.border, height: 1),
+              // Option 4: Edit Display Name
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.edit_note_rounded,
+                    color: AppColors.primary,
+                    size: 22,
+                  ),
+                ),
+                title: Text(
+                  lang == AppLanguage.th
+                      ? 'แก้ไขชื่อผู้ใช้งาน'
+                      : 'Edit Display Name',
+                  style: GoogleFonts.sarabun(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right,
+                  color: AppColors.textMuted,
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showEditDisplayNameDialog(context, currentDisplayName);
+                },
+              ),
+              if (currentAvatarUrl != null) ...[
+                const Divider(color: AppColors.border, height: 1),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.delete_outline_rounded,
+                      color: Colors.redAccent,
+                      size: 22,
+                    ),
+                  ),
+                  title: Text(
+                    lang == AppLanguage.th
+                        ? 'ลบรูปโปรไฟล์ (ใช้อักษรย่อ)'
+                        : 'Remove Photo (Use Initials)',
+                    style: GoogleFonts.sarabun(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.redAccent,
+                    ),
+                  ),
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    await ref.read(authProvider.notifier).removeAvatar();
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            lang == AppLanguage.th
+                                ? 'ลบรูปโปรไฟล์แล้ว'
+                                : 'Profile photo removed',
+                          ),
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickAndUploadAvatar(ImageSource source) async {
+    final lang = ref.read(languageProvider);
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: source,
+        maxWidth: 600,
+        maxHeight: 600,
+        imageQuality: 85,
+      );
+      if (picked == null) return;
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.onPrimary,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  lang == AppLanguage.th
+                      ? 'กำลังอัปโหลดรูปภาพ...'
+                      : 'Uploading image...',
+                  style: const TextStyle(color: AppColors.onPrimary),
+                ),
+              ],
+            ),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            duration: const Duration(seconds: 15),
+          ),
+        );
+      }
+
+      final bytes = await picked.readAsBytes();
+      final ext = picked.name.split('.').last;
+      await ref.read(authProvider.notifier).uploadAvatar(bytes, ext);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              lang == AppLanguage.th
+                  ? 'เปลี่ยนรูปโปรไฟล์สำเร็จ!'
+                  : 'Profile photo updated!',
+            ),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        final err = e.toString();
+        String msg =
+            lang == AppLanguage.th
+                ? 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ'
+                : 'Failed to upload image: $e';
+        if (err.contains('Bucket not found') || err.contains('bucket')) {
+          msg =
+              lang == AppLanguage.th
+                  ? 'ยังไม่ได้สร้าง Bucket "avatars" ใน Supabase หรือยังไม่ได้ตั้งเป็น Public'
+                  : 'Bucket "avatars" not found in Supabase Storage or not set to Public.';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(msg),
+            backgroundColor: Colors.redAccent,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    }
+  }
+
+  void _showPresetAvatarsSheet(BuildContext context) {
+    final lang = ref.read(languageProvider);
+    final presets = [
+      {
+        'name': lang == AppLanguage.th ? 'Powerlifter' : 'Powerlifter',
+        'url':
+            'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400&auto=format&fit=crop&q=80',
+      },
+      {
+        'name': lang == AppLanguage.th ? 'Gym Athlete' : 'Gym Athlete',
+        'url':
+            'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400&auto=format&fit=crop&q=80',
+      },
+      {
+        'name': lang == AppLanguage.th ? 'Barbell Lifter' : 'Barbell Lifter',
+        'url':
+            'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400&auto=format&fit=crop&q=80',
+      },
+      {
+        'name': lang == AppLanguage.th ? 'Fitness Woman' : 'Fitness Woman',
+        'url':
+            'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&auto=format&fit=crop&q=80',
+      },
+      {
+        'name': lang == AppLanguage.th ? 'Crossfit Pro' : 'Crossfit Pro',
+        'url':
+            'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&auto=format&fit=crop&q=80',
+      },
+      {
+        'name': lang == AppLanguage.th ? 'Athletic Girl' : 'Athletic Girl',
+        'url':
+            'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=400&auto=format&fit=crop&q=80',
+      },
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            border: Border.all(color: AppColors.border, width: 1),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                lang == AppLanguage.th
+                    ? 'เลือกรูปโปรไฟล์ฟิตเนส'
+                    : 'Choose Fitness Profile Photo',
+                style: GoogleFonts.barlowCondensed(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 14,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 0.85,
+                ),
+                itemCount: presets.length,
+                itemBuilder: (context, i) {
+                  final item = presets[i];
+                  return GestureDetector(
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      try {
+                        await ref
+                            .read(authProvider.notifier)
+                            .updateAvatarUrl(item['url']!);
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                lang == AppLanguage.th
+                                    ? 'เปลี่ยนรูปโปรไฟล์เป็น ${item['name']} แล้ว'
+                                    : 'Profile photo updated to ${item['name']}',
+                              ),
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error: $e'),
+                              backgroundColor: Colors.redAccent,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceElevated,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: AppColors.border,
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppColors.primary,
+                                width: 2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.25,
+                                  ),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(32),
+                              child: Image.network(
+                                WebImageUtils.getCorsSafeUrl(item['url']!),
+                                fit: BoxFit.cover,
+                                loadingBuilder: (context, child, progress) {
+                                  if (progress == null) return child;
+                                  return Container(
+                                    color: AppColors.surface,
+                                    alignment: Alignment.center,
+                                    child: const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Container(
+                                      color: AppColors.surface,
+                                      alignment: Alignment.center,
+                                      child: const Icon(
+                                        Icons.person,
+                                        color: AppColors.primary,
+                                        size: 28,
+                                      ),
+                                    ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            item['name']!,
+                            style: GoogleFonts.barlowCondensed(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showEditDisplayNameDialog(BuildContext context, String currentName) {
+    final controller = TextEditingController(text: currentName);
+    final lang = ref.read(languageProvider);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
+              border: Border.all(color: AppColors.border, width: 1),
+            ),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  lang == AppLanguage.th
+                      ? 'แก้ไขชื่อผู้ใช้งาน'
+                      : 'Edit Display Name',
+                  style: GoogleFonts.barlowCondensed(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.words,
+                  style: GoogleFonts.sarabun(
+                    fontSize: 15,
+                    color: AppColors.textPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: lang == AppLanguage.th
+                        ? 'กรอกชื่อที่คุณต้องการให้แสดง'
+                        : 'Enter your display name',
+                    hintStyle: const TextStyle(color: AppColors.textMuted),
+                    filled: true,
+                    fillColor: AppColors.inputBg,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: AppColors.border,
+                        width: 1,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 48,
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: AppColors.surfaceElevated,
+                            side: const BorderSide(color: AppColors.border),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: Text(
+                            lang == AppLanguage.th ? 'ยกเลิก' : 'Cancel',
+                            style: GoogleFonts.sarabun(
+                              fontSize: 14,
+                              color: AppColors.textMuted,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      flex: 2,
+                      child: SizedBox(
+                        height: 48,
+                        child: FilledButton(
+                          onPressed: () async {
+                            final newName = controller.text.trim();
+                            if (newName.isEmpty) return;
+                            Navigator.pop(ctx);
+                            try {
+                              await ref
+                                  .read(authProvider.notifier)
+                                  .updateDisplayName(newName);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      lang == AppLanguage.th
+                                          ? 'อัปเดตชื่อผู้ใช้เรียบร้อยแล้ว'
+                                          : 'Display name updated',
+                                    ),
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      lang == AppLanguage.th
+                                          ? 'เกิดข้อผิดพลาดในการอัปเดตชื่อ: $e'
+                                          : 'Failed to update name: $e',
+                                    ),
+                                    backgroundColor: Colors.redAccent,
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
+                            foregroundColor: AppColors.onPrimary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: Text(
+                            lang == AppLanguage.th ? 'บันทึก' : 'Save',
+                            style: GoogleFonts.barlowCondensed(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -669,54 +1381,130 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 child: Column(
                   children: [
-                    // Avatar with Gradient border matching Figma
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: const LinearGradient(
-                          colors: [AppColors.primary, AppColors.primaryVariant],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        border: Border.all(
-                          color: AppColors.primary.withValues(alpha: 0.3),
-                          width: 3,
-                        ),
+                    // Avatar with Cyber Volt gradient border & edit indicator
+                    GestureDetector(
+                      onTap: () => _showProfileOptionsSheet(
+                        context,
+                        displayName,
+                        avatarUrl,
                       ),
-                      alignment: Alignment.center,
-                      child: avatarUrl != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(40),
-                              child: Image.network(
-                                WebImageUtils.getCorsSafeUrl(avatarUrl),
-                                width: 80,
-                                height: 80,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Text(
-                                      displayName.isNotEmpty
-                                          ? displayName[0].toUpperCase()
-                                          : 'U',
-                                      style: GoogleFonts.barlowCondensed(
-                                        fontSize: 32,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.onPrimary,
-                                      ),
-                                    ),
+                      child: Stack(
+                        alignment: Alignment.bottomRight,
+                        children: [
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: const LinearGradient(
+                                colors: [
+                                  AppColors.primary,
+                                  AppColors.primaryVariant,
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
                               ),
-                            )
-                          : Text(
-                              displayName.isNotEmpty
-                                  ? displayName[0].toUpperCase()
-                                  : 'U',
-                              style: GoogleFonts.barlowCondensed(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.onPrimary,
+                              border: Border.all(
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.35,
+                                ),
+                                width: 3,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.2,
+                                  ),
+                                  blurRadius: 16,
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
+                            alignment: Alignment.center,
+                            child: avatarUrl != null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(40),
+                                    child: avatarUrl.startsWith('assets/')
+                                        ? Image.asset(
+                                            avatarUrl,
+                                            width: 80,
+                                            height: 80,
+                                            fit: BoxFit.cover,
+                                            errorBuilder:
+                                                (context, error, stackTrace) =>
+                                                    Text(
+                                                      displayName.isNotEmpty
+                                                          ? displayName[0]
+                                                              .toUpperCase()
+                                                          : 'U',
+                                                      style:
+                                                          GoogleFonts
+                                                              .barlowCondensed(
+                                                                fontSize: 34,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                color: AppColors
+                                                                    .onPrimary,
+                                                              ),
+                                                    ),
+                                          )
+                                        : Image.network(
+                                            WebImageUtils.getCorsSafeUrl(
+                                              avatarUrl,
+                                            ),
+                                            width: 80,
+                                            height: 80,
+                                            fit: BoxFit.cover,
+                                            errorBuilder:
+                                                (context, error, stackTrace) =>
+                                                    Text(
+                                                      displayName.isNotEmpty
+                                                          ? displayName[0]
+                                                              .toUpperCase()
+                                                          : 'U',
+                                                      style:
+                                                          GoogleFonts
+                                                              .barlowCondensed(
+                                                                fontSize: 34,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                color: AppColors
+                                                                    .onPrimary,
+                                                              ),
+                                                    ),
+                                          ),
+                                  )
+                                : Text(
+                                    displayName.isNotEmpty
+                                        ? displayName[0].toUpperCase()
+                                        : 'U',
+                                    style: GoogleFonts.barlowCondensed(
+                                      fontSize: 34,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.onPrimary,
+                                    ),
+                                  ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppColors.border,
+                                width: 1.5,
                               ),
                             ),
+                            child: const Icon(
+                              Icons.edit_rounded,
+                              size: 13,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -726,21 +1514,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         fontWeight: FontWeight.bold,
                         color: textPrimary,
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      user?.email ?? 'somchai@email.com',
+                      user?.email ?? '',
                       style: GoogleFonts.sarabun(
                         fontSize: 13,
                         color: textMuted,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    // Google connect status badge
+                    // Member status badge (replaced obsolete Google OAuth badge)
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
-                        vertical: 4,
+                        vertical: 5,
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
@@ -750,24 +1539,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Image.network(
-                            'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
-                            width: 14,
-                            height: 14,
-                            errorBuilder: (_, __, ___) => const Icon(
-                              Icons.g_mobiledata,
-                              size: 14,
-                              color: Colors.grey,
-                            ),
+                          const Icon(
+                            Icons.fitness_center_rounded,
+                            size: 13,
+                            color: AppColors.primary,
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            lang == AppLanguage.th
-                                ? 'เชื่อมต่อผ่าน Google'
-                                : 'Connected with Google',
+                            memberSinceLabel != null
+                                ? (lang == AppLanguage.th
+                                      ? 'สมาชิก LIFT · ตั้งแต่ $memberSinceLabel'
+                                      : 'LIFT Member · Since $memberSinceLabel')
+                                : (lang == AppLanguage.th
+                                      ? 'สมาชิก LIFT'
+                                      : 'LIFT Member'),
                             style: GoogleFonts.sarabun(
                               fontSize: 11,
                               color: AppColors.textMuted,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
@@ -1289,27 +2078,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ],
                       ),
                       const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            lang == AppLanguage.th
-                                ? 'สมาชิกตั้งแต่'
-                                : 'Member since',
-                            style: GoogleFonts.sarabun(
-                              fontSize: 13,
-                              color: AppColors.textMuted,
-                            ),
-                          ),
-                          Text(
-                            memberSinceLabel ?? 'ม.ค. 2025',
-                            style: GoogleFonts.sarabun(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
                     ],
                   ),
                 ),

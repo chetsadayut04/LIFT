@@ -29,8 +29,31 @@ class ActiveWorkoutScreen extends ConsumerWidget {
   Future<void> _addExercise(BuildContext context, WidgetRef ref) async {
     final name = await showAddExerciseSheet(context);
     if (name != null && context.mounted) {
+      final cleanName = name.trim();
+      final currentExercises = ref.read(activeWorkoutProvider).exercises;
+      final isDuplicate = currentExercises.any(
+        (e) => e.exercise.name.toLowerCase() == cleanName.toLowerCase(),
+      );
+      if (isDuplicate) {
+        final lang = ref.read(languageProvider);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              lang == AppLanguage.th
+                  ? 'ท่า "$cleanName" มีอยู่ในการฝึกวันนี้แล้ว คุณสามารถเพิ่มเซ็ตในท่านั้นได้ทันที'
+                  : '"$cleanName" is already added. You can add sets to it directly.',
+            ),
+            backgroundColor: Colors.orangeAccent.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+        return;
+      }
       try {
-        await ref.read(activeWorkoutProvider.notifier).addExercise(name);
+        await ref.read(activeWorkoutProvider.notifier).addExercise(cleanName);
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

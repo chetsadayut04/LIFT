@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -20,8 +21,66 @@ class AuthNotifier extends StateNotifier<User?> {
     );
   }
 
-  Future<void> signUpWithEmail(String email, String password) async {
-    await _client.auth.signUp(email: email.trim(), password: password);
+  Future<void> signUpWithEmail(
+    String email,
+    String password, {
+    String? displayName,
+  }) async {
+    await _client.auth.signUp(
+      email: email.trim(),
+      password: password,
+      data: (displayName != null && displayName.trim().isNotEmpty)
+          ? {'full_name': displayName.trim(), 'name': displayName.trim()}
+          : null,
+    );
+  }
+
+  Future<void> updateDisplayName(String name) async {
+    final response = await _client.auth.updateUser(
+      UserAttributes(data: {'full_name': name.trim(), 'name': name.trim()}),
+    );
+    if (response.user != null) {
+      state = response.user;
+    }
+  }
+
+  Future<void> updateAvatarUrl(String url) async {
+    final response = await _client.auth.updateUser(
+      UserAttributes(data: {'avatar_url': url}),
+    );
+    if (response.user != null) {
+      state = response.user;
+    }
+  }
+
+  Future<String> uploadAvatar(Uint8List bytes, String extension) async {
+    final user = _client.auth.currentUser;
+    if (user == null) throw Exception('User not logged in');
+
+    final cleanExt = extension.replaceAll('.', '').toLowerCase();
+    final fileName = '${user.id}/${DateTime.now().millisecondsSinceEpoch}.$cleanExt';
+
+    await _client.storage.from('avatars').uploadBinary(
+      fileName,
+      bytes,
+      fileOptions: FileOptions(
+        contentType: 'image/$cleanExt',
+        upsert: true,
+      ),
+    );
+
+    final publicUrl = _client.storage.from('avatars').getPublicUrl(fileName);
+    await updateAvatarUrl(publicUrl);
+    return publicUrl;
+  }
+
+  Future<void> removeAvatar() async {
+    final response = await _client.auth.updateUser(
+      UserAttributes(data: {'avatar_url': null}),
+    );
+    if (response.user != null) {
+      state = response.user;
+    }
   }
 
   Future<void> sendPasswordResetEmail(String email) async {

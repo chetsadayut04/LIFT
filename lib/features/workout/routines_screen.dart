@@ -1056,8 +1056,32 @@ class _CreateRoutineScreenState extends ConsumerState<_CreateRoutineScreen> {
   Future<void> _addExercise() async {
     final name = await showAddExerciseSheet(context);
     if (name != null && name.trim().isNotEmpty) {
+      final cleanName = name.trim();
+      final isDuplicate = _exercises.any(
+        (e) => (e['name'] as String).toLowerCase() == cleanName.toLowerCase(),
+      );
+      if (isDuplicate) {
+        if (mounted) {
+          final lang = ref.read(languageProvider);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                lang == AppLanguage.th
+                    ? 'ท่า "$cleanName" มีอยู่ในตารางนี้แล้ว'
+                    : '"$cleanName" is already in this routine',
+              ),
+              backgroundColor: Colors.orangeAccent.shade700,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          );
+        }
+        return;
+      }
       setState(() {
-        _exercises.add({'name': name.trim(), 'sets': <Map<String, dynamic>>[]});
+        _exercises.add({'name': cleanName, 'sets': <Map<String, dynamic>>[]});
       });
     }
   }
