@@ -14,6 +14,7 @@ import '../workout/routine_provider.dart';
 import 'home_provider.dart';
 import '../../core/utils/routine_image_helper.dart';
 import '../../core/theme/app_colors.dart';
+import '../profile/onboarding_metrics_dialog.dart';
 
 const _thaiDays = [
   'จันทร์',
@@ -67,11 +68,24 @@ String _fmtVol(double v, bool isLbs) {
   return '${fmtNum(val)} $unit';
 }
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      OnboardingMetricsDialog.checkAndShow(context, ref);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(homeProvider);
     return Scaffold(
       body: SafeArea(
