@@ -340,8 +340,13 @@ class SetDao {
         whereArgs: [exerciseId],
         orderBy: 'set_number ASC');
     for (var i = 0; i < sets.length; i++) {
-      final id = sets[i]['id'] as int;
+      final currentNumber = sets[i]['set_number'] as int?;
       final newNumber = i + 1;
+      if (currentNumber == newNumber) {
+        continue;
+      }
+
+      final id = sets[i]['id'] as int;
 
       // 1. Update on Supabase
       await _supabase.from('sets').update({'set_number': newNumber}).eq('id', id);

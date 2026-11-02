@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -28,30 +29,35 @@ final cacheInitProvider = FutureProvider<void>((ref) async {
   // 2. Set up Supabase Realtime listener to sync live updates between devices
   final supabase = Supabase.instance.client;
   final channel = supabase.channel('db-changes');
+  Timer? debounceTimer;
 
   channel.onPostgresChanges(
     event: PostgresChangeEvent.all,
     schema: 'public',
-    callback: (payload) async {
+    callback: (payload) {
       if (kDebugMode) {
-        print("Realtime change detected, syncing cache: ${payload.toString()}");
+        print("Realtime change detected, debouncing sync: ${payload.toString()}");
       }
-      try {
-        await DatabaseHelper.clearAndPopulateCache();
-        ref.invalidate(homeProvider);
-        ref.invalidate(historyProvider);
-        ref.invalidate(statsProvider);
-        ref.read(activeWorkoutProvider.notifier).loadTodaySession();
-      } catch (e) {
-        if (kDebugMode) {
-          print("Error updating cache on realtime change: $e");
+      debounceTimer?.cancel();
+      debounceTimer = Timer(const Duration(milliseconds: 800), () async {
+        try {
+          await DatabaseHelper.clearAndPopulateCache();
+          ref.invalidate(homeProvider);
+          ref.invalidate(historyProvider);
+          ref.invalidate(statsProvider);
+          ref.read(activeWorkoutProvider.notifier).loadTodaySession();
+        } catch (e) {
+          if (kDebugMode) {
+            print("Error updating cache on realtime change: $e");
+          }
         }
-      }
+      });
     },
   ).subscribe();
 
   // Cancel subscription when user logs out or provider is disposed
   ref.onDispose(() {
+    debounceTimer?.cancel();
     supabase.removeChannel(channel);
   });
 });
