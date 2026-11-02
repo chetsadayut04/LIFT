@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-const MODEL = Deno.env.get("OPENAI_MODEL") || "gpt-4o-mini";
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+const MODEL = Deno.env.get("GEMINI_MODEL") || "gemini-3.8-flash";
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -17,8 +17,8 @@ serve(async (req) => {
   try {
     const { message, context } = await req.json();
 
-    if (!OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY environment variable is not set in Supabase secrets.");
+    if (!GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY environment variable is not set in Supabase secrets.");
     }
 
     const systemPrompt = `You are LIFT AI, a premium personal trainer and fitness coach inside the LIFT weightlifting tracker app.
@@ -32,28 +32,29 @@ Instructions:
 3. Keep answers compact and readable in a mobile chat interface. Avoid overly long paragraphs.
 4. Encourage progressive overload and smart training.`;
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${GEMINI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: message },
+          ],
+        }),
       },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: message },
-        ],
-        temperature: 0.7,
-        max_tokens: 800,
-      }),
-    });
+    );
 
     const data = await response.json();
 
     if (!response.ok || data.error) {
       const errMsg = data.error?.message || response.statusText;
-      throw new Error(`OpenAI Error: ${errMsg}`);
+      throw new Error(`Gemini Error: ${errMsg}`);
     }
 
     const replyText = data.choices?.[0]?.message?.content || "";
