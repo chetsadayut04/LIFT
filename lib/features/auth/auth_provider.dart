@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -58,16 +57,19 @@ class AuthNotifier extends StateNotifier<User?> {
     if (user == null) throw Exception('User not logged in');
 
     final cleanExt = extension.replaceAll('.', '').toLowerCase();
-    final fileName = '${user.id}/${DateTime.now().millisecondsSinceEpoch}.$cleanExt';
+    final fileName =
+        '${user.id}/${DateTime.now().millisecondsSinceEpoch}.$cleanExt';
 
-    await _client.storage.from('avatars').uploadBinary(
-      fileName,
-      bytes,
-      fileOptions: FileOptions(
-        contentType: 'image/$cleanExt',
-        upsert: true,
-      ),
-    );
+    await _client.storage
+        .from('avatars')
+        .uploadBinary(
+          fileName,
+          bytes,
+          fileOptions: FileOptions(
+            contentType: 'image/$cleanExt',
+            upsert: true,
+          ),
+        );
 
     final publicUrl = _client.storage.from('avatars').getPublicUrl(fileName);
     await updateAvatarUrl(publicUrl);
