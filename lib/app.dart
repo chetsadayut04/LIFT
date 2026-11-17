@@ -130,14 +130,10 @@ class _AppState extends ConsumerState<App> {
                             lang == AppLanguage.th
                                 ? 'กำลังโหลดข้อมูลจากคลาวด์...'
                                 : 'Loading data from cloud...',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.color
-                                  ?.withValues(alpha: 0.7),
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],

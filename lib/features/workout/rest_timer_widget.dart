@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'rest_timer_provider.dart';
@@ -22,6 +23,12 @@ class RestTimerBottomSheet extends ConsumerWidget {
     final textPrimary = theme.textTheme.bodyLarge?.color ?? Colors.white;
     final accent = theme.colorScheme.primary;
     final border = theme.colorScheme.outline;
+
+    void closeTimer() {
+      HapticFeedback.lightImpact();
+      notifier.reset();
+      Navigator.of(context).pop();
+    }
 
     return Container(
       padding: const EdgeInsets.fromLTRB(28, 16, 28, 32),
@@ -48,47 +55,50 @@ class RestTimerBottomSheet extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 28),
-          // Timer circle
-          SizedBox(
-            width: 160,
-            height: 160,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                SizedBox.expand(
-                  child: CircularProgressIndicator(
-                    value: isReady ? 1.0 : timer.progress,
-                    strokeWidth: 6,
-                    backgroundColor: border,
-                    color: isDone
-                        ? accent
-                        : isReady
-                            ? border
-                            : accent,
+          // Timer circle (tappable when countdown is done to dismiss)
+          GestureDetector(
+            onTap: isDone ? closeTimer : null,
+            child: SizedBox(
+              width: 160,
+              height: 160,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox.expand(
+                    child: CircularProgressIndicator(
+                      value: isReady ? 1.0 : timer.progress,
+                      strokeWidth: 6,
+                      backgroundColor: border,
+                      color: isDone
+                          ? accent
+                          : isReady
+                              ? border
+                              : accent,
+                    ),
                   ),
-                ),
-                Text(
-                  isDone ? 'GO!' : timeStr,
-                  style: GoogleFonts.jetBrainsMono(
-                    fontSize: 36,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -1.5,
-                    color: isDone
-                        ? accent
-                        : isReady
-                            ? textMuted
-                            : textPrimary,
-                    shadows: !isReady
-                        ? [
-                            Shadow(
-                              color: accent.withValues(alpha: 0.4),
-                              blurRadius: 14,
-                            ),
-                          ]
-                        : null,
+                  Text(
+                    isDone ? 'GO!' : timeStr,
+                    style: GoogleFonts.jetBrainsMono(
+                      fontSize: 36,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -1.5,
+                      color: isDone
+                          ? accent
+                          : isReady
+                              ? textMuted
+                              : textPrimary,
+                      shadows: !isReady
+                          ? [
+                              Shadow(
+                                color: accent.withValues(alpha: 0.4),
+                                blurRadius: 14,
+                              ),
+                            ]
+                          : null,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 28),
@@ -108,23 +118,36 @@ class RestTimerBottomSheet extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
 
-          // Start button (when not started) or Skip button (when running)
+          // Action button: Done -> GO (dismiss), Ready -> Start, Running -> Skip
           SizedBox(
             width: double.infinity,
             height: 48,
-            child: isReady
+            child: isDone
                 ? FilledButton.icon(
-                    onPressed: () => notifier.start(seconds: timer.secondsLeft),
+                    onPressed: closeTimer,
                     icon: const Icon(Icons.play_arrow_rounded),
-                    label: const Text('เริ่ม'),
+                    label: const Text(
+                      'GO !',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
                   )
-                : OutlinedButton(
-                    onPressed: () {
-                      notifier.skip();
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('ข้าม'),
-                  ),
+                : isReady
+                    ? FilledButton.icon(
+                        onPressed: () => notifier.start(seconds: timer.secondsLeft),
+                        icon: const Icon(Icons.play_arrow_rounded),
+                        label: const Text('เริ่ม'),
+                      )
+                    : OutlinedButton(
+                        onPressed: () {
+                          notifier.skip();
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('ข้าม'),
+                      ),
           ),
         ],
       ),
