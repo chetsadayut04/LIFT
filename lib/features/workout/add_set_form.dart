@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/providers/unit_provider.dart';
 
 // ลบสีค่าคงที่ฮาร์ดโค้ดออกเพื่อให้ใช้สีระบบตาม Theme ได้อย่างสมบูรณ์แบบ
@@ -350,18 +351,31 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
         // Full Width Add Set Button
         SizedBox(
           width: double.infinity,
+          height: 44,
           child: FilledButton.icon(
             onPressed: () => _submit(isLbs),
             style: _isWarmup
                 ? FilledButton.styleFrom(
                     backgroundColor: const Color(
                       0xFFFF9F1C,
-                    ).withValues(alpha: 0.7),
-                    foregroundColor: Colors.white,
+                    ),
+                    foregroundColor: const Color(0xFF000000),
                   )
-                : null,
-            icon: const Icon(Icons.add, size: 18),
-            label: const Text('เพิ่มเซ็ต'),
+                : FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: const Color(0xFF000000),
+                  ),
+            icon: const Icon(Icons.add_task_rounded, size: 18),
+            label: Text(
+              _isWarmup
+                  ? 'บันทึกเซ็ต Warm-up'
+                  : 'บันทึกเซ็ตที่ ${widget.previousSets.length + 1}',
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+                letterSpacing: 0.3,
+              ),
+            ),
           ),
         ),
       ],
