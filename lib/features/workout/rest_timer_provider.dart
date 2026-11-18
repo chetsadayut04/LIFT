@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/services/background_timer_service.dart';
 
@@ -75,8 +76,14 @@ class RestTimerNotifier extends StateNotifier<RestTimerState> {
         t.cancel();
         state = state.copyWith(isRunning: false, secondsLeft: 0, clearEndTime: true);
         BackgroundTimerService().stop();
+        HapticFeedback.heavyImpact();
+        SystemSound.play(SystemSoundType.alert);
       } else {
         if (state.secondsLeft != remaining) {
+          if (remaining <= 3 && remaining > 0) {
+            HapticFeedback.mediumImpact();
+            SystemSound.play(SystemSoundType.click);
+          }
           state = state.copyWith(secondsLeft: remaining);
         }
       }

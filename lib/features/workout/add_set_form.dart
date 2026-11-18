@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers/unit_provider.dart';
 
@@ -57,7 +58,7 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
     } else if (widget.previousSets.isNotEmpty) {
       final last = widget.previousSets.last;
       _weightCtrl.text = fmtNum(isLbs ? last.weight * kgToLbs : last.weight);
-      _repsCtrl.clear();
+      _repsCtrl.text = last.reps.toString();
     }
   }
 
@@ -73,6 +74,7 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
     double delta, {
     bool isInt = false,
   }) {
+    HapticFeedback.selectionClick();
     final current = double.tryParse(ctrl.text) ?? 0;
     final next = (current + delta).clamp(0.0, double.maxFinite);
     setState(() {
@@ -86,6 +88,7 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
     if (rawWeight == null || reps == null || rawWeight <= 0 || reps <= 0) {
       return;
     }
+    HapticFeedback.mediumImpact();
     final weightKg = inputToKg(rawWeight, isLbs);
     widget.onAdd(weightKg, reps, _isWarmup);
     if (!_isWarmup) widget.onAfterAdd?.call();
@@ -99,17 +102,17 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
         theme.inputDecorationTheme.fillColor ?? theme.colorScheme.surface;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(8),
       child: Container(
-        width: 30,
-        height: 40,
+        width: 38,
+        height: 44,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: surfaceHi,
           border: Border.all(color: border),
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, size: 14, color: accent),
+        child: Icon(icon, size: 18, color: accent),
       ),
     );
   }

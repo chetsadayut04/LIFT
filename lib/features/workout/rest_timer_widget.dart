@@ -17,6 +17,7 @@ class RestTimerBottomSheet extends ConsumerWidget {
         '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
     final isDone = timer.secondsLeft == 0 && timer.isRunning == false && timer.totalSeconds > 0;
     final isReady = !timer.isRunning && !isDone && timer.secondsLeft > 0;
+    final isCountdownWarning = timer.isRunning && timer.secondsLeft <= 3 && timer.secondsLeft > 0;
 
     final theme = Theme.of(context);
     final textMuted = theme.textTheme.bodySmall?.color ?? Colors.grey;
@@ -71,9 +72,11 @@ class RestTimerBottomSheet extends ConsumerWidget {
                       backgroundColor: border,
                       color: isDone
                           ? accent
-                          : isReady
-                              ? border
-                              : accent,
+                          : isCountdownWarning
+                              ? const Color(0xFFFF9F1C)
+                              : isReady
+                                  ? border
+                                  : accent,
                     ),
                   ),
                   Text(
@@ -84,14 +87,19 @@ class RestTimerBottomSheet extends ConsumerWidget {
                       letterSpacing: -1.5,
                       color: isDone
                           ? accent
-                          : isReady
-                              ? textMuted
-                              : textPrimary,
-                      shadows: !isReady
+                          : isCountdownWarning
+                              ? const Color(0xFFFF9F1C)
+                              : isReady
+                                  ? textMuted
+                                  : textPrimary,
+                      shadows: (!isReady || isCountdownWarning)
                           ? [
                               Shadow(
-                                color: accent.withValues(alpha: 0.4),
-                                blurRadius: 14,
+                                color: (isCountdownWarning
+                                        ? const Color(0xFFFF9F1C)
+                                        : accent)
+                                    .withValues(alpha: isCountdownWarning ? 0.7 : 0.4),
+                                blurRadius: isCountdownWarning ? 20 : 14,
                               ),
                             ]
                           : null,

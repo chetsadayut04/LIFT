@@ -162,7 +162,10 @@ class _HomeBody extends ConsumerWidget {
           const SizedBox(height: 24),
 
           // ── Weekly Consistency ────────────────────────────────────
-          _ConsistencyCalendar(finishedDates: state.finishedDates),
+          _ConsistencyCalendar(
+            finishedDates: state.finishedDates,
+            streak: state.streak,
+          ),
           const SizedBox(height: 24),
 
           // ── Main Body (Conditional) ──────────────────────────────
@@ -256,17 +259,30 @@ class _HomeBody extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Large Title
+                        // Hero Motivation Header
                         Text(
-                          lang.tr('home_ready'),
-                          style: GoogleFonts.spaceGrotesk(
+                          lang == AppLanguage.th
+                              ? 'พร้อมลุยวันนี้หรือยัง?'
+                              : 'READY TO LIFT?',
+                          style: GoogleFonts.barlowCondensed(
                             fontSize: 34,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -1,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.5,
                             color: textPrimary,
+                            height: 1.1,
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 4),
+                        Text(
+                          lang == AppLanguage.th
+                              ? 'เลือกตารางฝึกด้านล่าง หรือกดเริ่มเพื่อบันทึกเซสชัน'
+                              : 'Pick a routine below or tap Start to begin',
+                          style: GoogleFonts.sarabun(
+                            fontSize: 13,
+                            color: textMuted,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
                         // Stats Summary Dashboard
                         _StatsSummaryDashboard(state: state, isLbs: isLbs),
                         const SizedBox(height: 24),
@@ -1098,7 +1114,8 @@ class _ExerciseList extends ConsumerWidget {
 
 class _ConsistencyCalendar extends ConsumerWidget {
   final Set<String> finishedDates;
-  const _ConsistencyCalendar({required this.finishedDates});
+  final int streak;
+  const _ConsistencyCalendar({required this.finishedDates, this.streak = 0});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1118,16 +1135,49 @@ class _ConsistencyCalendar extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          lang == AppLanguage.th
-              ? 'ความสม่ำเสมอสัปดาห์นี้'
-              : 'WEEKLY CONSISTENCY',
-          style: TextStyle(
-            fontSize: 9,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1,
-            color: textMuted,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              lang == AppLanguage.th
+                  ? 'ความสม่ำเสมอสัปดาห์นี้'
+                  : 'WEEKLY CONSISTENCY',
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1,
+                color: textMuted,
+              ),
+            ),
+            if (streak > 0)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF9F1C).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: const Color(0xFFFF9F1C).withValues(alpha: 0.35),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('🔥', style: TextStyle(fontSize: 11)),
+                    const SizedBox(width: 4),
+                    Text(
+                      lang == AppLanguage.th
+                          ? '$streak วันต่อเนื่อง'
+                          : '$streak DAY STREAK',
+                      style: GoogleFonts.barlowCondensed(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFFFF9F1C),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 10),
         Row(
