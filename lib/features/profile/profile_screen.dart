@@ -420,12 +420,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final lang = ref.read(languageProvider);
     try {
       final picker = ImagePicker();
-      final picked = await picker.pickImage(
-        source: source,
-        maxWidth: 600,
-        maxHeight: 600,
-        imageQuality: 85,
-      );
+      XFile? picked;
+      try {
+        picked = await picker.pickImage(
+          source: source,
+          maxWidth: 600,
+          maxHeight: 600,
+          imageQuality: 85,
+        );
+      } catch (err) {
+        if (source == ImageSource.camera) {
+          picked = await picker.pickImage(
+            source: ImageSource.gallery,
+            maxWidth: 600,
+            maxHeight: 600,
+            imageQuality: 85,
+          );
+        } else {
+          rethrow;
+        }
+      }
       if (picked == null) return;
 
       if (mounted) {
