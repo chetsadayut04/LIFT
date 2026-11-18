@@ -81,9 +81,9 @@ class RestTimerBottomSheet extends ConsumerWidget {
                   ),
                   Text(
                     isDone ? 'GO!' : timeStr,
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 36,
-                      fontWeight: FontWeight.w700,
+                    style: GoogleFonts.spaceGrotesk(
+                      fontSize: 42,
+                      fontWeight: FontWeight.w800,
                       letterSpacing: -1.5,
                       color: isDone
                           ? accent
@@ -92,17 +92,6 @@ class RestTimerBottomSheet extends ConsumerWidget {
                               : isReady
                                   ? textMuted
                                   : textPrimary,
-                      shadows: (!isReady || isCountdownWarning)
-                          ? [
-                              Shadow(
-                                color: (isCountdownWarning
-                                        ? const Color(0xFFFF9F1C)
-                                        : accent)
-                                    .withValues(alpha: isCountdownWarning ? 0.7 : 0.4),
-                                blurRadius: isCountdownWarning ? 20 : 14,
-                              ),
-                            ]
-                          : null,
                     ),
                   ),
                 ],

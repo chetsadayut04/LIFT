@@ -108,7 +108,11 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                       ),
                     ),
                     alignment: Alignment.center,
-                    child: const Text('🤖', style: TextStyle(fontSize: 22)),
+                    child: const Icon(
+                      Icons.bolt_rounded,
+                      color: AppColors.primary,
+                      size: 24,
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -117,8 +121,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                       children: [
                         Text(
                           lang == AppLanguage.th
-                              ? 'LIFT AI Coach'
-                              : 'LIFT AI Coach',
+                              ? 'LIFT Coach'
+                              : 'LIFT Coach',
                           style: GoogleFonts.barlowCondensed(
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
@@ -130,17 +134,19 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                             Container(
                               width: 6,
                               height: 6,
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.primary,
+                              decoration: const BoxDecoration(
+                                color: AppColors.primary,
                                 shape: BoxShape.circle,
                               ),
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              lang == AppLanguage.th ? 'ออนไลน์' : 'Online',
+                              lang == AppLanguage.th
+                                  ? 'วิทยาศาสตร์การกีฬา · พร้อมให้คำปรึกษา'
+                                  : 'Sports Science · Active',
                               style: GoogleFonts.sarabun(
                                 fontSize: 12,
-                                color: Theme.of(context).colorScheme.primary,
+                                color: AppColors.textMuted,
                               ),
                             ),
                           ],
@@ -447,7 +453,11 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               alignment: Alignment.center,
-              child: const Text('🤖', style: TextStyle(fontSize: 14)),
+              child: Icon(
+                Icons.bolt_rounded,
+                size: 16,
+                color: accent,
+              ),
             ),
             const SizedBox(width: 8),
           ],
@@ -532,7 +542,11 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             alignment: Alignment.center,
-            child: const Text('🤖', style: TextStyle(fontSize: 14)),
+            child: Icon(
+              Icons.bolt_rounded,
+              size: 16,
+              color: accent,
+            ),
           ),
           const SizedBox(width: 8),
           Container(

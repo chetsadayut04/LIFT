@@ -46,7 +46,7 @@ const Map<String, Map<AppLanguage, String>> _translations = {
   'nav_home': {AppLanguage.th: 'หน้าหลัก', AppLanguage.en: 'Home'},
   'nav_history': {AppLanguage.th: 'ประวัติ', AppLanguage.en: 'History'},
   'nav_stats': {AppLanguage.th: 'สถิติ', AppLanguage.en: 'Stats'},
-  'nav_ai': {AppLanguage.th: 'โค้ช AI', AppLanguage.en: 'AI Coach'},
+  'nav_ai': {AppLanguage.th: 'โค้ช', AppLanguage.en: 'Coach'},
   'nav_profile': {AppLanguage.th: 'โปรไฟล์', AppLanguage.en: 'Profile'},
 
   // Profile Screen

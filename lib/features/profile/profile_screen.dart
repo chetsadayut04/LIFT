@@ -632,14 +632,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 color: AppColors.primary,
                                 width: 2,
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primary.withValues(
-                                    alpha: 0.25,
-                                  ),
-                                  blurRadius: 8,
-                                ),
-                              ],
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(32),
@@ -1441,29 +1433,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 height: 80,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      AppColors.primary,
-                                      AppColors.primaryVariant,
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
+                                  color: AppColors.surfaceElevated,
                                   border: Border.all(
-                                    color: AppColors.primary.withValues(
-                                      alpha: 0.35,
-                                    ),
-                                    width: 3,
+                                    color: AppColors.primary,
+                                    width: 2,
                                   ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.primary.withValues(
-                                        alpha: 0.2,
-                                      ),
-                                      blurRadius: 16,
-                                      spreadRadius: 1,
-                                    ),
-                                  ],
                                 ),
                                 alignment: Alignment.center,
                                 child: avatarUrl != null
@@ -1492,7 +1466,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                                       fontWeight:
                                                           FontWeight.bold,
                                                       color:
-                                                          AppColors.onPrimary,
+                                                          AppColors.primary,
                                                     ),
                                               ),
                                         ),
@@ -1504,7 +1478,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                         style: GoogleFonts.barlowCondensed(
                                           fontSize: 34,
                                           fontWeight: FontWeight.bold,
-                                          color: AppColors.onPrimary,
+                                          color: AppColors.primary,
                                         ),
                                       ),
                               ),

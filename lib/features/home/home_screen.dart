@@ -136,19 +136,30 @@ class _HomeBody extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ShaderMask(
-                shaderCallback: (bounds) =>
-                    AppColors.primaryGradient.createShader(bounds),
-                child: Text(
-                  'LIFT',
-                  style: GoogleFonts.barlowCondensed(
-                    fontSize: 38,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -1.0,
-                    color: Colors.white,
-                    height: 1.0,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    'LIFT',
+                    style: GoogleFonts.barlowCondensed(
+                      fontSize: 38,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -1.0,
+                      color: AppColors.textPrimary,
+                      height: 1.0,
+                    ),
                   ),
-                ),
+                  Container(
+                    margin: const EdgeInsets.only(left: 3),
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
               ),
               Padding(
                 padding: const EdgeInsets.only(top: 4.0),
@@ -390,43 +401,29 @@ class _HomeBody extends ConsumerWidget {
             flex: 2,
             child: SizedBox(
               height: 52,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+              child: FilledButton(
+                onPressed: () => _continue(context, ref),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
-                child: FilledButton(
-                  onPressed: () => _continue(context, ref),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        lang == AppLanguage.th ? 'บันทึกต่อ' : 'Continue',
-                        style: GoogleFonts.barlowCondensed(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      lang == AppLanguage.th ? 'บันทึกต่อ' : 'Continue',
+                      style: GoogleFonts.barlowCondensed(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
                       ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.arrow_forward_rounded, size: 18),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.arrow_forward_rounded, size: 18),
+                  ],
                 ),
               ),
             ),
@@ -434,25 +431,13 @@ class _HomeBody extends ConsumerWidget {
         ],
       );
     }
-    return Container(
+    return SizedBox(
       width: double.infinity,
       height: 52,
-      decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.35),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
       child: FilledButton(
         onPressed: () => _start(context, ref, lang),
         style: FilledButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.black,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
@@ -1226,15 +1211,6 @@ class _ConsistencyCalendar extends ConsumerWidget {
                                 )),
                       width: isCompleted || isToday ? 1.5 : 1,
                     ),
-                    boxShadow: isCompleted
-                        ? [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.45),
-                              blurRadius: 8,
-                              spreadRadius: 1,
-                            ),
-                          ]
-                        : null,
                   ),
                   alignment: Alignment.center,
                   child: isCompleted
@@ -1509,21 +1485,10 @@ class _StatsSummaryDashboardState
             decoration: BoxDecoration(
               color: isDark ? AppColors.surface : const Color(0xFFF1F5F0),
               border: Border.all(
-                color: isDark
-                    ? AppColors.secondary.withValues(alpha: 0.35)
-                    : border,
+                color: isDark ? AppColors.border : border,
                 width: 1.0,
               ),
               borderRadius: BorderRadius.circular(16),
-              boxShadow: isDark
-                  ? [
-                      BoxShadow(
-                        color: AppColors.secondary.withValues(alpha: 0.08),
-                        blurRadius: 12,
-                        spreadRadius: 1,
-                      ),
-                    ]
-                  : null,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1603,14 +1568,6 @@ class _StatsSummaryDashboardState
                                 ? AppColors.secondary.withValues(alpha: 0.15)
                                 : theme.colorScheme.outline.withValues(alpha: 0.3)),
                         borderRadius: BorderRadius.circular(3),
-                        boxShadow: dayVol > 0 && isDark
-                            ? [
-                                BoxShadow(
-                                  color: AppColors.secondary.withValues(alpha: 0.4),
-                                  blurRadius: 4,
-                                ),
-                              ]
-                            : null,
                       ),
                     );
                   }),
@@ -1620,7 +1577,7 @@ class _StatsSummaryDashboardState
           ),
         ),
         const SizedBox(width: 12),
-        // Right Card: Monthly Workouts Target Progress Ring (Electric Volt Glow)
+        // Right Card: Monthly Workouts Target Progress Ring
         Expanded(
           child: InkWell(
             onTap: () => _showSetGoalDialog(context, lang),
@@ -1631,21 +1588,10 @@ class _StatsSummaryDashboardState
               decoration: BoxDecoration(
                 color: isDark ? AppColors.surface : const Color(0xFFF1F5F0),
                 border: Border.all(
-                  color: isDark
-                      ? AppColors.primary.withValues(alpha: 0.35)
-                      : border,
+                  color: isDark ? AppColors.border : border,
                   width: 1.0,
                 ),
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: isDark
-                    ? [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.08),
-                          blurRadius: 12,
-                          spreadRadius: 1,
-                        ),
-                      ]
-                    : null,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

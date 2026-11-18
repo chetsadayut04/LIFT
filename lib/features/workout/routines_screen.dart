@@ -400,21 +400,10 @@ class RoutinesScreen extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    // Bottom actions: Modern Capsule Start Workout button (Volt & Cyan Gradient)
-                    Container(
+                    // Bottom actions: Modern Capsule Start Workout button
+                    SizedBox(
                       width: double.infinity,
                       height: 46,
-                      decoration: BoxDecoration(
-                        gradient: AppColors.primaryGradient,
-                        borderRadius: BorderRadius.circular(23),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
                       child: FilledButton.icon(
                         icon: const Icon(Icons.play_arrow_rounded, size: 20),
                         label: Text(
@@ -428,8 +417,7 @@ class RoutinesScreen extends ConsumerWidget {
                           ),
                         ),
                         style: FilledButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
+                          backgroundColor: AppColors.primary,
                           foregroundColor: const Color(0xFF000000),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(23),

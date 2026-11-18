@@ -1,66 +1,67 @@
 import 'package:flutter/material.dart';
 
-/// Central Design System Color Tokens for LIFT (Electric Volt & Cyan Glow Theme)
+/// Central Design System Color Tokens for LIFT (Pro Athletic Precision & Matte Obsidian)
+/// Replaces generic AI cyberpunk glow with gym-tested, high-contrast athletic ergonomics.
 class AppColors {
-  // Primary Volt Accents (Luminous Electric Volt)
-  static const Color primary = Color(0xFFD4FF00); // Electric Volt Neon - crisp & luminous
-  static const Color primaryVariant = Color(0xFFE4FF3A);
-  static const Color onPrimary = Color(0xFF070A0F);
+  // Primary Athletic Volt (Crisp, High-Contrast Performance Lime)
+  static const Color primary = Color(0xFFCCFF00); // Pure Athletic Volt
+  static const Color primaryVariant = Color(0xFFB8E600);
+  static const Color onPrimary = Color(0xFF000000);
 
-  // Secondary & Cyan Glow Accents (Sporty Electric Cyan)
-  static const Color secondary = Color(0xFF00E5FF); // Electric Cyan Glow
-  static const Color secondaryVariant = Color(0xFF00B0FF);
-  static const Color onSecondary = Color(0xFF070A0F);
+  // Secondary Athletic Steel Blue (Focused utility, avoids overdone neon cyan)
+  static const Color secondary = Color(0xFF38BDF8); // Clean Performance Blue
+  static const Color secondaryVariant = Color(0xFF0284C7);
+  static const Color onSecondary = Color(0xFF000000);
 
-  // Tertiary Electric Violet (PRs, High Impact)
-  static const Color tertiary = Color(0xFF8B5CF6);
+  // Tertiary Apex Coral / PR Highlights (Sharp Athletic Contrast)
+  static const Color tertiary = Color(0xFFFF4757); // Apex Coral Red
   static const Color onTertiary = Color(0xFFFFFFFF);
 
-  // Deep Navy & Midnight Backgrounds (Rich Depth & Modern Contrast)
-  static const Color bg = Color(0xFF0B0F17); // Rich Midnight Navy Charcoal
-  static const Color surface = Color(0xFF131926); // High-contrast Sleek Midnight Slate
-  static const Color surfaceElevated = Color(0xFF1B2335); // Elevated Card Surface
-  static const Color inputBg = Color(0xFF0E131E); // Deep Input Background
+  // Deep Matte Obsidian Canvas & Slate Surfaces (Reduces gym glare, authentic athlete feel)
+  static const Color bg = Color(0xFF090A0E); // Deep Matte Obsidian
+  static const Color surface = Color(0xFF12141A); // High-contrast Matte Slate
+  static const Color surfaceElevated = Color(0xFF1A1D24); // Elevated Tactile Surface
+  static const Color inputBg = Color(0xFF0D0E13); // Precision Input Dark
 
-  // Borders & Glow Outlines
-  static const Color border = Color(0xFF222D42); // Clean Modern Border
-  static const Color borderSubtle = Color(0xFF192030);
-  static const Color borderHighlight = Color(0x60D4FF00); // 38% Volt glow
-  static const Color borderCyan = Color(0x5000E5FF); // 31% Cyan glow
+  // Clean 1px Industrial Borders (Minimalist, zero AI neon blur)
+  static const Color border = Color(0xFF22252E); // 1px Subtle Edge
+  static const Color borderSubtle = Color(0xFF181A20);
+  static const Color borderHighlight = Color(0x35CCFF00); // 21% Volt subtle rim
+  static const Color borderCyan = Color(0x2538BDF8); // 15% Slate blue rim
 
-  // Typography
+  // High-Legibility Typography (Readable from 2 meters away)
   static const Color textPrimary = Color(0xFFF8FAFC); // Pure Crisp Slate White
   static const Color textSecondary = Color(0xFFCBD5E1); // Bright Silver Slate
-  static const Color textMuted = Color(0xFF8E9BB5); // Legible Muted Slate
+  static const Color textMuted = Color(0xFF717D96); // Refined Technical Slate
 
   // Status & Utility Colors
-  static const Color success = Color(0xFFD4FF00); // Electric Volt Success
-  static const Color error = Color(0xFFFF4757); // Vibrant Coral Red
+  static const Color success = Color(0xFFCCFF00); // Athletic Volt Check
+  static const Color error = Color(0xFFFF3B30); // Precision Red
   static const Color onError = Color(0xFFFFFFFF);
-  static const Color warning = Color(0xFFFFB300); // Solar Amber
-  static const Color info = Color(0xFF00E5FF); // Electric Cyan
+  static const Color warning = Color(0xFFF59E0B); // Industrial Amber
+  static const Color info = Color(0xFF38BDF8); // Technical Slate Blue
 
-  // Gradients for Dynamic Visual Flair
+  // Clean Athletic Gradients (Toned down from AI neon rainbow to focused tone-on-tone)
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFFD4FF00), Color(0xFF00E5FF)],
+    colors: [Color(0xFFCCFF00), Color(0xFFB5E600)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient cardGradient = LinearGradient(
-    colors: [Color(0xFF161E30), Color(0xFF101624)],
+    colors: [Color(0xFF14171E), Color(0xFF0E1015)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient cyanGradient = LinearGradient(
-    colors: [Color(0xFF00E5FF), Color(0xFF0091EA)],
+    colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient accentGlow = LinearGradient(
-    colors: [Color(0x25D4FF00), Colors.transparent],
+    colors: [Color(0x10CCFF00), Colors.transparent],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );

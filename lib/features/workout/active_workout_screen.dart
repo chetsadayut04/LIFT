@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/providers/unit_provider.dart';
 import '../../core/providers/translation_provider.dart';
 import '../../core/providers/tab_provider.dart';
@@ -511,32 +512,43 @@ class _ExerciseCard extends ConsumerWidget {
                                 width: 36,
                                 child: s.isWarmup
                                     ? Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 5,
-                                          vertical: 2,
-                                        ),
+                                        width: 22,
+                                        height: 22,
+                                        alignment: Alignment.center,
                                         decoration: BoxDecoration(
-                                          color: const Color(
-                                            0xFFFF9F1C,
-                                          ).withValues(alpha: 0.18),
+                                          color: AppColors.warning.withValues(
+                                            alpha: 0.18,
+                                          ),
                                           borderRadius: BorderRadius.circular(
-                                            4,
+                                            6,
                                           ),
                                         ),
                                         child: const Text(
                                           'W',
                                           style: TextStyle(
                                             fontSize: 11,
-                                            color: Color(0xFFFF9F1C),
-                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.warning,
+                                            fontWeight: FontWeight.w800,
                                           ),
                                         ),
                                       )
-                                    : Text(
-                                        '${s.setNumber}',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: textSec,
+                                    : Container(
+                                        width: 22,
+                                        height: 22,
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                          color: AppColors.surfaceElevated,
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '${s.setNumber}',
+                                          style: GoogleFonts.jetBrainsMono(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: textSec,
+                                          ),
                                         ),
                                       ),
                               ),

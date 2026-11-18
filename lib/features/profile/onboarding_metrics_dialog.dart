@@ -210,16 +210,9 @@ class _OnboardingMetricsDialogState
                   child: Container(
                     width: 58,
                     height: 58,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: AppColors.primaryGradient,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.3),
-                          blurRadius: 16,
-                          spreadRadius: 1,
-                        ),
-                      ],
+                      color: AppColors.primary,
                     ),
                     child: const Icon(
                       Icons.fitness_center_rounded,
@@ -472,24 +465,14 @@ class _OnboardingMetricsDialogState
                 const SizedBox(height: 26),
 
                 // Primary Save Button
-                Container(
+                SizedBox(
                   height: 48,
-                  decoration: BoxDecoration(
-                    gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
                   child: ElevatedButton(
                     onPressed: _isSaving ? null : _handleSave,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.onPrimary,
+                      elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

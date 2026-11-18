@@ -86,8 +86,8 @@ class _AppState extends ConsumerState<App> {
               label: lang.tr('nav_stats'),
             ),
             NavigationDestination(
-              icon: const Icon(Icons.smart_toy_outlined),
-              selectedIcon: const Icon(Icons.smart_toy),
+              icon: const Icon(Icons.bolt_outlined),
+              selectedIcon: const Icon(Icons.bolt),
               label: lang.tr('nav_ai'),
             ),
             NavigationDestination(
