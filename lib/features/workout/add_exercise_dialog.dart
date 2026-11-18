@@ -10,6 +10,7 @@ Future<String?> showAddExerciseSheet(BuildContext context) {
   return showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (_) => const _AddExerciseSheet(),
   );
@@ -133,6 +134,7 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
+    final screenHeight = MediaQuery.of(context).size.height;
     final filtered = _filtered;
     final theme = Theme.of(context);
     final textMuted = theme.textTheme.bodySmall?.color ?? Colors.grey;
@@ -140,73 +142,71 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
     final surfaceColor = theme.cardTheme.color ?? theme.colorScheme.surface;
     final outlineColor = theme.colorScheme.outline;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      padding: EdgeInsets.only(bottom: bottom),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle
-          const SizedBox(height: 10),
-          Container(
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: outlineColor,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 14),
-
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextField(
-              controller: _controller,
-              focusNode: _focusNode,
-              autofocus: true,
-              textCapitalization: TextCapitalization.words,
-              decoration: InputDecoration(
-                hintText: 'ค้นหาหรือพิมพ์ชื่อท่า...',
-                prefixIcon: Icon(Icons.search, size: 20, color: textMuted),
-                suffixIcon: _query.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, size: 18),
-                        onPressed: () {
-                          _controller.clear();
-                          setState(() => _query = '');
-                        },
-                      )
-                    : null,
-                filled: true,
-                fillColor: theme.scaffoldBackgroundColor,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+    return SizedBox(
+      height: screenHeight * 0.85,
+      child: Container(
+        decoration: BoxDecoration(
+          color: surfaceColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            // Handle
+            const SizedBox(height: 10),
+            Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: outlineColor,
+                borderRadius: BorderRadius.circular(2),
               ),
-              onChanged: (v) => setState(() => _query = v),
-              onSubmitted: (v) {
-                if (v.trim().isNotEmpty) _select(v);
-              },
             ),
-          ),
+            const SizedBox(height: 14),
 
-          const SizedBox(height: 8),
-
-          // List
-          ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.5,
+            // Search bar (Pinned at top - never pushed off screen)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: TextField(
+                controller: _controller,
+                focusNode: _focusNode,
+                autofocus: true,
+                textCapitalization: TextCapitalization.words,
+                decoration: InputDecoration(
+                  hintText: 'ค้นหาหรือพิมพ์ชื่อท่า...',
+                  prefixIcon: Icon(Icons.search, size: 20, color: textMuted),
+                  suffixIcon: _query.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 18),
+                          onPressed: () {
+                            _controller.clear();
+                            setState(() => _query = '');
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: theme.scaffoldBackgroundColor,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onChanged: (v) => setState(() => _query = v),
+                onSubmitted: (v) {
+                  if (v.trim().isNotEmpty) _select(v);
+                },
+              ),
             ),
-            child: ListView(
-              shrinkWrap: true,
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              children: [
+
+            const SizedBox(height: 8),
+
+            // Adaptive Scrollable List
+            Expanded(
+              child: ListView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: EdgeInsets.fromLTRB(16, 0, 16, bottom + 16),
+                children: [
                 // Recent section (only when not searching)
                 if (_query.isEmpty && _recent.isNotEmpty) ...[
                   const _SectionLabel('ล่าสุด'),
@@ -272,8 +272,9 @@ class _AddExerciseSheetState extends State<_AddExerciseSheet> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _SectionLabel extends StatelessWidget {
