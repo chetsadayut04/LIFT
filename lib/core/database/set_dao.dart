@@ -180,6 +180,31 @@ class SetDao {
         .toList();
   }
 
+  /// Sets (including warmup sets) from the most recent session before [beforeDate] that had [exerciseName].
+  Future<List<({double weight, int reps, bool isWarmup})>> getLastSessionSetsDetailedForExercise(
+      String exerciseName, String beforeDate) async {
+    final db = await DatabaseHelper.database;
+    final rows = await db.rawQuery('''
+      SELECT s.weight_kg, s.reps, s.is_warmup FROM sets s
+      JOIN exercises e ON s.exercise_id = e.id
+      JOIN sessions ss ON e.session_id = ss.id
+      WHERE e.name = ?
+        AND ss.date = (
+          SELECT MAX(ss2.date) FROM sessions ss2
+          JOIN exercises e2 ON e2.session_id = ss2.id
+          WHERE e2.name = ? AND ss2.date < ?
+        )
+      ORDER BY s.set_number ASC
+    ''', [exerciseName, exerciseName, beforeDate]);
+    return rows
+        .map((r) => (
+              weight: (r['weight_kg'] as num).toDouble(),
+              reps: r['reps'] as int,
+              isWarmup: (r['is_warmup'] as int? ?? 0) == 1,
+            ))
+        .toList();
+  }
+
   /// All-time max working weight for [exerciseName] across all sessions.
   Future<double?> getPrWeightForExercise(String exerciseName) async {
     final db = await DatabaseHelper.database;

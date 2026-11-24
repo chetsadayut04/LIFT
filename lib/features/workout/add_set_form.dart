@@ -9,8 +9,9 @@ import '../../core/providers/unit_provider.dart';
 class AddSetForm extends ConsumerStatefulWidget {
   final void Function(double weight, int reps, bool isWarmup) onAdd;
   final VoidCallback? onAfterAdd;
-  final List<({double weight, int reps})> previousSets;
+  final List<({double weight, int reps, bool isWarmup})> previousSets;
   final List<({double weight, int reps})> lastSessionSets;
+  final List<({double weight, int reps})> lastSessionWarmupSets;
   final int repMin;
   final int repMax;
 
@@ -20,6 +21,7 @@ class AddSetForm extends ConsumerStatefulWidget {
     this.onAfterAdd,
     this.previousSets = const [],
     this.lastSessionSets = const [],
+    this.lastSessionWarmupSets = const [],
     this.repMin = kRepMin,
     this.repMax = kRepMax,
   });
@@ -32,6 +34,16 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
   final _weightCtrl = TextEditingController();
   final _repsCtrl = TextEditingController();
   bool _isWarmup = false;
+
+  int get currentWarmupsCount =>
+      widget.previousSets.where((s) => s.isWarmup).length;
+  int get currentWorkingCount =>
+      widget.previousSets.where((s) => !s.isWarmup).length;
+
+  List<({double weight, int reps})> get currentWorkingSets => widget.previousSets
+      .where((s) => !s.isWarmup)
+      .map((s) => (weight: s.weight, reps: s.reps))
+      .toList();
 
   @override
   void initState() {
@@ -51,15 +63,32 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
   // Falls back to keeping weight + clearing reps once past last-session set count.
   void _syncFields() {
     final isLbs = ref.read(isLbsProvider);
-    final nextIdx = widget.previousSets.length;
-    if (nextIdx < widget.lastSessionSets.length) {
-      final src = widget.lastSessionSets[nextIdx];
+    final targetLastSets = _isWarmup
+        ? widget.lastSessionWarmupSets
+        : widget.lastSessionSets;
+    final currentSameTypeSets = widget.previousSets
+        .where((s) => s.isWarmup == _isWarmup)
+        .toList();
+    final nextIdx = currentSameTypeSets.length;
+
+    if (nextIdx < targetLastSets.length) {
+      final src = targetLastSets[nextIdx];
       _weightCtrl.text = fmtNum(isLbs ? src.weight * kgToLbs : src.weight);
       _repsCtrl.text = src.reps.toString();
-    } else if (widget.previousSets.isNotEmpty) {
-      final last = widget.previousSets.last;
+    } else if (currentSameTypeSets.isNotEmpty) {
+      final last = currentSameTypeSets.last;
       _weightCtrl.text = fmtNum(isLbs ? last.weight * kgToLbs : last.weight);
       _repsCtrl.text = last.reps.toString();
+    } else if (!_isWarmup && widget.previousSets.isNotEmpty) {
+      if (widget.lastSessionSets.isNotEmpty) {
+        final src = widget.lastSessionSets.first;
+        _weightCtrl.text = fmtNum(isLbs ? src.weight * kgToLbs : src.weight);
+        _repsCtrl.text = src.reps.toString();
+      } else {
+        final last = widget.previousSets.last;
+        _weightCtrl.text = fmtNum(isLbs ? last.weight * kgToLbs : last.weight);
+        _repsCtrl.text = '10';
+      }
     }
   }
 
@@ -164,62 +193,117 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── Previous session hint ──────────────────────────────
-        if (widget.lastSessionSets.isNotEmpty) ...[
-          Row(
-            children: [
-              Text(
-                'ครั้งก่อน  ',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: textMuted,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: widget.lastSessionSets.asMap().entries.map((e) {
-                      final s = e.value;
-                      final w = isLbs ? s.weight * kgToLbs : s.weight;
-                      final wStr = fmtNum(w);
-                      final isCurrent = e.key == widget.previousSets.length;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: Text(
-                          '${e.key + 1}: $wStr $unit × ${s.reps}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: isCurrent ? accent : textSec,
-                            fontWeight: isCurrent
-                                ? FontWeight.w700
-                                : FontWeight.w400,
-                          ),
-                        ),
-                      );
-                    }).toList(),
+        if (_isWarmup) ...[
+          if (widget.lastSessionWarmupSets.isNotEmpty) ...[
+            Row(
+              children: [
+                const Text(
+                  'วอร์มครั้งก่อน  ',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFFFF9F1C),
+                    letterSpacing: 0.5,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          _ProgressionHint(
-            lastSessionSets: widget.lastSessionSets,
-            previousSets: widget.previousSets,
-            isLbs: isLbs,
-            repMin: widget.repMin,
-            repMax: widget.repMax,
-          ),
-          const SizedBox(height: 6),
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: widget.lastSessionWarmupSets
+                          .asMap()
+                          .entries
+                          .map((e) {
+                        final s = e.value;
+                        final w = isLbs ? s.weight * kgToLbs : s.weight;
+                        final wStr = fmtNum(w);
+                        final isCurrent = e.key == currentWarmupsCount;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Text(
+                            'W${e.key + 1}: $wStr $unit × ${s.reps}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isCurrent
+                                  ? const Color(0xFFFF9F1C)
+                                  : textSec,
+                              fontWeight: isCurrent
+                                  ? FontWeight.w700
+                                  : FontWeight.w400,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+          ],
+        ] else ...[
+          if (widget.lastSessionSets.isNotEmpty) ...[
+            Row(
+              children: [
+                Text(
+                  'ครั้งก่อน  ',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: textMuted,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: widget.lastSessionSets.asMap().entries.map((e) {
+                        final s = e.value;
+                        final w = isLbs ? s.weight * kgToLbs : s.weight;
+                        final wStr = fmtNum(w);
+                        final isCurrent = e.key == currentWorkingCount;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Text(
+                            '${e.key + 1}: $wStr $unit × ${s.reps}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isCurrent ? accent : textSec,
+                              fontWeight: isCurrent
+                                  ? FontWeight.w700
+                                  : FontWeight.w400,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            _ProgressionHint(
+              lastSessionSets: widget.lastSessionSets,
+              previousSets: currentWorkingSets,
+              isLbs: isLbs,
+              repMin: widget.repMin,
+              repMax: widget.repMax,
+            ),
+            const SizedBox(height: 6),
+          ],
         ],
 
         // ── Warmup toggle & Plate Calc ─────────────────────────
         Row(
           children: [
             GestureDetector(
-              onTap: () => setState(() => _isWarmup = !_isWarmup),
+              onTap: () {
+                setState(() {
+                  _isWarmup = !_isWarmup;
+                  _syncFields();
+                });
+              },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
                 padding: const EdgeInsets.symmetric(
@@ -368,8 +452,8 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
             icon: const Icon(Icons.add_task_rounded, size: 18),
             label: Text(
               _isWarmup
-                  ? 'บันทึกเซ็ต Warm-up'
-                  : 'บันทึกเซ็ตที่ ${widget.previousSets.length + 1}',
+                  ? 'บันทึกเซ็ต Warm-up (W${currentWarmupsCount + 1})'
+                  : 'บันทึกเซ็ตที่ ${currentWorkingCount + 1}',
               style: const TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: 14,

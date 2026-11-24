@@ -391,21 +391,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                   onTap: () async {
                     Navigator.pop(ctx);
+                    final messenger = ScaffoldMessenger.of(context);
+                    final primaryColor = Theme.of(context).colorScheme.primary;
                     await ref.read(authProvider.notifier).removeAvatar();
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            lang == AppLanguage.th
-                                ? 'ลบรูปโปรไฟล์แล้ว'
-                                : 'Profile photo removed',
-                          ),
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          lang == AppLanguage.th
+                              ? 'ลบรูปโปรไฟล์แล้ว'
+                              : 'Profile photo removed',
                         ),
-                      );
-                    }
+                        backgroundColor: primaryColor,
+                      ),
+                    );
                   },
                 ),
               ],
@@ -598,33 +596,30 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   return GestureDetector(
                     onTap: () async {
                       Navigator.pop(ctx);
+                      final messenger = ScaffoldMessenger.of(context);
+                      final primaryColor =
+                          Theme.of(context).colorScheme.primary;
                       try {
                         await ref
                             .read(authProvider.notifier)
                             .updateAvatarUrl(item['url']!);
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                lang == AppLanguage.th
-                                    ? 'เปลี่ยนรูปโปรไฟล์เป็น ${item['name']} แล้ว'
-                                    : 'Profile photo updated to ${item['name']}',
-                              ),
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.primary,
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              lang == AppLanguage.th
+                                  ? 'เปลี่ยนรูปโปรไฟล์เป็น ${item['name']} แล้ว'
+                                  : 'Profile photo updated to ${item['name']}',
                             ),
-                          );
-                        }
+                            backgroundColor: primaryColor,
+                          ),
+                        );
                       } catch (e) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Error: $e'),
-                              backgroundColor: Colors.redAccent,
-                            ),
-                          );
-                        }
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text('Error: $e'),
+                            backgroundColor: Colors.redAccent,
+                          ),
+                        );
                       }
                     },
                     child: Container(

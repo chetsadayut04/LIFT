@@ -341,7 +341,6 @@ class _ExerciseCard extends ConsumerWidget {
     final ex = exerciseWithSets.exercise;
     final sets = exerciseWithSets.sets;
     final prKg = exerciseWithSets.prKg;
-    final lastSessionSets = exerciseWithSets.lastSessionSets;
 
     final accent = Theme.of(context).colorScheme.primary;
     final textPrimary =
@@ -529,204 +528,216 @@ class _ExerciseCard extends ConsumerWidget {
                       ),
                       const SizedBox(height: 6),
                       // Pro Set Matrix Rows
-                      ...sets.asMap().entries.map((entry) {
-                        final i = entry.key;
-                        final s = entry.value;
-                        final prevSet =
-                            i < lastSessionSets.length ? lastSessionSets[i] : null;
-                        final prevStr = prevSet != null
-                            ? '${prevSet.weight.display(isLbs)} × ${prevSet.reps}'
-                            : '—';
+                      ...() {
+                        var warmupIdx = 0;
+                        var workingIdx = 0;
+                        final lastWarmup =
+                            exerciseWithSets.lastSessionWarmupSets;
+                        final lastWorking = exerciseWithSets.lastSessionSets;
 
-                        return Container(
-                          margin: const EdgeInsets.symmetric(vertical: 3),
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 5,
-                            horizontal: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceElevated.withValues(
-                              alpha: 0.45,
+                        return sets.map((s) {
+                          final ({double weight, int reps})? prevSet;
+                          final int setDisplayNumber;
+                          if (s.isWarmup) {
+                            prevSet = warmupIdx < lastWarmup.length
+                                ? lastWarmup[warmupIdx]
+                                : null;
+                            warmupIdx++;
+                            setDisplayNumber = warmupIdx;
+                          } else {
+                            prevSet = workingIdx < lastWorking.length
+                                ? lastWorking[workingIdx]
+                                : null;
+                            workingIdx++;
+                            setDisplayNumber = workingIdx;
+                          }
+                          final prevStr = prevSet != null
+                              ? '${prevSet.weight.display(isLbs)} × ${prevSet.reps}'
+                              : '—';
+
+                          return Container(
+                            margin: const EdgeInsets.symmetric(vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 5,
+                              horizontal: 4,
                             ),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: AppColors.border.withValues(alpha: 0.6),
-                              width: 0.5,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              // Set Number or Warmup Badge
-                              SizedBox(
-                                width: 30,
-                                child: s.isWarmup
-                                    ? Container(
-                                        width: 22,
-                                        height: 22,
-                                        alignment: Alignment.center,
-                                        decoration: BoxDecoration(
-                                          color: AppColors.warning.withValues(
-                                            alpha: 0.18,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            6,
-                                          ),
-                                        ),
-                                        child: const Text(
-                                          'W',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: AppColors.warning,
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                        ),
-                                      )
-                                    : Container(
-                                        width: 22,
-                                        height: 22,
-                                        alignment: Alignment.center,
-                                        decoration: BoxDecoration(
-                                          color: AppColors.surface,
-                                          borderRadius: BorderRadius.circular(
-                                            6,
-                                          ),
-                                          border: Border.all(
-                                            color: AppColors.border,
-                                            width: 0.5,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          '${s.setNumber}',
-                                          style: GoogleFonts.jetBrainsMono(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w700,
-                                            color: textSec,
-                                          ),
-                                        ),
-                                      ),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceElevated.withValues(
+                                alpha: 0.45,
                               ),
-                              // Previous Session Performance
-                              SizedBox(
-                                width: 78,
-                                child: Text(
-                                  prevStr,
-                                  style: GoogleFonts.jetBrainsMono(
-                                    fontSize: 11,
-                                    color: textMuted,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: AppColors.border.withValues(alpha: 0.6),
+                                width: 0.5,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                // Set Number or Warmup Badge
+                                SizedBox(
+                                  width: 30,
+                                  child: s.isWarmup
+                                      ? Container(
+                                          width: 22,
+                                          height: 22,
+                                          alignment: Alignment.center,
+                                          decoration: BoxDecoration(
+                                            color: AppColors.warning.withValues(
+                                              alpha: 0.18,
+                                            ),
+                                            borderRadius:
+                                                BorderRadius.circular(6),
+                                          ),
+                                          child: const Text(
+                                            'W',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: AppColors.warning,
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                          ),
+                                        )
+                                      : Container(
+                                          width: 22,
+                                          height: 22,
+                                          alignment: Alignment.center,
+                                          decoration: BoxDecoration(
+                                            color: AppColors.surface,
+                                            borderRadius:
+                                                BorderRadius.circular(6),
+                                            border: Border.all(
+                                              color: AppColors.border,
+                                              width: 0.5,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            '$setDisplayNumber',
+                                            style: GoogleFonts.jetBrainsMono(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                              color: textSec,
+                                            ),
+                                          ),
+                                        ),
                                 ),
-                              ),
-                              // Weight
-                              Expanded(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      s.weightKg.display(isLbs),
-                                      style: GoogleFonts.spaceGrotesk(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w700,
-                                        color: s.isWarmup
-                                            ? textSec
-                                            : textPrimary,
-                                      ),
+                                // Previous Session Performance
+                                SizedBox(
+                                  width: 78,
+                                  child: Text(
+                                    prevStr,
+                                    style: GoogleFonts.jetBrainsMono(
+                                      fontSize: 11,
+                                      color: textMuted,
+                                      fontWeight: FontWeight.w500,
                                     ),
-                                    if (!s.isWarmup &&
-                                        prKg != null &&
-                                        s.weightKg >= prKg) ...[
-                                      const SizedBox(width: 4),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 4,
-                                          vertical: 1,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.primary,
-                                          borderRadius: BorderRadius.circular(
-                                            3,
-                                          ),
-                                        ),
-                                        child: const Text(
-                                          'PR',
-                                          style: TextStyle(
-                                            fontSize: 8,
-                                            fontWeight: FontWeight.w900,
-                                            color: Color(0xFF000000),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                              // Reps
-                              SizedBox(
-                                width: 46,
-                                child: Text(
-                                  '${s.reps}',
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.spaceGrotesk(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                    color: s.isWarmup ? textSec : textPrimary,
                                   ),
                                 ),
-                              ),
-                              // Logged Checkmark / Delete button
-                              SizedBox(
-                                width: 30,
-                                child: readOnly
-                                    ? Container(
-                                        width: 24,
-                                        height: 24,
-                                        alignment: Alignment.center,
-                                        decoration: BoxDecoration(
-                                          color: AppColors.primary.withValues(
-                                            alpha: 0.15,
+                                // Weight
+                                Expanded(
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        s.weightKg.display(isLbs),
+                                        style: GoogleFonts.spaceGrotesk(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                          color: s.isWarmup
+                                              ? textSec
+                                              : textPrimary,
+                                        ),
+                                      ),
+                                      if (!s.isWarmup &&
+                                          prKg != null &&
+                                          s.weightKg >= prKg) ...[
+                                        const SizedBox(width: 4),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 4,
+                                            vertical: 1,
                                           ),
-                                          borderRadius: BorderRadius.circular(
-                                            6,
+                                          decoration: BoxDecoration(
+                                            color: AppColors.primary,
+                                            borderRadius:
+                                                BorderRadius.circular(3),
+                                          ),
+                                          child: const Text(
+                                            'PR',
+                                            style: TextStyle(
+                                              fontSize: 8,
+                                              fontWeight: FontWeight.w900,
+                                              color: Color(0xFF000000),
+                                            ),
                                           ),
                                         ),
-                                        child: const Icon(
-                                          Icons.check_rounded,
-                                          size: 14,
-                                          color: AppColors.primary,
-                                        ),
-                                      )
-                                    : GestureDetector(
-                                        onTap: () => onDeleteSet(s.id!),
-                                        child: Container(
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                // Reps
+                                SizedBox(
+                                  width: 46,
+                                  child: Text(
+                                    '${s.reps}',
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.spaceGrotesk(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color:
+                                          s.isWarmup ? textSec : textPrimary,
+                                    ),
+                                  ),
+                                ),
+                                // Logged Checkmark / Delete button
+                                SizedBox(
+                                  width: 30,
+                                  child: readOnly
+                                      ? Container(
                                           width: 24,
                                           height: 24,
                                           alignment: Alignment.center,
                                           decoration: BoxDecoration(
-                                            color: AppColors.primary.withValues(
-                                              alpha: 0.18,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              6,
-                                            ),
-                                            border: Border.all(
-                                              color: AppColors.primary.withValues(
-                                                alpha: 0.35,
-                                              ),
-                                              width: 1,
-                                            ),
+                                            color: AppColors.primary
+                                                .withValues(alpha: 0.15),
+                                            borderRadius:
+                                                BorderRadius.circular(6),
                                           ),
                                           child: const Icon(
                                             Icons.check_rounded,
                                             size: 14,
                                             color: AppColors.primary,
                                           ),
+                                        )
+                                      : GestureDetector(
+                                          onTap: () => onDeleteSet(s.id!),
+                                          child: Container(
+                                            width: 24,
+                                            height: 24,
+                                            alignment: Alignment.center,
+                                            decoration: BoxDecoration(
+                                              color: AppColors.primary
+                                                  .withValues(alpha: 0.18),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                              border: Border.all(
+                                                color: AppColors.primary
+                                                    .withValues(alpha: 0.35),
+                                                width: 1,
+                                              ),
+                                            ),
+                                            child: const Icon(
+                                              Icons.check_rounded,
+                                              size: 14,
+                                              color: AppColors.primary,
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
+                                ),
+                              ],
+                            ),
+                          );
+                        });
+                      }(),
                       const SizedBox(height: 12),
                     ] else
                       const SizedBox(height: 12),
@@ -736,9 +747,15 @@ class _ExerciseCard extends ConsumerWidget {
                         onAdd: onAddSet,
                         onAfterAdd: onAfterAdd,
                         previousSets: sets
-                            .map((s) => (weight: s.weightKg, reps: s.reps))
+                            .map((s) => (
+                                  weight: s.weightKg,
+                                  reps: s.reps,
+                                  isWarmup: s.isWarmup,
+                                ))
                             .toList(),
                         lastSessionSets: exerciseWithSets.lastSessionSets,
+                        lastSessionWarmupSets:
+                            exerciseWithSets.lastSessionWarmupSets,
                         repMin: exerciseWithSets.repMin,
                         repMax: exerciseWithSets.repMax,
                       ),

@@ -12,12 +12,16 @@ class ExerciseWithSets {
   final Exercise exercise;
   final List<WorkoutSet> sets;
   final List<({double weight, int reps})> lastSessionSets;
+  final List<({double weight, int reps})> lastSessionWarmupSets;
   final double? prKg;
   final int repMin;
   final int repMax;
 
-  ExerciseWithSets(this.exercise, this.sets, {
+  ExerciseWithSets(
+    this.exercise,
+    this.sets, {
     this.lastSessionSets = const [],
+    this.lastSessionWarmupSets = const [],
     this.prKg,
     this.repMin = 8,
     this.repMax = 12,
@@ -26,6 +30,7 @@ class ExerciseWithSets {
   ExerciseWithSets copyWith({
     List<WorkoutSet>? sets,
     List<({double weight, int reps})>? lastSessionSets,
+    List<({double weight, int reps})>? lastSessionWarmupSets,
     double? prKg,
     int? repMin,
     int? repMax,
@@ -34,6 +39,8 @@ class ExerciseWithSets {
         exercise,
         sets ?? this.sets,
         lastSessionSets: lastSessionSets ?? this.lastSessionSets,
+        lastSessionWarmupSets:
+            lastSessionWarmupSets ?? this.lastSessionWarmupSets,
         prKg: prKg ?? this.prKg,
         repMin: repMin ?? this.repMin,
         repMax: repMax ?? this.repMax,
@@ -91,15 +98,26 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState> {
     final exercisesWithSets = await Future.wait(exercises.map((ex) async {
       final results = await Future.wait([
         _setDao.getByExercise(ex.id!),
-        _setDao.getLastSessionSetsForExercise(ex.name, session.date),
+        _setDao.getLastSessionSetsDetailedForExercise(ex.name, session.date),
         _setDao.getPrWeightForExercise(ex.name),
         _configDao.get(ex.name),
       ]);
+      final detailedSets = results[1]
+          as List<({double weight, int reps, bool isWarmup})>;
+      final lastWorking = detailedSets
+          .where((s) => !s.isWarmup)
+          .map((s) => (weight: s.weight, reps: s.reps))
+          .toList();
+      final lastWarmup = detailedSets
+          .where((s) => s.isWarmup)
+          .map((s) => (weight: s.weight, reps: s.reps))
+          .toList();
       final cfg = results[3] as ExerciseConfig;
       return ExerciseWithSets(
         ex,
         results[0] as List<WorkoutSet>,
-        lastSessionSets: results[1] as List<({double weight, int reps})>,
+        lastSessionSets: lastWorking,
+        lastSessionWarmupSets: lastWarmup,
         prKg: results[2] as double?,
         repMin: cfg.repMin,
         repMax: cfg.repMax,
@@ -117,19 +135,33 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState> {
       orderIndex: state.exercises.length,
     ));
     final results = await Future.wait([
-      _setDao.getLastSessionSetsForExercise(trimmed, state.session!.date),
+      _setDao.getLastSessionSetsDetailedForExercise(trimmed, state.session!.date),
       _setDao.getPrWeightForExercise(trimmed),
       _configDao.get(trimmed),
     ]);
+    final detailedSets = results[0]
+        as List<({double weight, int reps, bool isWarmup})>;
+    final lastWorking = detailedSets
+        .where((s) => !s.isWarmup)
+        .map((s) => (weight: s.weight, reps: s.reps))
+        .toList();
+    final lastWarmup = detailedSets
+        .where((s) => s.isWarmup)
+        .map((s) => (weight: s.weight, reps: s.reps))
+        .toList();
     final cfg = results[2] as ExerciseConfig;
     state = state.copyWith(
       exercises: [
         ...state.exercises,
-        ExerciseWithSets(exercise, [],
-            lastSessionSets: results[0] as List<({double weight, int reps})>,
-            prKg: results[1] as double?,
-            repMin: cfg.repMin,
-            repMax: cfg.repMax),
+        ExerciseWithSets(
+          exercise,
+          [],
+          lastSessionSets: lastWorking,
+          lastSessionWarmupSets: lastWarmup,
+          prKg: results[1] as double?,
+          repMin: cfg.repMin,
+          repMax: cfg.repMax,
+        ),
       ],
     );
   }
@@ -209,8 +241,15 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState> {
     await _exerciseDao.updateName(exerciseId, trimmed);
     final updated = state.exercises.map((e) {
       if (e.exercise.id == exerciseId) {
-        return ExerciseWithSets(e.exercise.copyWith(name: trimmed), e.sets,
-            lastSessionSets: e.lastSessionSets, prKg: e.prKg);
+        return ExerciseWithSets(
+          e.exercise.copyWith(name: trimmed),
+          e.sets,
+          lastSessionSets: e.lastSessionSets,
+          lastSessionWarmupSets: e.lastSessionWarmupSets,
+          prKg: e.prKg,
+          repMin: e.repMin,
+          repMax: e.repMax,
+        );
       }
       return e;
     }).toList();

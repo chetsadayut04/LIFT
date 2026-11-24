@@ -540,8 +540,12 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
+              interval: math.max(1.0, ((history.length - 1) / 4).ceilToDouble()),
               getTitlesWidget: (val, _) {
-                final idx = val.toInt();
+                if ((val - val.round()).abs() > 0.01) {
+                  return const SizedBox.shrink();
+                }
+                final idx = val.round();
                 if (idx >= 0 && idx < history.length) {
                   final date = history[idx].dateStr;
                   final parts = date.split('-');
