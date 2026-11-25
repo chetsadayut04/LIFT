@@ -1546,34 +1546,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               width: 1,
                             ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.fitness_center_rounded,
-                                size: 13,
-                                color: AppColors.primary,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                () {
-                                  final tier = totalSessions >= 50
-                                      ? 'APEX ATHLETE'
-                                      : totalSessions >= 15
-                                          ? 'PRO LIFTER'
-                                          : 'ATHLETE';
-                                  return memberSinceLabel != null
-                                      ? '$tier · SINCE ${memberSinceLabel.toUpperCase()}'
-                                      : tier;
-                                }(),
-                                style: GoogleFonts.jetBrainsMono(
-                                  fontSize: 10,
-                                  color: AppColors.textSecondary,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.6,
-                                ),
-                              ),
-                            ],
+                          child: Text(
+                            () {
+                              final tier = totalSessions >= 50
+                                  ? 'APEX ATHLETE'
+                                  : totalSessions >= 15
+                                      ? 'PRO LIFTER'
+                                      : 'ATHLETE';
+                              return memberSinceLabel != null
+                                  ? '$tier · SINCE ${memberSinceLabel.toUpperCase()}'
+                                  : tier;
+                            }(),
+                            style: GoogleFonts.jetBrainsMono(
+                              fontSize: 10,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.6,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -1627,26 +1616,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.military_tech_rounded,
-                                      size: 16,
-                                      color: AppColors.primary,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      lang == AppLanguage.th
-                                          ? 'สถิติส่วนบุคคลสูงสุด (PRs)'
-                                          : 'PERSONAL RECORDS (PRs)',
-                                      style: GoogleFonts.barlowCondensed(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.textPrimary,
-                                        letterSpacing: 0.8,
-                                      ),
-                                    ),
-                                  ],
+                                Text(
+                                  lang == AppLanguage.th
+                                      ? 'สถิติส่วนบุคคลสูงสุด (PRs)'
+                                      : 'PERSONAL RECORDS (PRs)',
+                                  style: GoogleFonts.barlowCondensed(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textPrimary,
+                                    letterSpacing: 0.8,
+                                  ),
                                 ),
                                 const SizedBox(height: 10),
                                 Wrap(

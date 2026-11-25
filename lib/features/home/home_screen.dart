@@ -452,20 +452,13 @@ class _HomeBody extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      lang == AppLanguage.th ? 'บันทึกต่อ' : 'Continue',
-                      style: GoogleFonts.barlowCondensed(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.arrow_forward_rounded, size: 18),
-                  ],
+                child: Text(
+                  lang == AppLanguage.th ? 'บันทึกต่อ' : 'Continue',
+                  style: GoogleFonts.barlowCondensed(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ),
             ),
@@ -485,20 +478,13 @@ class _HomeBody extends ConsumerWidget {
             borderRadius: BorderRadius.circular(14),
           ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.play_arrow_rounded, size: 22),
-            const SizedBox(width: 6),
-            Text(
-              lang == AppLanguage.th ? 'เริ่มการฝึก' : 'Start Workout',
-              style: GoogleFonts.barlowCondensed(
-                fontSize: 19,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ],
+        child: Text(
+          lang == AppLanguage.th ? 'เริ่มการฝึก' : 'Start Workout',
+          style: GoogleFonts.barlowCondensed(
+            fontSize: 19,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
         ),
       ),
     );
@@ -1619,30 +1605,18 @@ class _StatsSummaryDashboardState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                lang == AppLanguage.th
-                                    ? 'เป้าหมายเดือนนี้'
-                                    : 'MONTH GOAL',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.barlowCondensed(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.7,
-                                  color: AppColors.textMuted,
-                                ),
-                              ),
-                            ),
-                            const Icon(
-                              Icons.edit_outlined,
-                              size: 11,
-                              color: AppColors.textMuted,
-                            ),
-                          ],
+                        Text(
+                          lang == AppLanguage.th
+                              ? 'เป้าหมายเดือนนี้'
+                              : 'MONTH GOAL',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.barlowCondensed(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.7,
+                            color: AppColors.textMuted,
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(

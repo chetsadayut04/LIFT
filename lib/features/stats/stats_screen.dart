@@ -174,23 +174,13 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
                           color: AppColors.primary.withValues(alpha: 0.3),
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.history_rounded,
-                            size: 16,
-                            color: AppColors.primary,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            lang == AppLanguage.th ? 'ประวัติ' : 'History',
-                            style: GoogleFonts.sarabun(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        lang == AppLanguage.th ? 'ประวัติ' : 'History',
+                        style: GoogleFonts.sarabun(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                   ),

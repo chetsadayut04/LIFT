@@ -401,71 +401,94 @@ class _ExerciseCard extends ConsumerWidget {
                           ),
                         ),
                         if (!readOnly)
-                          GestureDetector(
-                            onTap: () => _showRepRangeDialog(
-                              context,
-                              lang,
-                              textSec,
-                              textMuted,
+                          PopupMenuButton<String>(
+                            icon: Icon(
+                              Icons.more_horiz,
+                              size: 18,
+                              color: textMuted,
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 8, right: 4),
-                              child: Icon(
-                                Icons.tune,
-                                size: 15,
-                                color: textMuted,
-                              ),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 32,
+                              minHeight: 32,
                             ),
-                          ),
-                        if (!readOnly)
-                          GestureDetector(
-                            onTap: () =>
-                                _showRenameDialog(context, ex.name, lang),
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 4, right: 4),
-                              child: Icon(
-                                Icons.edit_outlined,
-                                size: 15,
-                                color: textMuted,
-                              ),
+                            color: AppColors.surfaceElevated,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: const BorderSide(color: AppColors.border),
                             ),
-                          ),
-                        if (!readOnly)
-                          GestureDetector(
-                            onTap: () => showDialog(
-                              context: context,
-                              builder: (_) => AlertDialog(
-                                title: Text(lang.tr('dialog_delete_exercise')),
-                                content: Text(
-                                  '${lang.tr('dialog_delete_exercise_desc')} "${ex.name}"?',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: Text(lang.tr('btn_cancel')),
-                                  ),
-                                  FilledButton(
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                      onDeleteExercise();
-                                    },
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: const Color(0xFF1A0800),
-                                      foregroundColor: const Color(0xFFFF5A3C),
+                            onSelected: (value) {
+                              if (value == 'rep_range') {
+                                _showRepRangeDialog(
+                                  context,
+                                  lang,
+                                  textSec,
+                                  textMuted,
+                                );
+                              } else if (value == 'rename') {
+                                _showRenameDialog(context, ex.name, lang);
+                              } else if (value == 'delete') {
+                                showDialog(
+                                  context: context,
+                                  builder: (_) => AlertDialog(
+                                    title: Text(
+                                      lang.tr('dialog_delete_exercise'),
                                     ),
-                                    child: Text(lang.tr('btn_delete')),
+                                    content: Text(
+                                      '${lang.tr('dialog_delete_exercise_desc')} "${ex.name}"?',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: Text(lang.tr('btn_cancel')),
+                                      ),
+                                      FilledButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                          onDeleteExercise();
+                                        },
+                                        style: FilledButton.styleFrom(
+                                          backgroundColor: const Color(
+                                            0xFF1A0800,
+                                          ),
+                                          foregroundColor: const Color(
+                                            0xFFFF5A3C,
+                                          ),
+                                        ),
+                                        child: Text(lang.tr('btn_delete')),
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                );
+                              }
+                            },
+                            itemBuilder: (_) => [
+                              PopupMenuItem(
+                                value: 'rep_range',
+                                child: Text(
+                                  lang == AppLanguage.th
+                                      ? 'ตั้งช่วง Rep เป้าหมาย'
+                                      : 'Target Rep Range',
+                                ),
                               ),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(4),
-                              child: Icon(
-                                Icons.delete_outline,
-                                size: 17,
-                                color: textMuted,
+                              PopupMenuItem(
+                                value: 'rename',
+                                child: Text(
+                                  lang == AppLanguage.th
+                                      ? 'เปลี่ยนชื่อท่า'
+                                      : 'Rename Exercise',
+                                ),
                               ),
-                            ),
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: Text(
+                                  lang.tr('btn_delete'),
+                                  style: const TextStyle(
+                                    color: AppColors.tertiary,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                       ],
                     ),

@@ -436,7 +436,7 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
         SizedBox(
           width: double.infinity,
           height: 44,
-          child: FilledButton.icon(
+          child: FilledButton(
             onPressed: () => _submit(isLbs),
             style: _isWarmup
                 ? FilledButton.styleFrom(
@@ -449,8 +449,7 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
                     backgroundColor: AppColors.primary,
                     foregroundColor: const Color(0xFF000000),
                   ),
-            icon: const Icon(Icons.add_task_rounded, size: 18),
-            label: Text(
+            child: Text(
               _isWarmup
                   ? 'บันทึกเซ็ต Warm-up (W${currentWarmupsCount + 1})'
                   : 'บันทึกเซ็ตที่ ${currentWorkingCount + 1}',
@@ -526,21 +525,13 @@ class _ProgressionHint extends StatelessWidget {
         ? 'เพิ่มน้ำหนัก: ${fmtNum(display)} $unit × ${s.reps} reps'
         : 'เพิ่ม reps: ${fmtNum(display)} $unit × ${s.reps} reps';
 
-    return Row(
-      children: [
-        Icon(Icons.trending_up, size: 11, color: accent),
-        const SizedBox(width: 3),
-        Expanded(
-          child: Text(
-            hint,
-            style: TextStyle(
-              fontSize: 10,
-              color: accent,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
+    return Text(
+      hint,
+      style: TextStyle(
+        fontSize: 10,
+        color: accent,
+        fontWeight: FontWeight.w600,
+      ),
     );
   }
 }

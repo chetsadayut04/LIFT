@@ -431,18 +431,7 @@ class RoutinesScreen extends ConsumerWidget {
                     SizedBox(
                       width: double.infinity,
                       height: 46,
-                      child: FilledButton.icon(
-                        icon: const Icon(Icons.play_arrow_rounded, size: 20),
-                        label: Text(
-                          lang == AppLanguage.th
-                              ? 'เริ่มการฝึก'
-                              : 'Start Workout',
-                          style: GoogleFonts.barlowCondensed(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
+                      child: FilledButton(
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: const Color(0xFF000000),
@@ -478,6 +467,16 @@ class RoutinesScreen extends ConsumerWidget {
                             );
                           }
                         },
+                        child: Text(
+                          lang == AppLanguage.th
+                              ? 'เริ่มการฝึก'
+                              : 'Start Workout',
+                          style: GoogleFonts.barlowCondensed(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                       ),
                     ),
                   ],
