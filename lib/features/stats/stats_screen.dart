@@ -540,6 +540,7 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
+              reservedSize: 26,
               interval: math.max(1.0, ((history.length - 1) / 4).ceilToDouble()),
               getTitlesWidget: (val, _) {
                 if ((val - val.round()).abs() > 0.01) {
@@ -575,8 +576,10 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
           ),
         ),
         borderData: FlBorderData(show: false),
-        minX: 0,
-        maxX: (history.length - 1).toDouble().clamp(0, double.infinity),
+        minX: history.length == 1 ? -0.5 : 0,
+        maxX: history.length == 1
+            ? 0.5
+            : (history.length - 1).toDouble().clamp(1, double.infinity),
         minY: chartMin,
         maxY: chartMax == chartMin ? chartMin + 10 : chartMax,
         lineBarsData: [

@@ -47,6 +47,17 @@
     setTimeout(loadFlutter, 1000);
 
     if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        for (var i = 0; i < regs.length; i++) {
+          var reg = regs[i];
+          var scriptUrl = (reg.active && reg.active.scriptURL) ||
+              (reg.installing && reg.installing.scriptURL) ||
+              (reg.waiting && reg.waiting.scriptURL) || '';
+          if (scriptUrl.indexOf('flutter_service_worker.js') !== -1) {
+            reg.unregister();
+          }
+        }
+      });
       navigator.serviceWorker.register('sqflite_sw.js')
         .then(function() {
           loadFlutter();
