@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'core/providers/theme_provider.dart';
 import 'core/providers/translation_provider.dart';
 import 'core/providers/cache_provider.dart';
 import 'core/providers/tab_provider.dart';
@@ -48,7 +47,6 @@ class _AppState extends ConsumerState<App> {
   Widget build(BuildContext context) {
     final user = ref.watch(authProvider);
     final isRecovery = ref.watch(passwordRecoveryProvider);
-    final themeMode = ref.watch(themeProvider);
     final lang = ref.watch(languageProvider);
     final cacheInit = user != null ? ref.watch(cacheInitProvider) : null;
     final currentIndex = ref.watch(activeTabProvider);
@@ -56,46 +54,56 @@ class _AppState extends ConsumerState<App> {
     final mainScaffold = Scaffold(
       body: IndexedStack(index: currentIndex, children: _screens),
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
+          color: AppColors.bg,
           border: Border(
-            top: BorderSide(
-              color: themeMode == ThemeMode.dark
-                  ? AppColors.border
-                  : const Color(0xFFE2E8DF),
-              width: 0.5,
-            ),
+            top: BorderSide(color: AppColors.border, width: 1.0),
           ),
         ),
-        child: NavigationBar(
-          selectedIndex: currentIndex,
-          onDestinationSelected: _onTabChanged,
-          destinations: [
-            NavigationDestination(
-              icon: const Icon(Icons.home_outlined),
-              selectedIcon: const Icon(Icons.home),
-              label: lang.tr('nav_home'),
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 62,
+            child: Row(
+              children: [
+                _TelemetryNavItem(
+                  icon: Icons.home_outlined,
+                  selectedIcon: Icons.home_rounded,
+                  label: lang.tr('nav_home'),
+                  selected: currentIndex == 0,
+                  onTap: () => _onTabChanged(0),
+                ),
+                _TelemetryNavItem(
+                  icon: Icons.tune_outlined,
+                  selectedIcon: Icons.tune_rounded,
+                  label: lang == AppLanguage.th ? 'ตาราง' : 'Routines',
+                  selected: currentIndex == 1,
+                  onTap: () => _onTabChanged(1),
+                ),
+                _TelemetryNavItem(
+                  icon: Icons.trending_up_outlined,
+                  selectedIcon: Icons.trending_up_rounded,
+                  label: lang.tr('nav_stats'),
+                  selected: currentIndex == 2,
+                  onTap: () => _onTabChanged(2),
+                ),
+                _TelemetryNavItem(
+                  icon: Icons.bolt_outlined,
+                  selectedIcon: Icons.bolt_rounded,
+                  label: lang.tr('nav_ai'),
+                  selected: currentIndex == 3,
+                  onTap: () => _onTabChanged(3),
+                ),
+                _TelemetryNavItem(
+                  icon: Icons.person_outline,
+                  selectedIcon: Icons.person_rounded,
+                  label: lang == AppLanguage.th ? 'ฉัน' : 'Profile',
+                  selected: currentIndex == 4,
+                  onTap: () => _onTabChanged(4),
+                ),
+              ],
             ),
-            NavigationDestination(
-              icon: const Icon(Icons.tune_outlined),
-              selectedIcon: const Icon(Icons.tune),
-              label: lang == AppLanguage.th ? 'ตาราง' : 'Routines',
-            ),
-            NavigationDestination(
-              icon: const Icon(Icons.trending_up_outlined),
-              selectedIcon: const Icon(Icons.trending_up),
-              label: lang.tr('nav_stats'),
-            ),
-            NavigationDestination(
-              icon: const Icon(Icons.bolt_outlined),
-              selectedIcon: const Icon(Icons.bolt),
-              label: lang.tr('nav_ai'),
-            ),
-            NavigationDestination(
-              icon: const Icon(Icons.person_outline),
-              selectedIcon: const Icon(Icons.person),
-              label: lang == AppLanguage.th ? 'ฉัน' : 'Profile',
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -365,6 +373,63 @@ class _AppState extends ConsumerState<App> {
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TelemetryNavItem extends StatelessWidget {
+  final IconData icon;
+  final IconData selectedIcon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _TelemetryNavItem({
+    required this.icon,
+    required this.selectedIcon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected ? AppColors.primary : AppColors.textMuted;
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        splashColor: AppColors.primary.withValues(alpha: 0.08),
+        highlightColor: Colors.transparent,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              width: selected ? 24 : 0,
+              height: 2,
+              margin: const EdgeInsets.only(bottom: 6),
+              decoration: BoxDecoration(
+                color: selected ? AppColors.primary : Colors.transparent,
+                borderRadius: BorderRadius.circular(1),
+              ),
+            ),
+            Icon(selected ? selectedIcon : icon, color: color, size: 22),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.barlowCondensed(
+                color: color,
+                fontSize: 12,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                letterSpacing: 0.4,
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -185,68 +185,110 @@ class _HomeBody extends ConsumerWidget {
                 ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Session Name & Timer row matching Figma
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
+                      // Telemetry Live Session Card
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: state.isFinishedToday
+                                ? AppColors.border
+                                : AppColors.borderHighlight,
+                            width: 1,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  lang == AppLanguage.th
-                                      ? 'กำลังฝึกซ้อม'
-                                      : 'WORKOUT IN PROGRESS',
-                                  style: GoogleFonts.sarabun(
-                                    fontSize: 12,
-                                    color: textMuted,
-                                    fontWeight: FontWeight.w500,
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Container(
+                                            width: 6,
+                                            height: 6,
+                                            decoration: BoxDecoration(
+                                              color: state.isFinishedToday
+                                                  ? AppColors.textMuted
+                                                  : AppColors.primary,
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            state.isFinishedToday
+                                                ? (lang == AppLanguage.th
+                                                    ? 'เสร็จสิ้นแล้ว'
+                                                    : 'SESSION COMPLETE')
+                                                : (lang == AppLanguage.th
+                                                    ? 'กำลังฝึกซ้อม'
+                                                    : 'LIVE TELEMETRY'),
+                                            style: GoogleFonts.barlowCondensed(
+                                              fontSize: 12,
+                                              color: state.isFinishedToday
+                                                  ? textMuted
+                                                  : AppColors.primary,
+                                              fontWeight: FontWeight.w700,
+                                              letterSpacing: 1.0,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        state.sessionName ??
+                                            lang.tr('home_ready'),
+                                        style: GoogleFonts.barlowCondensed(
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.w800,
+                                          letterSpacing: -0.5,
+                                          height: 1.1,
+                                          color: textPrimary,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  state.sessionName ?? lang.tr('home_ready'),
-                                  style: GoogleFonts.barlowCondensed(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: -0.5,
-                                    height: 1.1,
-                                    color: textPrimary,
-                                  ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      lang == AppLanguage.th
+                                          ? 'เวลาที่ใช้'
+                                          : 'ELAPSED',
+                                      style: GoogleFonts.barlowCondensed(
+                                        fontSize: 11,
+                                        letterSpacing: 0.8,
+                                        color: textMuted,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    _TimerRow(
+                                      state: state,
+                                      fontSize: 26,
+                                      hideDot: true,
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                lang == AppLanguage.th
-                                    ? 'เวลาที่ใช้'
-                                    : 'TIME ELAPSED',
-                                style: GoogleFonts.sarabun(
-                                  fontSize: 11,
-                                  color: textMuted,
-                                ),
-                              ),
-                              const SizedBox(height: 3),
-                              _TimerRow(
-                                state: state,
-                                fontSize: 28,
-                                hideDot: true,
-                              ),
+                            const SizedBox(height: 14),
+                            _PulsingWorkoutProgress(state: state),
+                            if (state.todayVolume > 0) ...[
+                              const SizedBox(height: 10),
+                              _VolumeSummaryRow(state: state, isLbs: isLbs),
                             ],
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      // Pulsing progress bar matching Figma CSS
-                      _PulsingWorkoutProgress(state: state),
-                      if (state.todayVolume > 0) ...[
-                        const SizedBox(height: 10),
-                        _VolumeSummaryRow(state: state, isLbs: isLbs),
-                      ],
                       const SizedBox(height: 16),
                       Divider(height: 1, thickness: 0.5, color: divider),
                       const SizedBox(height: 16),
@@ -294,7 +336,7 @@ class _HomeBody extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 18),
-                        // Stats Summary Dashboard
+                        // Stats Summary Dashboard (Weekly Volume + Monthly Goal Bento)
                         _StatsSummaryDashboard(state: state, isLbs: isLbs),
                         const SizedBox(height: 24),
                         // Routines Carousel header
@@ -1437,12 +1479,6 @@ class _StatsSummaryDashboardState
   @override
   Widget build(BuildContext context) {
     final lang = ref.watch(languageProvider);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final accent = theme.colorScheme.primary;
-    final textPrimary = theme.textTheme.bodyLarge?.color ?? Colors.white;
-    final textMuted = theme.textTheme.bodySmall?.color ?? Colors.grey;
-    final border = theme.colorScheme.outline;
 
     // Monthly Workout calculations
     final now = DateTime.now();
@@ -1451,253 +1487,184 @@ class _StatsSummaryDashboardState
     final workoutsThisMonth = widget.state.finishedDates
         .where((d) => d.startsWith(currentMonthPrefix))
         .length;
-    final progressRatio = _targetGoal > 0
+    final goalRatio = _targetGoal > 0
         ? (workoutsThisMonth / _targetGoal).clamp(0.0, 1.0)
         : 0.0;
 
     // Weekly Volume
     final weeklyVol = _fmtVol(widget.state.thisWeekVolume, widget.isLbs);
-    final changeText = widget.state.percentChange != null
-        ? '${widget.state.percentChange! >= 0 ? '+' : ''}${widget.state.percentChange!.toStringAsFixed(1)}%'
-        : null;
-    final changeColor =
-        widget.state.percentChange != null && widget.state.percentChange! >= 0
-        ? accent
-        : const Color(0xFFFF5A3C);
-
-    // Calculate maximum daily volume for mini bar chart
-    final monday = now.subtract(Duration(days: now.weekday - 1));
-    final weekDates = List.generate(7, (i) {
-      final day = monday.add(Duration(days: i));
-      return '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
-    });
-    final maxDailyVolume = weekDates
-        .map((d) => widget.state.weeklyVolumePerDay[d] ?? 0.0)
-        .fold(0.0, math.max);
+    final pct = widget.state.percentChange;
+    final volRatio = widget.state.lastWeekVolume > 0
+        ? (widget.state.thisWeekVolume / widget.state.lastWeekVolume)
+            .clamp(0.0, 1.0)
+        : (widget.state.thisWeekVolume > 0 ? 1.0 : 0.0);
 
     return Row(
       children: [
-        // Left Card: Weekly Volume Summary (Electric Cyan Glow)
+        // Left Tile: Weekly Volume Telemetry Ring
         Expanded(
           child: Container(
-            height: 130,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.surface : const Color(0xFFF1F5F0),
-              border: Border.all(
-                color: isDark ? AppColors.border : border,
-                width: 1.0,
-              ),
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border, width: 1),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: AppColors.secondary,
-                        shape: BoxShape.circle,
+                SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: CustomPaint(
+                    painter: _TelemetryArcPainter(
+                      progress: volRatio,
+                      color: AppColors.primary,
+                      trackColor: AppColors.border,
+                    ),
+                    child: Center(
+                      child: Text(
+                        pct != null
+                            ? '${pct >= 0 ? '+' : ''}${pct.round()}%'
+                            : (widget.state.thisWeekVolume > 0 ? 'ON' : '0%'),
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: pct != null && pct < 0
+                              ? AppColors.tertiary
+                              : AppColors.primary,
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 5),
-                    Text(
-                      lang == AppLanguage.th
-                          ? 'น้ำหนักสัปดาห์นี้'
-                          : 'WEEKLY VOLUME',
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? AppColors.secondary : textMuted,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                Text(
-                  weeklyVol,
-                  style: GoogleFonts.spaceGrotesk(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: textPrimary,
                   ),
                 ),
-                const SizedBox(height: 2),
-                if (changeText != null)
-                  Text(
-                    lang == AppLanguage.th
-                        ? '$changeText จากสัปดาห์ก่อน'
-                        : '$changeText vs last week',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: changeColor,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  )
-                else
-                  Text(
-                    lang == AppLanguage.th
-                        ? 'ไม่มีข้อมูลสัปดาห์ก่อน'
-                        : 'No previous week data',
-                    style: TextStyle(fontSize: 10, color: textMuted),
-                  ),
-                const Spacer(),
-                // Mini bar chart
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: List.generate(7, (i) {
-                    final dayVol =
-                        widget.state.weeklyVolumePerDay[weekDates[i]] ?? 0.0;
-                    final ratio = maxDailyVolume > 0
-                        ? dayVol / maxDailyVolume
-                        : 0.0;
-                    final barHeight = 14 * ratio + 3.0; // min height 3px
-
-                    return Container(
-                      width: 6,
-                      height: barHeight,
-                      decoration: BoxDecoration(
-                        color: dayVol > 0
-                            ? AppColors.secondary
-                            : (isDark
-                                ? AppColors.secondary.withValues(alpha: 0.15)
-                                : theme.colorScheme.outline.withValues(alpha: 0.3)),
-                        borderRadius: BorderRadius.circular(3),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        lang == AppLanguage.th ? 'วอลุ่มสัปดาห์นี้' : 'WEEK VOL',
+                        style: GoogleFonts.barlowCondensed(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.7,
+                          color: AppColors.textMuted,
+                        ),
                       ),
-                    );
-                  }),
+                      const SizedBox(height: 2),
+                      Text(
+                        weeklyVol,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        lang == AppLanguage.th ? 'เทียบสัปดาห์ก่อน' : 'vs last wk',
+                        style: GoogleFonts.sarabun(
+                          fontSize: 10,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
         ),
-        const SizedBox(width: 12),
-        // Right Card: Monthly Workouts Target Progress Ring
+        const SizedBox(width: 10),
+        // Right Tile: Monthly Goal Telemetry Ring (Tap to Edit)
         Expanded(
           child: InkWell(
             onTap: () => _showSetGoalDialog(context, lang),
             borderRadius: BorderRadius.circular(16),
             child: Container(
-              height: 130,
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.surface : const Color(0xFFF1F5F0),
-                border: Border.all(
-                  color: isDark ? AppColors.border : border,
-                  width: 1.0,
-                ),
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.border, width: 1),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
+                  SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: CustomPaint(
+                      painter: _TelemetryArcPainter(
+                        progress: goalRatio,
+                        color: AppColors.secondary,
+                        trackColor: AppColors.border,
+                      ),
+                      child: Center(
                         child: Text(
-                          lang == AppLanguage.th
-                              ? 'เป้าหมายรายเดือน'
-                              : 'MONTHLY GOAL',
-                          style: TextStyle(
-                            fontSize: 8.5,
-                            fontWeight: FontWeight.bold,
-                            color: textMuted,
-                            letterSpacing: 0.3,
+                          '${(goalRatio * 100).round()}%',
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.secondary,
                           ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                lang == AppLanguage.th
+                                    ? 'เป้าหมายเดือนนี้'
+                                    : 'MONTH GOAL',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.barlowCondensed(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.7,
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
+                            ),
+                            const Icon(
+                              Icons.edit_outlined,
+                              size: 11,
+                              color: AppColors.textMuted,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '$workoutsThisMonth/$_targetGoal',
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 5,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: accent.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: accent.withValues(alpha: 0.3),
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
                           ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.edit_outlined, size: 10, color: accent),
-                            const SizedBox(width: 2),
-                            Text(
-                              lang == AppLanguage.th ? 'ตั้งเป้า' : 'Edit',
-                              style: TextStyle(
-                                fontSize: 8.5,
-                                fontWeight: FontWeight.bold,
-                                color: accent,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          lang == AppLanguage.th ? 'แตะเพื่อปรับเป้า' : 'Tap to edit',
+                          style: GoogleFonts.sarabun(
+                            fontSize: 10,
+                            color: AppColors.textMuted,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  const Spacer(),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              lang == AppLanguage.th
-                                  ? 'ฝึกซ้อมครบ'
-                                  : 'Completed',
-                              style: TextStyle(fontSize: 10, color: textMuted),
-                            ),
-                            Text(
-                              lang == AppLanguage.th
-                                  ? '$workoutsThisMonth วัน'
-                                  : '$workoutsThisMonth days',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 2),
-                      SizedBox(
-                        width: 52,
-                        height: 52,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            CircularProgressIndicator(
-                              value: progressRatio,
-                              strokeWidth: 4.5,
-                              backgroundColor: theme.colorScheme.outline
-                                  .withValues(alpha: 0.15),
-                              valueColor: AlwaysStoppedAnimation<Color>(accent),
-                            ),
-                            Text(
-                              '$workoutsThisMonth/$_targetGoal',
-                              style: GoogleFonts.spaceGrotesk(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.bold,
-                                color: textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
                 ],
               ),
             ),
@@ -1997,4 +1964,52 @@ class _PulsingWorkoutProgressState extends State<_PulsingWorkoutProgress>
       ),
     );
   }
+}
+
+class _TelemetryArcPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  final Color trackColor;
+
+  const _TelemetryArcPainter({
+    required this.progress,
+    required this.color,
+    required this.trackColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (math.min(size.width, size.height) / 2) - 3;
+    const strokeWidth = 4.0;
+
+    final trackPaint = Paint()
+      ..color = trackColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+
+    final activePaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawCircle(center, radius, trackPaint);
+    if (progress > 0) {
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        -math.pi / 2,
+        2 * math.pi * progress,
+        false,
+        activePaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _TelemetryArcPainter oldDelegate) =>
+      oldDelegate.progress != progress ||
+      oldDelegate.color != color ||
+      oldDelegate.trackColor != trackColor;
 }

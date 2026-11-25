@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'routine_dao.dart';
 
 String generateUUID() {
   final random = Random.secure();
@@ -356,6 +357,11 @@ class DatabaseHelper {
     final supabase = Supabase.instance.client;
     final user = supabase.auth.currentUser;
     if (user == null) return;
+
+    // 0. Push any unsynced local routines up to Supabase before refreshing cache
+    try {
+      await RoutineDao().syncUnsyncedRoutines();
+    } catch (_) {}
 
     // 1. Fetch all remote data from Supabase in parallel
     final results = await Future.wait<dynamic>([

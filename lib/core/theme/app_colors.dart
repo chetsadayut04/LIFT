@@ -17,15 +17,15 @@ class AppColors {
   static const Color tertiary = Color(0xFFFF4757); // Apex Coral Red
   static const Color onTertiary = Color(0xFFFFFFFF);
 
-  // Deep Matte Obsidian Canvas & Slate Surfaces (Reduces gym glare, authentic athlete feel)
-  static const Color bg = Color(0xFF090A0E); // Deep Matte Obsidian
-  static const Color surface = Color(0xFF12141A); // High-contrast Matte Slate
-  static const Color surfaceElevated = Color(0xFF1A1D24); // Elevated Tactile Surface
-  static const Color inputBg = Color(0xFF0D0E13); // Precision Input Dark
+  // True OLED Black Canvas & Graphite Telemetry Surfaces (WHOOP / Garmin Pro aesthetic)
+  static const Color bg = Color(0xFF000000); // True OLED Black
+  static const Color surface = Color(0xFF111318); // Graphite Telemetry Surface
+  static const Color surfaceElevated = Color(0xFF181B22); // Elevated Tactile Surface
+  static const Color inputBg = Color(0xFF090B0F); // Precision Input Dark
 
   // Clean 1px Industrial Borders (Minimalist, zero AI neon blur)
-  static const Color border = Color(0xFF22252E); // 1px Subtle Edge
-  static const Color borderSubtle = Color(0xFF181A20);
+  static const Color border = Color(0xFF1F242D); // 1px Crisp Telemetry Edge
+  static const Color borderSubtle = Color(0xFF151820);
   static const Color borderHighlight = Color(0x35CCFF00); // 21% Volt subtle rim
   static const Color borderCyan = Color(0x2538BDF8); // 15% Slate blue rim
 
@@ -49,7 +49,7 @@ class AppColors {
   );
 
   static const LinearGradient cardGradient = LinearGradient(
-    colors: [Color(0xFF14171E), Color(0xFF0E1015)],
+    colors: [Color(0xFF13161D), Color(0xFF0B0D11)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

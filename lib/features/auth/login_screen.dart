@@ -432,17 +432,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'LIFT',
-                              style: GoogleFonts.barlowCondensed(
-                                fontSize: 52,
-                                fontWeight: FontWeight.w800,
-                                color: accent,
-                                letterSpacing: -1.0,
-                                height: 1.0,
-                              ),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
+                                Text(
+                                  'LIFT',
+                                  style: GoogleFonts.barlowCondensed(
+                                    fontSize: 54,
+                                    fontWeight: FontWeight.w900,
+                                    color: textPrimary,
+                                    letterSpacing: -1.5,
+                                    height: 1.0,
+                                  ),
+                                ),
+                                Container(
+                                  margin: const EdgeInsets.only(left: 4),
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: accent,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 6),
                             Text(
                               'ติดตามการฝึกซ้อม · วิเคราะห์สถิติ · เติบโตขึ้น',
                               style: GoogleFonts.sarabun(

@@ -58,11 +58,17 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         Theme.of(context).textTheme.bodySmall?.color ?? AppColors.textMuted;
 
     final chips = lang == AppLanguage.th
-        ? ["แนะนำโปรแกรม 4 วัน", "เทคนิค Bench Press", "อาหารสร้างกล้าม"]
+        ? [
+            "วิเคราะห์การฝึกสัปดาห์นี้",
+            "แนะนำน้ำหนักเพิ่ม (PR)",
+            "จัดตาราง Upper/Lower 4 วัน",
+            "เทคนิค Bench Press",
+          ]
         : [
-            "Suggest 4-day program",
+            "Analyze this week",
+            "Progressive overload tips",
+            "4-day Upper/Lower split",
             "Bench Press technique",
-            "Muscle building diet",
           ];
 
     return Scaffold(
@@ -71,47 +77,30 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Custom Header matching Figma exactly
+            // Telemetry Coach Header
             Container(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
-              decoration: BoxDecoration(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 14),
+              decoration: const BoxDecoration(
+                color: AppColors.bg,
                 border: Border(
-                  bottom: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.06),
-                    width: 1,
-                  ),
+                  bottom: BorderSide(color: AppColors.border, width: 1),
                 ),
               ),
               child: Row(
                 children: [
                   Container(
-                    width: 44,
-                    height: 44,
+                    width: 42,
+                    height: 42,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.15),
-                          Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.05),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.2),
-                      ),
+                      color: AppColors.surfaceElevated,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.borderHighlight),
                     ),
                     alignment: Alignment.center,
                     child: const Icon(
                       Icons.bolt_rounded,
                       color: AppColors.primary,
-                      size: 24,
+                      size: 22,
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -194,10 +183,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                         ),
                       );
 
-                      if (confirm == true && mounted) {
-                        await ref.read(aiChatProvider.notifier).clearHistory();
-                      }
-                      if (confirm != true) return;
+                      if (confirm != true || !mounted) return;
                       await ref.read(aiChatProvider.notifier).clearHistory();
                       messenger.showSnackBar(
                         SnackBar(
@@ -301,8 +287,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                     ),
             ),
 
-            // Suggestion chips matching Figma
-            if (state.messages.length <= 1)
+            // Persistent Quick Diagnostic Chips
+            if (!state.isLoading)
               Container(
                 height: 42,
                 margin: const EdgeInsets.only(bottom: 8),

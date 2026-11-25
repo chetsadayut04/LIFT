@@ -7,6 +7,7 @@ import '../../features/home/home_provider.dart';
 import '../../features/history/history_provider.dart';
 import '../../features/stats/stats_provider.dart';
 import '../../features/workout/active_workout_provider.dart';
+import '../../features/workout/routine_provider.dart';
 import '../database/database_helper.dart';
 
 final cacheInitProvider = FutureProvider<void>((ref) async {
@@ -19,6 +20,7 @@ final cacheInitProvider = FutureProvider<void>((ref) async {
     ref.invalidate(homeProvider);
     ref.invalidate(historyProvider);
     ref.invalidate(statsProvider);
+    ref.invalidate(routineProvider);
     ref.read(activeWorkoutProvider.notifier).loadTodaySession();
   } catch (e) {
     if (kDebugMode) {
@@ -45,6 +47,7 @@ final cacheInitProvider = FutureProvider<void>((ref) async {
           ref.invalidate(homeProvider);
           ref.invalidate(historyProvider);
           ref.invalidate(statsProvider);
+          ref.invalidate(routineProvider);
           ref.read(activeWorkoutProvider.notifier).loadTodaySession();
         } catch (e) {
           if (kDebugMode) {

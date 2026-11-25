@@ -240,6 +240,10 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
           ),
         ),
 
+        // ── Telemetry KPI Strip ─────────────────────────────────────────────
+        _StatsKpiStrip(state: state, isLbs: isLbs, lang: lang),
+        const SizedBox(height: 16),
+
         // ── Exercises & PR Section ──────────────────────────────────────────
         if (!hasExercises)
           Container(
@@ -416,6 +420,12 @@ class _StatsSectionState extends ConsumerState<StatsSection> {
               ],
             ),
           ),
+
+          // ── Muscle Group Balance Card ──────────────────────────────────────
+          if (state.exercisePrs.isNotEmpty) ...[
+            _MuscleBalanceCard(exercisePrs: state.exercisePrs, lang: lang),
+            const SizedBox(height: 20),
+          ],
 
           // ── Personal PR Records Section ("สถิติส่วนตัว (PR)") ─────────────
           Padding(
@@ -1635,6 +1645,279 @@ class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
               ),
             ),
           const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatsKpiStrip extends StatelessWidget {
+  final StatsState state;
+  final bool isLbs;
+  final AppLanguage lang;
+
+  const _StatsKpiStrip({
+    required this.state,
+    required this.isLbs,
+    required this.lang,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final unit = isLbs ? 'lbs' : 'kg';
+    final rawVol = state.weekly?.thisWeekVolume ?? 0.0;
+    final displayVol = isLbs ? rawVol * kgToLbs : rawVol;
+    final volStr = displayVol >= 1000
+        ? '${(displayVol / 1000).toStringAsFixed(1)}k'
+        : displayVol.toStringAsFixed(0);
+    final pct = state.weekly?.percentChange;
+
+    return Row(
+      children: [
+        Expanded(
+          child: _KpiTile(
+            label: lang == AppLanguage.th ? 'วอลุ่มสัปดาห์นี้' : 'WEEK VOL',
+            value: '$volStr $unit',
+            badge: pct != null
+                ? '${pct >= 0 ? '+' : ''}${pct.round()}%'
+                : null,
+            badgePositive: pct == null || pct >= 0,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _KpiTile(
+            label: lang == AppLanguage.th ? 'เซ็ตสัปดาห์นี้' : 'WEEK SETS',
+            value: '${state.thisWeekSets}',
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _KpiTile(
+            label: lang == AppLanguage.th ? 'วันฝึกรวม' : 'SESSIONS',
+            value: '${state.workoutDates.length}',
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _KpiTile extends StatelessWidget {
+  final String label;
+  final String value;
+  final String? badge;
+  final bool badgePositive;
+
+  const _KpiTile({
+    required this.label,
+    required this.value,
+    this.badge,
+    this.badgePositive = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.barlowCondensed(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.6,
+              color: AppColors.textMuted,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Flexible(
+                child: Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              if (badge != null) ...[
+                const SizedBox(width: 4),
+                Text(
+                  badge!,
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: badgePositive
+                        ? AppColors.primary
+                        : AppColors.tertiary,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MuscleBalanceCard extends StatelessWidget {
+  final List<({String name, double prKg, int prReps, int totalSets})> exercisePrs;
+  final AppLanguage lang;
+
+  const _MuscleBalanceCard({
+    required this.exercisePrs,
+    required this.lang,
+  });
+
+  String _classify(String name) {
+    final n = name.toLowerCase();
+    if (n.contains('squat') ||
+        n.contains('leg') ||
+        n.contains('lunge') ||
+        n.contains('calf') ||
+        n.contains('rdl') ||
+        n.contains('hip') ||
+        n.contains('glute')) {
+      return 'LEGS';
+    }
+    if (n.contains('row') ||
+        n.contains('pull') ||
+        n.contains('lat') ||
+        n.contains('deadlift') ||
+        n.contains('face') ||
+        n.contains('rear delt') ||
+        n.contains('shrug')) {
+      return 'PULL';
+    }
+    if (n.contains('bench') ||
+        n.contains('chest') ||
+        n.contains('pec') ||
+        n.contains('fly') ||
+        n.contains('dip') ||
+        n.contains('press') ||
+        n.contains('lateral raise') ||
+        n.contains('shoulder')) {
+      return 'PUSH';
+    }
+    return 'ARMS / CORE';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final counts = <String, int>{
+      'PUSH': 0,
+      'PULL': 0,
+      'LEGS': 0,
+      'ARMS / CORE': 0,
+    };
+    for (final ex in exercisePrs) {
+      final group = _classify(ex.name);
+      counts[group] = (counts[group] ?? 0) + ex.totalSets;
+    }
+    final total = counts.values.fold<int>(0, (s, v) => s + v);
+    if (total == 0) return const SizedBox.shrink();
+
+    final colors = {
+      'PUSH': AppColors.primary,
+      'PULL': AppColors.secondary,
+      'LEGS': AppColors.tertiary,
+      'ARMS / CORE': AppColors.warning,
+    };
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                lang == AppLanguage.th
+                    ? 'สมดุลกลุ่มกล้ามเนื้อ'
+                    : 'MUSCLE BALANCE',
+                style: GoogleFonts.barlowCondensed(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
+                  color: AppColors.textMuted,
+                ),
+              ),
+              Text(
+                '$total ${lang == AppLanguage.th ? 'เซ็ต' : 'SETS'}',
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...counts.entries.map((entry) {
+            final pct = total > 0 ? (entry.value / total) : 0.0;
+            final color = colors[entry.key] ?? AppColors.primary;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        entry.key,
+                        style: GoogleFonts.barlowCondensed(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.6,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        '${entry.value} (${(pct * 100).round()}%)',
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(3),
+                    child: LinearProgressIndicator(
+                      value: pct.clamp(0.0, 1.0),
+                      minHeight: 6,
+                      backgroundColor: AppColors.border,
+                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );

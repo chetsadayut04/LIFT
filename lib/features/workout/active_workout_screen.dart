@@ -246,14 +246,22 @@ class ActiveWorkoutScreen extends ConsumerWidget {
                 ],
               ),
             )
-          : ReorderableListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-              buildDefaultDragHandles: false,
-              onReorder: (oldIndex, newIndex) => ref
-                  .read(activeWorkoutProvider.notifier)
-                  .reorderExercises(oldIndex, newIndex),
-              itemCount: state.exercises.length,
-              itemBuilder: (_, i) {
+          : Column(
+              children: [
+                _WorkoutTelemetryStrip(
+                  exercises: state.exercises,
+                  lang: lang,
+                  readOnly: readOnly,
+                ),
+                Expanded(
+                  child: ReorderableListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+                    buildDefaultDragHandles: false,
+                    onReorder: (oldIndex, newIndex) => ref
+                        .read(activeWorkoutProvider.notifier)
+                        .reorderExercises(oldIndex, newIndex),
+                    itemCount: state.exercises.length,
+                    itemBuilder: (_, i) {
                 final ex = state.exercises[i];
                 return Padding(
                   key: ValueKey(ex.exercise.id),
@@ -296,6 +304,9 @@ class ActiveWorkoutScreen extends ConsumerWidget {
                   ),
                 );
               },
+                  ),
+                ),
+              ],
             ),
       floatingActionButton: (!readOnly && state.session != null)
           ? FloatingActionButton.extended(
@@ -907,6 +918,219 @@ class _ExerciseCard extends ConsumerWidget {
             child: Text(lang.tr('btn_save')),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _WorkoutTelemetryStrip extends ConsumerWidget {
+  final List<ExerciseWithSets> exercises;
+  final AppLanguage lang;
+  final bool readOnly;
+
+  const _WorkoutTelemetryStrip({
+    required this.exercises,
+    required this.lang,
+    required this.readOnly,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isLbs = ref.watch(isLbsProvider);
+    final unit = isLbs ? 'lbs' : 'kg';
+    final timer = ref.watch(restTimerProvider);
+    final timerNotifier = ref.read(restTimerProvider.notifier);
+
+    int workingSets = 0;
+    double totalVolumeKg = 0;
+    for (final ex in exercises) {
+      for (final s in ex.sets) {
+        if (!s.isWarmup) {
+          workingSets++;
+          totalVolumeKg += s.weightKg * s.reps;
+        }
+      }
+    }
+    final displayVol = isLbs ? totalVolumeKg * kgToLbs : totalVolumeKg;
+    final volStr = displayVol >= 1000
+        ? '${(displayVol / 1000).toStringAsFixed(1)}k'
+        : displayVol.toStringAsFixed(0);
+
+    final mins = timer.secondsLeft ~/ 60;
+    final secs = timer.secondsLeft % 60;
+    final timerStr =
+        '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(
+          bottom: BorderSide(color: AppColors.border, width: 1),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _TelemetryMetric(
+                label: lang == AppLanguage.th ? 'ท่า' : 'EXERCISES',
+                value: '${exercises.length}',
+              ),
+              _TelemetryMetric(
+                label: lang == AppLanguage.th ? 'เซ็ตจริง' : 'SETS',
+                value: '$workingSets',
+              ),
+              _TelemetryMetric(
+                label: lang == AppLanguage.th
+                    ? 'วอลุ่ม ($unit)'
+                    : 'VOLUME ($unit)',
+                value: volStr,
+                highlight: true,
+              ),
+            ],
+          ),
+          if (!readOnly && timer.isRunning) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.bg,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.45),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.timer_rounded,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    lang == AppLanguage.th ? 'พักเซ็ต' : 'REST',
+                    style: GoogleFonts.barlowCondensed(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.8,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    timerStr,
+                    style: GoogleFonts.jetBrainsMono(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const Spacer(),
+                  _MiniTimerBtn(
+                    label: '-15s',
+                    onTap: () => timerNotifier.adjust(-15),
+                  ),
+                  const SizedBox(width: 6),
+                  _MiniTimerBtn(
+                    label: '+15s',
+                    onTap: () => timerNotifier.adjust(15),
+                  ),
+                  const SizedBox(width: 6),
+                  _MiniTimerBtn(
+                    label: 'Skip',
+                    accent: true,
+                    onTap: () => timerNotifier.reset(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TelemetryMetric extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool highlight;
+
+  const _TelemetryMetric({
+    required this.label,
+    required this.value,
+    this.highlight = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.barlowCondensed(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.7,
+              color: AppColors.textMuted,
+            ),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.jetBrainsMono(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: highlight ? AppColors.primary : AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniTimerBtn extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  final bool accent;
+
+  const _MiniTimerBtn({
+    required this.label,
+    required this.onTap,
+    this.accent = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: accent
+              ? AppColors.primary.withValues(alpha: 0.16)
+              : AppColors.surfaceElevated,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: accent
+                ? AppColors.primary.withValues(alpha: 0.4)
+                : AppColors.border,
+          ),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.jetBrainsMono(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: accent ? AppColors.primary : AppColors.textSecondary,
+          ),
+        ),
       ),
     );
   }

@@ -240,6 +240,33 @@ class RoutinesScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
+                    Positioned(
+                      top: 10,
+                      left: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.bg.withValues(alpha: 0.78),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: AppColors.border,
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          'SPLIT #${(index + 1).toString().padLeft(2, '0')} · ${exercises.length} EX',
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -283,12 +310,12 @@ class RoutinesScreen extends ConsumerWidget {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Edit button
+                              // Edit button
                             GestureDetector(
                               onTap: () => _editRoutine(context, item),
                               child: Container(
-                                width: 34,
-                                height: 34,
+                                width: 38,
+                                height: 38,
                                 decoration: BoxDecoration(
                                   color: AppColors.surfaceElevated,
                                   borderRadius: BorderRadius.circular(10),
@@ -308,8 +335,8 @@ class RoutinesScreen extends ConsumerWidget {
                               onTap: () =>
                                   _shareRoutineAsQr(context, item, lang),
                               child: Container(
-                                width: 34,
-                                height: 34,
+                                width: 38,
+                                height: 38,
                                 decoration: BoxDecoration(
                                   color: AppColors.surfaceElevated,
                                   borderRadius: BorderRadius.circular(10),
@@ -334,8 +361,8 @@ class RoutinesScreen extends ConsumerWidget {
                                 lang,
                               ),
                               child: Container(
-                                width: 34,
-                                height: 34,
+                                width: 38,
+                                height: 38,
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFEF4444).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(10),

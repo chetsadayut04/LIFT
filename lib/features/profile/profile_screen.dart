@@ -1556,17 +1556,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                memberSinceLabel != null
-                                    ? (lang == AppLanguage.th
-                                          ? 'สมาชิก LIFT · ตั้งแต่ $memberSinceLabel'
-                                          : 'LIFT Member · Since $memberSinceLabel')
-                                    : (lang == AppLanguage.th
-                                          ? 'สมาชิก LIFT'
-                                          : 'LIFT Member'),
-                                style: GoogleFonts.sarabun(
-                                  fontSize: 11,
-                                  color: AppColors.textMuted,
-                                  fontWeight: FontWeight.w500,
+                                () {
+                                  final tier = totalSessions >= 50
+                                      ? 'APEX ATHLETE'
+                                      : totalSessions >= 15
+                                          ? 'PRO LIFTER'
+                                          : 'ATHLETE';
+                                  return memberSinceLabel != null
+                                      ? '$tier · SINCE ${memberSinceLabel.toUpperCase()}'
+                                      : tier;
+                                }(),
+                                style: GoogleFonts.jetBrainsMono(
+                                  fontSize: 10,
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.6,
                                 ),
                               ),
                             ],

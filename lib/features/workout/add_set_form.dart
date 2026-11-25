@@ -134,8 +134,8 @@ class _AddSetFormState extends ConsumerState<AddSetForm> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        width: 38,
-        height: 44,
+        width: 44,
+        height: 46,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: surfaceHi,
