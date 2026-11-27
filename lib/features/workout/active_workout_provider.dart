@@ -129,6 +129,14 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState> {
   Future<void> addExercise(String name) async {
     if (state.session == null) return;
     final trimmed = name.trim();
+    if (trimmed.isEmpty) return;
+
+    // Prevent duplicate exercise names within the same session
+    final isDuplicate = state.exercises.any(
+      (e) => e.exercise.name.trim().toLowerCase() == trimmed.toLowerCase(),
+    );
+    if (isDuplicate) return;
+
     final exercise = await _exerciseDao.insert(Exercise(
       sessionId: state.session!.id!,
       name: trimmed,
@@ -257,9 +265,31 @@ class ActiveWorkoutNotifier extends StateNotifier<ActiveWorkoutState> {
   }
 
   Future<void> startSessionFromTemplate(String? name, List<String> exerciseNames) async {
-    await startSession(name: name);
-    for (final exerciseName in exerciseNames) {
-      await addExercise(exerciseName);
+    if (state.isLoading) return;
+    state = state.copyWith(isLoading: true);
+    try {
+      await startSession(name: name);
+      if (name != null &&
+          name.trim().isNotEmpty &&
+          state.session != null &&
+          (state.session!.name == null || state.session!.name!.isEmpty)) {
+        await renameSession(name.trim());
+      }
+
+      final existingNames = state.exercises
+          .map((e) => e.exercise.name.trim().toLowerCase())
+          .toSet();
+
+      for (final exerciseName in exerciseNames) {
+        final clean = exerciseName.trim();
+        if (clean.isEmpty) continue;
+        if (!existingNames.contains(clean.toLowerCase())) {
+          await addExercise(clean);
+          existingNames.add(clean.toLowerCase());
+        }
+      }
+    } finally {
+      state = state.copyWith(isLoading: false);
     }
   }
 

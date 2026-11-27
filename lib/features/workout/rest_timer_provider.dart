@@ -138,3 +138,5 @@ final restTimerProvider =
     StateNotifierProvider<RestTimerNotifier, RestTimerState>(
   (_) => RestTimerNotifier(),
 );
+
+final isRestTimerSheetOpenProvider = StateProvider<bool>((ref) => false);

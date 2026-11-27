@@ -440,6 +440,7 @@ class RoutinesScreen extends ConsumerWidget {
                           ),
                         ),
                         onPressed: () async {
+                          if (ref.read(activeWorkoutProvider).isLoading) return;
                           final exNames = exercises
                               .map((e) => e.exercise.name)
                               .toList();

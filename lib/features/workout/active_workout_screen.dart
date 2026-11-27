@@ -15,16 +15,28 @@ class ActiveWorkoutScreen extends ConsumerWidget {
   final bool readOnly;
   const ActiveWorkoutScreen({super.key, this.readOnly = false});
 
-  void _showRestTimer(BuildContext context, WidgetRef ref) {
-    ref.read(restTimerProvider.notifier).reset(seconds: 90);
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => const RestTimerBottomSheet(),
-    );
+  Future<void> _showRestTimer(
+    BuildContext context,
+    WidgetRef ref, {
+    bool autoResetIfIdle = true,
+  }) async {
+    final timer = ref.read(restTimerProvider);
+    if (!timer.isRunning && autoResetIfIdle) {
+      ref.read(restTimerProvider.notifier).reset(seconds: 90);
+    }
+    ref.read(isRestTimerSheetOpenProvider.notifier).state = true;
+    try {
+      await showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (_) => const RestTimerBottomSheet(),
+      );
+    } finally {
+      ref.read(isRestTimerSheetOpenProvider.notifier).state = false;
+    }
   }
 
   Future<void> _addExercise(BuildContext context, WidgetRef ref) async {
@@ -252,6 +264,11 @@ class ActiveWorkoutScreen extends ConsumerWidget {
                   exercises: state.exercises,
                   lang: lang,
                   readOnly: readOnly,
+                  onOpenRestTimer: () => _showRestTimer(
+                    context,
+                    ref,
+                    autoResetIfIdle: false,
+                  ),
                 ),
                 Expanded(
                   child: ReorderableListView.builder(
@@ -950,11 +967,13 @@ class _WorkoutTelemetryStrip extends ConsumerWidget {
   final List<ExerciseWithSets> exercises;
   final AppLanguage lang;
   final bool readOnly;
+  final VoidCallback? onOpenRestTimer;
 
   const _WorkoutTelemetryStrip({
     required this.exercises,
     required this.lang,
     required this.readOnly,
+    this.onOpenRestTimer,
   });
 
   @override
@@ -963,6 +982,7 @@ class _WorkoutTelemetryStrip extends ConsumerWidget {
     final unit = isLbs ? 'lbs' : 'kg';
     final timer = ref.watch(restTimerProvider);
     final timerNotifier = ref.read(restTimerProvider.notifier);
+    final isSheetOpen = ref.watch(isRestTimerSheetOpenProvider);
 
     int workingSets = 0;
     double totalVolumeKg = 0;
@@ -1013,7 +1033,7 @@ class _WorkoutTelemetryStrip extends ConsumerWidget {
               ),
             ],
           ),
-          if (!readOnly && timer.isRunning) ...[
+          if (!readOnly && timer.isRunning && !isSheetOpen) ...[
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -1027,28 +1047,37 @@ class _WorkoutTelemetryStrip extends ConsumerWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.timer_rounded,
-                    size: 16,
-                    color: AppColors.primary,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    lang == AppLanguage.th ? 'พักเซ็ต' : 'REST',
-                    style: GoogleFonts.barlowCondensed(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.8,
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    timerStr,
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: onOpenRestTimer,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.timer_rounded,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          lang == AppLanguage.th ? 'พักเซ็ต' : 'REST',
+                          style: GoogleFonts.barlowCondensed(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.8,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          timerStr,
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const Spacer(),

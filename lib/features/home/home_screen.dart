@@ -503,6 +503,7 @@ class _HomeBody extends ConsumerWidget {
     final name = result?.name;
     final exercises = result?.exercises ?? [];
     if (exercises.isNotEmpty) {
+      if (ref.read(activeWorkoutProvider).isLoading) return;
       await ref
           .read(activeWorkoutProvider.notifier)
           .startSessionFromTemplate(name, exercises);
@@ -1824,6 +1825,7 @@ class _RoutinesCarousel extends ConsumerWidget {
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
                               onPressed: () async {
+                                if (ref.read(activeWorkoutProvider).isLoading) return;
                                 await ref
                                     .read(activeWorkoutProvider.notifier)
                                     .startSessionFromTemplate(
